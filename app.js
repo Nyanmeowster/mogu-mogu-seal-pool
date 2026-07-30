@@ -1,14 +1,12 @@
-import * as THREE from "three";
-
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "20";
+const ASSET_VERSION = "21";
 const STAT_LOSS_PER_HOUR = 4;
 const PREVIEW_DEAD = new URLSearchParams(location.search).get("preview") === "dead";
 const QUERY_PARAMS = new URLSearchParams(location.search);
-const FORCE_REALTIME_3D = QUERY_PARAMS.get("realtime") === "1" || QUERY_PARAMS.get("3d") === "1" || QUERY_PARAMS.get("force3d") === "1";
-const FORCE_SPRITE_FALLBACK = QUERY_PARAMS.get("sprite") === "1" || QUERY_PARAMS.get("fallback") === "1";
+const FORCE_REALTIME_3D = false;
+const FORCE_SPRITE_FALLBACK = true;
 const MODEL_BASE_SCALE = 0.7;
 const THREE_POSE_STATES = {
   IDLE: "idle",
