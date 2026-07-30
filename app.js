@@ -54,7 +54,7 @@ const SIZE_STOPS = [20, 40, 70, 90];
 const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 const spriteAsset = (stageNumber) =>
-  `/assets/seal-3d-v1/seal-stage-${stageNumber}-sprite.png?v=${ASSET_VERSION}`;
+  `${import.meta.env.BASE_URL}assets/seal-3d-v1/seal-stage-${stageNumber}-sprite.png?v=${ASSET_VERSION}`;
 
 const fresh = () => {
   const now = Date.now();
