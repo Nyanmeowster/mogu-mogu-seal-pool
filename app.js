@@ -1,21 +1,26 @@
 import sealStage1Idle from "./assets/seal-stage-1.webp";
 import sealStage1Eat from "./assets/seal-stage-1-eat.webp";
+import sealStage1Chew from "./assets/seal-stage-1-eat-closed-v2.webp";
 import sealStage1Pet from "./assets/seal-stage-1-pet.webp";
 import sealStage1Walk from "./assets/seal-stage-1-walk.webp";
 import sealStage2Idle from "./assets/seal-stage-2.webp";
 import sealStage2Eat from "./assets/seal-stage-2-eat.webp";
+import sealStage2Chew from "./assets/seal-stage-2-eat-closed-v2.webp";
 import sealStage2Pet from "./assets/seal-stage-2-pet.webp";
 import sealStage2Walk from "./assets/seal-stage-2-walk.webp";
 import sealStage3Idle from "./assets/seal-stage-3.webp";
 import sealStage3Eat from "./assets/seal-stage-3-eat.webp";
+import sealStage3Chew from "./assets/seal-stage-3-eat-closed-v2.webp";
 import sealStage3Pet from "./assets/seal-stage-3-pet.webp";
 import sealStage3Walk from "./assets/seal-stage-3-walk.webp";
 import sealStage4Idle from "./assets/seal-stage-4.webp";
 import sealStage4Eat from "./assets/seal-stage-4-eat.webp";
+import sealStage4Chew from "./assets/seal-stage-4-eat-closed-v2.webp";
 import sealStage4Pet from "./assets/seal-stage-4-pet.webp";
 import sealStage4Walk from "./assets/seal-stage-4-walk.webp";
 import sealStage5Idle from "./assets/seal-stage-5.webp";
 import sealStage5Eat from "./assets/seal-stage-5-eat.webp";
+import sealStage5Chew from "./assets/seal-stage-5-eat-closed-v2.webp";
 import sealStage5Pet from "./assets/seal-stage-5-pet.webp";
 import sealStage5Walk from "./assets/seal-stage-5-walk.webp";
 import poolBackground from "./assets/pool-background-cover-v1.jpg";
@@ -23,7 +28,7 @@ import poolBackground from "./assets/pool-background-cover-v1.jpg";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "28";
+const ASSET_VERSION = "29";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -84,11 +89,11 @@ const IDLE_LINES = ["噗嚕～水溫剛剛好", "今天也想和你待在一起"
 const SIZE_STOPS = [20, 40, 70, 90];
 const SPRITE_ASSETS = [
   null,
-  { idle: sealStage1Idle, eat: sealStage1Eat, pet: sealStage1Pet, walk: sealStage1Walk },
-  { idle: sealStage2Idle, eat: sealStage2Eat, pet: sealStage2Pet, walk: sealStage2Walk },
-  { idle: sealStage3Idle, eat: sealStage3Eat, pet: sealStage3Pet, walk: sealStage3Walk },
-  { idle: sealStage4Idle, eat: sealStage4Eat, pet: sealStage4Pet, walk: sealStage4Walk },
-  { idle: sealStage5Idle, eat: sealStage5Eat, pet: sealStage5Pet, walk: sealStage5Walk },
+  { idle: sealStage1Idle, eat: sealStage1Eat, chew: sealStage1Chew, pet: sealStage1Pet, walk: sealStage1Walk },
+  { idle: sealStage2Idle, eat: sealStage2Eat, chew: sealStage2Chew, pet: sealStage2Pet, walk: sealStage2Walk },
+  { idle: sealStage3Idle, eat: sealStage3Eat, chew: sealStage3Chew, pet: sealStage3Pet, walk: sealStage3Walk },
+  { idle: sealStage4Idle, eat: sealStage4Eat, chew: sealStage4Chew, pet: sealStage4Pet, walk: sealStage4Walk },
+  { idle: sealStage5Idle, eat: sealStage5Eat, chew: sealStage5Chew, pet: sealStage5Pet, walk: sealStage5Walk },
 ];
 const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
@@ -2046,7 +2051,7 @@ function renderSeal() {
   roamer.classList.add(`stage-${nextStage}`);
   $("seal-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "idle")}")`;
   $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "pet")}")`;
-  $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "eat")}")`;
+  $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "chew")}")`;
   const habitatState = pet.waterQuality >= 70 ? "水質清澈" : pet.waterQuality >= 40 ? "水質待維護" : "水質警報";
   $("stage-pill").textContent = `${STAGE_LABELS[nextStage]} · ${habitatState}`;
   $("seal").setAttribute(
@@ -2363,7 +2368,7 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   const actionAsset = visualAsset || (kind === "eat" ? "eat" : "pet");
   $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), actionAsset)}")`;
   if (kind === "eat") {
-    $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), "eat")}")`;
+    $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), "chew")}")`;
   }
   actionActive = kind;
   seal.dataset.motion = motion || zone || kind;

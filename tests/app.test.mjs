@@ -27,6 +27,7 @@ test("固定沿用最終 2D 海豹素材", () => {
   assert.match(script, /const FORCE_SPRITE_FALLBACK = true;/);
   assert.match(script, /const SPRITE_ASSETS = \[/);
   assert.equal((script.match(/seal-stage-[1-5](?:-(?:eat|pet|walk))?\.webp/g) || []).length, 20);
+  assert.equal((script.match(/seal-stage-[1-5]-eat-closed-v2\.webp/g) || []).length, 5);
   assert.match(html, /id="seal-art-wrap"/);
   assert.doesNotMatch(html, /seal-three-canvas|GLTFLoader|three\.min\.js/);
   assert.match(styles, /background-size: contain;/);
@@ -48,10 +49,11 @@ test("餵食後會有連續咀嚼動畫", () => {
   assert.match(html, /id="seal-jaw-sprite"/);
   assert.match(styles, /\.pet-seal\.eat \.seal-action-sprite/);
   assert.match(styles, /\.pet-seal\.eat \.seal-jaw-sprite/);
-  assert.match(styles, /animation: seal-jaw-chew 1\.32s steps\(1, end\);/);
-  assert.match(styles, /@keyframes seal-jaw-chew/);
-  assert.match(styles, /transform: translateY\(-7px\) scaleY\(0\.9\);/);
+  assert.match(styles, /animation: seal-frame-chew 1\.32s steps\(1, end\);/);
+  assert.match(styles, /@keyframes seal-frame-chew/);
+  assert.match(styles, /20%, 36%, 52%, 68%, 84%/);
   assert.match(script, /seal-jaw-sprite/);
+  assert.match(script, /chew: sealStage5Chew/);
 });
 
 test("真實照護狀態包含飽足、信任、健康與水質", () => {

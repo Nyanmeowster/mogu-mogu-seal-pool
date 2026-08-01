@@ -648,42 +648,22 @@ button:focus-visible {
 
 .seal-roamer.stage-1 {
   --roam-time: 10.5s;
-  --jaw-top: 43%;
-  --jaw-right: 64%;
-  --jaw-bottom: 36%;
-  --jaw-left: 17%;
 }
 
 .seal-roamer.stage-2 {
   --roam-time: 12s;
-  --jaw-top: 43%;
-  --jaw-right: 64%;
-  --jaw-bottom: 35%;
-  --jaw-left: 17%;
 }
 
 .seal-roamer.stage-3 {
   --roam-time: 14s;
-  --jaw-top: 43%;
-  --jaw-right: 65%;
-  --jaw-bottom: 36%;
-  --jaw-left: 16%;
 }
 
 .seal-roamer.stage-4 {
   --roam-time: 16s;
-  --jaw-top: 42%;
-  --jaw-right: 65%;
-  --jaw-bottom: 35%;
-  --jaw-left: 17%;
 }
 
 .seal-roamer.stage-5 {
   --roam-time: 18s;
-  --jaw-top: 39%;
-  --jaw-right: 65%;
-  --jaw-bottom: 39%;
-  --jaw-left: 17%;
 }
 
 .seal-roamer.reacting,
@@ -831,14 +811,11 @@ button:focus-visible {
 
 .seal-jaw-sprite {
   z-index: 2;
-  clip-path: inset(var(--jaw-top, 45%) var(--jaw-right, 63%) var(--jaw-bottom, 35%) var(--jaw-left, 18%));
-  transform-origin: 30% 48%;
-  will-change: transform, opacity;
+  will-change: opacity;
 }
 
 .pet-seal.eat .seal-jaw-sprite {
-  opacity: 1;
-  animation: seal-jaw-chew 1.32s steps(1, end);
+  animation: seal-frame-chew 1.32s steps(1, end);
 }
 
 .pet-seal.pet .seal-action-sprite {
@@ -1580,12 +1557,12 @@ button:focus-visible {
   38%, 70% { transform: translateY(1px) rotate(0.2deg); }
 }
 
-@keyframes seal-jaw-chew {
+@keyframes seal-frame-chew {
   0%, 12%, 28%, 44%, 60%, 76%, 92%, 100% {
-    transform: translateY(0) scaleY(1);
+    opacity: 0;
   }
   20%, 36%, 52%, 68%, 84% {
-    transform: translateY(-7px) scaleY(0.9);
+    opacity: 1;
   }
 }
 
