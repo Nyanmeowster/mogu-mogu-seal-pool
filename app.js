@@ -23,7 +23,7 @@ import poolBackground from "./assets/pool-background-cover-v1.jpg";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "27";
+const ASSET_VERSION = "28";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -2046,6 +2046,7 @@ function renderSeal() {
   roamer.classList.add(`stage-${nextStage}`);
   $("seal-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "idle")}")`;
   $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "pet")}")`;
+  $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "eat")}")`;
   const habitatState = pet.waterQuality >= 70 ? "水質清澈" : pet.waterQuality >= 40 ? "水質待維護" : "水質警報";
   $("stage-pill").textContent = `${STAGE_LABELS[nextStage]} · ${habitatState}`;
   $("seal").setAttribute(
@@ -2361,6 +2362,9 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   const roamer = $("seal-roamer");
   const actionAsset = visualAsset || (kind === "eat" ? "eat" : "pet");
   $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), actionAsset)}")`;
+  if (kind === "eat") {
+    $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), "eat")}")`;
+  }
   actionActive = kind;
   seal.dataset.motion = motion || zone || kind;
   seal.classList.remove("eat", "pet");

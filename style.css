@@ -648,22 +648,42 @@ button:focus-visible {
 
 .seal-roamer.stage-1 {
   --roam-time: 10.5s;
+  --jaw-top: 43%;
+  --jaw-right: 64%;
+  --jaw-bottom: 36%;
+  --jaw-left: 17%;
 }
 
 .seal-roamer.stage-2 {
   --roam-time: 12s;
+  --jaw-top: 43%;
+  --jaw-right: 64%;
+  --jaw-bottom: 35%;
+  --jaw-left: 17%;
 }
 
 .seal-roamer.stage-3 {
   --roam-time: 14s;
+  --jaw-top: 43%;
+  --jaw-right: 65%;
+  --jaw-bottom: 36%;
+  --jaw-left: 16%;
 }
 
 .seal-roamer.stage-4 {
   --roam-time: 16s;
+  --jaw-top: 42%;
+  --jaw-right: 65%;
+  --jaw-bottom: 35%;
+  --jaw-left: 17%;
 }
 
 .seal-roamer.stage-5 {
   --roam-time: 18s;
+  --jaw-top: 39%;
+  --jaw-right: 65%;
+  --jaw-bottom: 39%;
+  --jaw-left: 17%;
 }
 
 .seal-roamer.reacting,
@@ -717,7 +737,8 @@ button:focus-visible {
 
 .seal-art-wrap,
 .seal-sprite,
-.seal-action-sprite {
+.seal-action-sprite,
+.seal-jaw-sprite {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -743,7 +764,8 @@ button:focus-visible {
 }
 
 .seal-art-wrap.using-realtime .seal-sprite,
-.seal-art-wrap.using-realtime .seal-action-sprite {
+.seal-art-wrap.using-realtime .seal-action-sprite,
+.seal-art-wrap.using-realtime .seal-jaw-sprite {
   opacity: 0;
 }
 
@@ -771,7 +793,8 @@ button:focus-visible {
 }
 
 .seal-sprite,
-.seal-action-sprite {
+.seal-action-sprite,
+.seal-jaw-sprite {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -784,7 +807,8 @@ button:focus-visible {
   will-change: opacity;
 }
 
-.seal-action-sprite {
+.seal-action-sprite,
+.seal-jaw-sprite {
   opacity: 0;
 }
 
@@ -803,8 +827,18 @@ button:focus-visible {
 
 .pet-seal.eat .seal-action-sprite {
   animation: seal-chew-cycle 1.32s ease-in-out;
-  transform-origin: 36% 42%;
-  will-change: transform;
+}
+
+.seal-jaw-sprite {
+  z-index: 2;
+  clip-path: inset(var(--jaw-top, 45%) var(--jaw-right, 63%) var(--jaw-bottom, 35%) var(--jaw-left, 18%));
+  transform-origin: 30% 48%;
+  will-change: transform, opacity;
+}
+
+.pet-seal.eat .seal-jaw-sprite {
+  opacity: 1;
+  animation: seal-jaw-chew 1.32s steps(1, end);
 }
 
 .pet-seal.pet .seal-action-sprite {
@@ -1541,17 +1575,17 @@ button:focus-visible {
 }
 
 @keyframes seal-chew-cycle {
-  0%, 8%, 100% {
-    transform: translateY(0) scale(1);
+  0%, 100% { transform: translateY(0) rotate(0); }
+  22%, 54%, 84% { transform: translateY(-2px) rotate(-0.25deg); }
+  38%, 70% { transform: translateY(1px) rotate(0.2deg); }
+}
+
+@keyframes seal-jaw-chew {
+  0%, 12%, 28%, 44%, 60%, 76%, 92%, 100% {
+    transform: translateY(0) scaleY(1);
   }
-  15%, 31%, 47%, 63%, 79% {
-    transform: translateY(1.5px) scale(1.006, 0.982);
-  }
-  23%, 39%, 55%, 71%, 87% {
-    transform: translateY(-1px) scale(0.998, 1.012);
-  }
-  94% {
-    transform: translateY(0) scale(1.002, 0.996);
+  20%, 36%, 52%, 68%, 84% {
+    transform: translateY(-7px) scaleY(0.9);
   }
 }
 
@@ -2093,6 +2127,7 @@ button:focus-visible {
   .pet-seal,
   .seal-sprite,
   .seal-action-sprite,
+  .seal-jaw-sprite,
   .water-lines,
   .water-caustics,
   .bubble-field i,
