@@ -3,32 +3,38 @@ import sealStage1Eat from "./assets/seal-stage-1-eat.webp";
 import sealStage1Chew from "./assets/seal-stage-1-eat-closed-v2.webp";
 import sealStage1Pet from "./assets/seal-stage-1-pet.webp";
 import sealStage1Walk from "./assets/seal-stage-1-walk.webp";
+import sealStage1Ring from "./assets/seal-stage-1-doflamingo-ring.webp";
 import sealStage2Idle from "./assets/seal-stage-2.webp";
 import sealStage2Eat from "./assets/seal-stage-2-eat.webp";
 import sealStage2Chew from "./assets/seal-stage-2-eat-closed-v2.webp";
 import sealStage2Pet from "./assets/seal-stage-2-pet.webp";
 import sealStage2Walk from "./assets/seal-stage-2-walk.webp";
+import sealStage2Ring from "./assets/seal-stage-2-doflamingo-ring.webp";
 import sealStage3Idle from "./assets/seal-stage-3.webp";
 import sealStage3Eat from "./assets/seal-stage-3-eat.webp";
 import sealStage3Chew from "./assets/seal-stage-3-eat-closed-v2.webp";
 import sealStage3Pet from "./assets/seal-stage-3-pet.webp";
 import sealStage3Walk from "./assets/seal-stage-3-walk.webp";
+import sealStage3Ring from "./assets/seal-stage-3-doflamingo-ring.webp";
 import sealStage4Idle from "./assets/seal-stage-4.webp";
 import sealStage4Eat from "./assets/seal-stage-4-eat.webp";
 import sealStage4Chew from "./assets/seal-stage-4-eat-closed-v2.webp";
 import sealStage4Pet from "./assets/seal-stage-4-pet.webp";
 import sealStage4Walk from "./assets/seal-stage-4-walk.webp";
+import sealStage4Ring from "./assets/seal-stage-4-doflamingo-ring.webp";
 import sealStage5Idle from "./assets/seal-stage-5.webp";
 import sealStage5Eat from "./assets/seal-stage-5-eat.webp";
 import sealStage5Chew from "./assets/seal-stage-5-eat-closed-v2.webp";
 import sealStage5Pet from "./assets/seal-stage-5-pet.webp";
 import sealStage5Walk from "./assets/seal-stage-5-walk.webp";
+import sealStage5Ring from "./assets/seal-stage-5-doflamingo-ring.webp";
 import poolBackground from "./assets/pool-background-cover-v1.jpg";
+import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
 
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "31";
+const ASSET_VERSION = "32";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -63,7 +69,7 @@ const EXPRESSION_MORPHS = [
 ];
 
 const DECOR = [
-  { id: "ring", icon: "🍩", name: "甜甜圈泳圈", price: 4, className: "decor-ring" },
+  { id: "ring", icon: "🦩", name: "Doflamingo 羽毛泳圈", price: 4, className: "decor-ring" },
   { id: "ball", icon: "🏖️", name: "海灘球", price: 7, className: "decor-ball" },
   { id: "plant", icon: "🌴", name: "迷你椰子樹", price: 12, className: "decor-plant" },
   { id: "light", icon: "✨", name: "星星池燈", price: 18, className: "decor-light" },
@@ -89,11 +95,11 @@ const IDLE_LINES = ["噗嚕～水溫剛剛好", "今天也想和你待在一起"
 const SIZE_STOPS = [20, 40, 70, 90];
 const SPRITE_ASSETS = [
   null,
-  { idle: sealStage1Idle, eat: sealStage1Eat, chew: sealStage1Chew, pet: sealStage1Pet, walk: sealStage1Walk },
-  { idle: sealStage2Idle, eat: sealStage2Eat, chew: sealStage2Chew, pet: sealStage2Pet, walk: sealStage2Walk },
-  { idle: sealStage3Idle, eat: sealStage3Eat, chew: sealStage3Chew, pet: sealStage3Pet, walk: sealStage3Walk },
-  { idle: sealStage4Idle, eat: sealStage4Eat, chew: sealStage4Chew, pet: sealStage4Pet, walk: sealStage4Walk },
-  { idle: sealStage5Idle, eat: sealStage5Eat, chew: sealStage5Chew, pet: sealStage5Pet, walk: sealStage5Walk },
+  { idle: sealStage1Idle, eat: sealStage1Eat, chew: sealStage1Chew, pet: sealStage1Pet, walk: sealStage1Walk, ring: sealStage1Ring },
+  { idle: sealStage2Idle, eat: sealStage2Eat, chew: sealStage2Chew, pet: sealStage2Pet, walk: sealStage2Walk, ring: sealStage2Ring },
+  { idle: sealStage3Idle, eat: sealStage3Eat, chew: sealStage3Chew, pet: sealStage3Pet, walk: sealStage3Walk, ring: sealStage3Ring },
+  { idle: sealStage4Idle, eat: sealStage4Eat, chew: sealStage4Chew, pet: sealStage4Pet, walk: sealStage4Walk, ring: sealStage4Ring },
+  { idle: sealStage5Idle, eat: sealStage5Eat, chew: sealStage5Chew, pet: sealStage5Pet, walk: sealStage5Walk, ring: sealStage5Ring },
 ];
 const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
@@ -422,6 +428,7 @@ function updateLoadingProgress(completed, total) {
 async function preloadEssentialAssets() {
   const urls = [
     `${poolBackground}?v=${ASSET_VERSION}`,
+    `${doflamingoRing}?v=${ASSET_VERSION}`,
     ...SPRITE_ASSETS.slice(1).flatMap((assets) => Object.values(assets).map((url) => `${url}?v=${ASSET_VERSION}`)),
   ];
   let completed = 0;
@@ -2031,7 +2038,7 @@ function renderDecorations() {
   $("decorations").innerHTML = DECOR.filter((item) => pet.active.includes(item.id))
     .map((item, index) =>
       item.id === "ring"
-        ? `<button class="pool-decor ${item.className}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" aria-label="拖曳甜甜圈泳圈和海豹玩">${item.icon}</button>`
+        ? `<button class="pool-decor ${item.className}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" aria-label="拖曳 Doflamingo 羽毛泳圈和海豹玩"><img src="${doflamingoRing}?v=${ASSET_VERSION}" alt=""></button>`
         : `<span class="pool-decor ${item.className}" style="--decor-delay:-${index * 0.63}s" aria-hidden="true">${item.icon}</span>`,
     )
     .join("");
@@ -2665,9 +2672,9 @@ function finishRingDrag(event) {
   if (touchedSeal) {
     pet.affection = clamp(pet.affection + 5);
     ring.classList.add("is-playing");
-    showNotice("海豹鑽進甜甜圈泳圈玩水！信任度＋5", "success");
+    showNotice("海豹抱住 Doflamingo 羽毛泳圈玩水！信任度＋5", "success");
     render();
-    react("pet", "🍩", "ring", "walk", "ring-play");
+    react("pet", "🦩", "ring", "ring", "ring-play");
     sound("water", "fin");
     navigator.vibrate?.([12, 35, 12]);
     safeSave();

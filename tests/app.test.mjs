@@ -28,6 +28,7 @@ test("固定沿用最終 2D 海豹素材", () => {
   assert.match(script, /const SPRITE_ASSETS = \[/);
   assert.equal((script.match(/seal-stage-[1-5](?:-(?:eat|pet|walk))?\.webp/g) || []).length, 20);
   assert.equal((script.match(/seal-stage-[1-5]-eat-closed-v2\.webp/g) || []).length, 5);
+  assert.equal((script.match(/seal-stage-[1-5]-doflamingo-ring\.webp/g) || []).length, 5);
   assert.match(html, /id="seal-art-wrap"/);
   assert.doesNotMatch(html, /seal-three-canvas|GLTFLoader|three\.min\.js/);
   assert.match(styles, /background-size: contain;/);
@@ -98,12 +99,16 @@ test("上岸休息會實際移動到背景石台並停留", () => {
   assert.match(styles, /@keyframes rock-sleep/);
 });
 
-test("甜甜圈泳圈會依海豹比例放大並可拖曳互動", () => {
+test("Doflamingo 泳圈會依海豹比例放大並切換專屬玩耍圖", () => {
   assert.match(script, /data-pool-toy="ring"/);
+  assert.match(script, /doflamingo-swim-ring-v1\.webp/);
+  assert.match(script, /ring: sealStage5Ring/);
+  assert.match(script, /<img src="\$\{doflamingoRing\}/);
   assert.match(script, /function ringTouchesSeal\(ring\)/);
   assert.match(script, /pointermove/);
   assert.match(script, /pet\.affection = clamp\(pet\.affection \+ 5\)/);
   assert.match(script, /"ring-play"/);
+  assert.match(script, /react\("pet", "🦩", "ring", "ring", "ring-play"\)/);
   assert.match(styles, /width: clamp\(150px, 42cqw, 220px\);/);
   assert.match(styles, /touch-action: none;/);
   assert.match(styles, /\.decor-ring\.is-over-seal/);
