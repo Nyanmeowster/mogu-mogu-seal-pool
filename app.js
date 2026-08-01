@@ -18,11 +18,12 @@ import sealStage5Idle from "./assets/seal-stage-5.webp";
 import sealStage5Eat from "./assets/seal-stage-5-eat.webp";
 import sealStage5Pet from "./assets/seal-stage-5-pet.webp";
 import sealStage5Walk from "./assets/seal-stage-5-walk.webp";
+import poolBackground from "./assets/pool-background-cover-v1.jpg";
 
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "25";
+const ASSET_VERSION = "26";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -92,6 +93,7 @@ const SPRITE_ASSETS = [
 const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 const spriteAsset = (stageNumber, action = "idle") => `${SPRITE_ASSETS[stageNumber][action]}?v=${ASSET_VERSION}`;
+document.documentElement.style.setProperty("--pool-background", `url("${poolBackground}?v=${ASSET_VERSION}")`);
 
 const fresh = () => {
   const now = Date.now();
@@ -413,7 +415,10 @@ function updateLoadingProgress(completed, total) {
 }
 
 async function preloadEssentialAssets() {
-  const urls = SPRITE_ASSETS.slice(1).flatMap((assets) => Object.values(assets).map((url) => `${url}?v=${ASSET_VERSION}`));
+  const urls = [
+    `${poolBackground}?v=${ASSET_VERSION}`,
+    ...SPRITE_ASSETS.slice(1).flatMap((assets) => Object.values(assets).map((url) => `${url}?v=${ASSET_VERSION}`)),
+  ];
   let completed = 0;
   updateLoadingProgress(0, urls.length);
   const results = await Promise.all(

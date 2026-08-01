@@ -395,9 +395,13 @@ button:focus-visible {
   overflow: hidden;
   border: 3px solid rgba(255, 255, 255, 0.82);
   border-radius: 34px 34px 68px 68px;
-  background:
-    radial-gradient(ellipse at 82% 12%, rgba(255, 241, 174, 0.56), transparent 24%),
-    linear-gradient(180deg, #c9efe8 0%, #a5ddd9 35%, #4cbac1 36%, #168ea1 100%);
+  background-color: #62cdd7;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(14, 111, 132, 0.08)),
+    var(--pool-background);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   box-shadow:
     0 14px 0 rgba(18, 110, 126, 0.14),
     0 22px 42px rgba(17, 102, 116, 0.14),
@@ -414,7 +418,7 @@ button:focus-visible {
   width: 230px;
   height: 230px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 234, 154, 0.82), rgba(255, 241, 194, 0.18) 54%, transparent 72%);
+  background: radial-gradient(circle, rgba(255, 244, 194, 0.3), rgba(255, 241, 194, 0.08) 54%, transparent 72%);
   filter: blur(2px);
 }
 
@@ -426,7 +430,7 @@ button:focus-visible {
   border-radius: 99px;
   background: rgba(255, 255, 255, 0.5);
   filter: blur(0.3px);
-  opacity: 0.68;
+  opacity: 0;
 }
 
 .cloud::before,
@@ -473,6 +477,7 @@ button:focus-visible {
   border-radius: 50%;
   background: linear-gradient(180deg, rgba(123, 174, 155, 0.18), rgba(81, 144, 143, 0.08));
   filter: blur(1px);
+  opacity: 0;
 }
 
 .pool-rim {
@@ -490,6 +495,7 @@ button:focus-visible {
   box-shadow:
     0 11px 0 rgba(20, 105, 118, 0.13),
     inset 0 -4px rgba(199, 173, 134, 0.12);
+  opacity: 0;
 }
 
 .water-lines {
@@ -502,7 +508,7 @@ button:focus-visible {
     rgba(255, 255, 255, 0.16) 25px 27px,
     transparent 29px 54px
   );
-  opacity: 0.52;
+  opacity: 0.18;
   animation: water-drift 10s linear infinite;
 }
 
@@ -515,7 +521,7 @@ button:focus-visible {
     radial-gradient(ellipse at 72% 45%, rgba(255, 255, 255, 0.14) 0 3px, transparent 4px),
     radial-gradient(ellipse at 52% 74%, rgba(255, 255, 255, 0.13) 0 2px, transparent 3px);
   background-size: 83px 58px, 110px 74px, 91px 65px;
-  opacity: 0.55;
+  opacity: 0.2;
   animation: caustics 12s ease-in-out infinite alternate;
 }
 

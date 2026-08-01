@@ -67,3 +67,11 @@ test("進入網站會先載入並解碼全部 2D 體型素材", () => {
   assert.match(script, /interactionLock = true;/);
   assert.match(script, /interactionLock = false;/);
 });
+
+test("遊戲泳池沿用封面風格的乾淨背景並預先載入", () => {
+  assert.match(script, /pool-background-cover-v1\.jpg/);
+  assert.match(script, /--pool-background/);
+  assert.match(script, /`\$\{poolBackground\}\?v=\$\{ASSET_VERSION\}`/);
+  assert.match(styles, /var\(--pool-background\)/);
+  assert.match(styles, /background-size: cover;/);
+});
