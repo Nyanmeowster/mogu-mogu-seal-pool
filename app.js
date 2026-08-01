@@ -1,8 +1,10 @@
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "21";
+const ASSET_VERSION = "22";
 const STAT_LOSS_PER_HOUR = 4;
+const TRUST_LOSS_PER_HOUR = 1.2;
+const WATER_LOSS_PER_HOUR = 2;
 const PREVIEW_DEAD = new URLSearchParams(location.search).get("preview") === "dead";
 const QUERY_PARAMS = new URLSearchParams(location.search);
 const FORCE_REALTIME_3D = false;
@@ -43,9 +45,16 @@ const DECOR = [
 ];
 
 const FOODS = [
-  { icon: "🐟", name: "小魚", sound: "fish" },
-  { icon: "🦐", name: "甜蝦", sound: "shrimp" },
-  { icon: "🦑", name: "魷魚", sound: "squid" },
+  { icon: "🐟", name: "鯡魚", sound: "fish", health: 2, note: "油脂與蛋白質" },
+  { icon: "🦑", name: "魷魚", sound: "squid", energy: 3, note: "增加食物變化" },
+  { icon: "🦐", name: "甜蝦", sound: "shrimp", affection: 2, note: "小份環境豐富化" },
+];
+
+const CARE_ACTIONS = [
+  { id: "haul", icon: "🪨", name: "上岸休息", note: "恢復體力、調節體溫", cooldown: 15 * 60e3 },
+  { id: "clean", icon: "💧", name: "維護水質", note: "清除污染、補充循環", cooldown: 30 * 60e3 },
+  { id: "enrich", icon: "🧊", name: "探索活動", note: "藏食冰塊與嗅聞遊戲", cooldown: 10 * 60e3 },
+  { id: "check", icon: "🩺", name: "健康檢查", note: "觀察呼吸、眼睛與體態", cooldown: 60 * 60e3 },
 ];
 
 const STAGE_LABELS = ["", "纖細小海豹", "健康體型", "圓潤體型", "胖嘟嘟", "幸福圓滾滾"];
@@ -61,6 +70,9 @@ const fresh = () => {
   return {
     satiety: 35,
     affection: 20,
+    energy: 72,
+    waterQuality: 86,
+    health: 90,
     coins: 1000,
     lastFedAt: now,
     lastSeenAt: now,
@@ -72,6 +84,7 @@ const fresh = () => {
     dead: false,
     starterCoinsGranted: 1,
     soundOn: true,
+    careLog: {},
   };
 };
 
@@ -86,6 +99,9 @@ function normalizePet(raw) {
     ...raw,
     satiety: clamp(numberOr(raw?.satiety, base.satiety)),
     affection: clamp(numberOr(raw?.affection, base.affection)),
+    energy: clamp(numberOr(raw?.energy, base.energy)),
+    waterQuality: clamp(numberOr(raw?.waterQuality, base.waterQuality)),
+    health: clamp(numberOr(raw?.health, base.health)),
     coins: Math.max(0, numberOr(raw?.coins, base.coins)),
     lastFedAt: numberOr(raw?.lastFedAt, base.lastFedAt),
     lastSeenAt: numberOr(raw?.lastSeenAt, base.lastSeenAt),
@@ -96,6 +112,7 @@ function normalizePet(raw) {
     active: listOrEmpty(raw?.active),
     dead: Boolean(raw?.dead),
     soundOn: raw?.soundOn !== false,
+    careLog: raw?.careLog && typeof raw.careLog === "object" ? { ...raw.careLog } : {},
     starterCoinsGranted: raw?.starterCoinsGranted === 1 ? 1 : 0,
   };
   normalized.active = normalized.active.filter((id) => normalized.owned.includes(id));
@@ -197,11 +214,19 @@ function applyElapsedStats(now = Date.now()) {
   }
   const elapsed = Math.max(0, now - pet.lastStatAt);
   if (!elapsed) return;
-  const loss = (elapsed / HOUR) * STAT_LOSS_PER_HOUR;
-  pet.satiety = clamp(pet.satiety - loss);
-  pet.affection = clamp(pet.affection - loss);
+  const hours = elapsed / HOUR;
+  pet.satiety = clamp(pet.satiety - hours * STAT_LOSS_PER_HOUR);
+  pet.affection = clamp(pet.affection - hours * TRUST_LOSS_PER_HOUR);
+  pet.waterQuality = clamp(pet.waterQuality - hours * WATER_LOSS_PER_HOUR);
+  const stableHabitat = pet.satiety >= 25 && pet.waterQuality >= 40;
+  pet.energy = clamp(pet.energy + hours * (stableHabitat ? 2.5 : -3));
+  const healthRisk =
+    (pet.satiety < 20 ? 2 : 0) +
+    (pet.waterQuality < 35 ? 2.5 : 0) +
+    (pet.energy < 20 ? 1.5 : 0);
+  pet.health = clamp(pet.health + hours * (healthRisk ? -healthRisk : 0.35));
   pet.lastStatAt = now;
-  pet.dead = now - pet.lastFedAt >= FIVE_DAYS;
+  pet.dead = pet.health <= 0 || now - pet.lastFedAt >= FIVE_DAYS;
 }
 
 function collectOfflineCoins(elapsedMs) {
@@ -227,6 +252,9 @@ pet.dead = pet.dead || nowAtLoad - pet.lastFedAt >= FIVE_DAYS;
 if (PREVIEW_DEAD) {
   pet.satiety = 0;
   pet.affection = 0;
+  pet.energy = 0;
+  pet.waterQuality = 0;
+  pet.health = 0;
   pet.dead = true;
 }
 
@@ -297,13 +325,16 @@ function getSizeMorphBlend(value) {
 }
 
 function mood() {
-  if (pet.dead) return "永遠睡著了";
+  if (pet.dead) return "需要專業獸醫照護";
+  if (pet.health < 30) return "今天狀態不太好，請先做健康檢查";
+  if (pet.waterQuality < 35) return "水質變差了，游起來不舒服……";
+  if (pet.energy < 25) return "想上岸安靜休息一下……";
   if (pet.satiety < 15) return "肚子餓得沒有力氣了……";
   if (pet.satiety < 30) return "肚子咕嚕咕嚕……";
-  if (pet.affection < 20) return "可以多陪陪我嗎？";
+  if (pet.affection < 20) return "慢慢來，我還在熟悉照護員";
   if (pet.affection > 80 && pet.satiety > 75) return "最喜歡和你待在一起！";
   if (pet.satiety > 90) return "飽飽的，好幸福～";
-  return "今天要一起玩什麼？";
+  return "今天的呼吸、食慾和活動都很正常";
 }
 
 function preloadStage(stageNumber) {
@@ -1882,12 +1913,20 @@ function renderStats() {
   $("coins").textContent = Math.floor(pet.coins);
   $("satiety-text").textContent = `${Math.round(pet.satiety)}%`;
   $("affection-text").textContent = `${Math.round(pet.affection)}%`;
+  $("health-text").textContent = `${Math.round(pet.health)}%`;
+  $("water-text").textContent = `${Math.round(pet.waterQuality)}%`;
   $("satiety-bar").style.width = `${pet.satiety}%`;
   $("affection-bar").style.width = `${pet.affection}%`;
+  $("health-bar").style.width = `${pet.health}%`;
+  $("water-bar").style.width = `${pet.waterQuality}%`;
   $("satiety-meter").setAttribute("aria-valuenow", String(Math.round(pet.satiety)));
   $("affection-meter").setAttribute("aria-valuenow", String(Math.round(pet.affection)));
+  $("health-meter").setAttribute("aria-valuenow", String(Math.round(pet.health)));
+  $("water-meter").setAttribute("aria-valuenow", String(Math.round(pet.waterQuality)));
   setMeterState("satiety-status", pet.satiety);
   setMeterState("affection-status", pet.affection);
+  setMeterState("health-status", pet.health);
+  setMeterState("water-status", pet.waterQuality);
 }
 
 function renderDecorations() {
@@ -1918,7 +1957,8 @@ function renderSeal() {
   const nextSpriteImage = `url("${spriteAsset(nextStage)}")`;
   $("seal-sprite").style.backgroundImage = nextSpriteImage;
   $("seal-action-sprite").style.backgroundImage = nextSpriteImage;
-  $("stage-pill").textContent = STAGE_LABELS[nextStage];
+  const habitatState = pet.waterQuality >= 70 ? "水質清澈" : pet.waterQuality >= 40 ? "水質待維護" : "水質警報";
+  $("stage-pill").textContent = `${STAGE_LABELS[nextStage]} · ${habitatState}`;
   $("seal").setAttribute(
     "aria-label",
     mode === "pet" ? "摸摸小海豹，可以輕點或來回撫摸" : "和小海豹打招呼",
@@ -1928,7 +1968,7 @@ function renderSeal() {
 }
 
 function renderDrawer(force = false) {
-  const key = `${mode}:${pet.owned.join(",")}:${pet.active.join(",")}:${Math.floor(pet.coins)}`;
+  const key = `${mode}:${pet.owned.join(",")}:${pet.active.join(",")}:${Math.floor(pet.coins)}:${Math.floor(Date.now() / 60000)}:${Math.round(pet.energy)}`;
   if (!force && key === drawerKey) return;
   drawerKey = key;
   const drawer = $("drawer");
@@ -1939,16 +1979,28 @@ function renderDrawer(force = false) {
   }
   if (mode === "pet") {
     drawer.innerHTML =
-      '<div class="interaction-card"><span class="big-hand" aria-hidden="true">🫳</span><div><small>摸摸時間</small><h2>輕點，或在海豹身上來回撫摸</h2><p>摸到不同部位會有不同反應，能加更多好感</p></div></div>';
+      '<div class="interaction-card"><span class="big-hand" aria-hidden="true">🫳</span><div><small>信任建立</small><h2>輕柔互動，觀察牠是否願意靠近</h2><p>照護模擬中可輕點或撫摸；現實中的野生海豹請保持距離，不要觸摸或餵食。</p></div></div>';
   }
   if (mode === "feed") {
     drawer.innerHTML =
-      '<div class="drawer-title"><div><small>開飯啦</small><h2>今天想吃哪一個？</h2></div><span>每份增加 10% 飽足度</span></div><div class="food-grid">' +
+      '<div class="drawer-title"><div><small>多樣化海洋飲食</small><h2>輪替魚類與無脊椎動物</h2></div><span>海豹從獵物取得水分，每份增加 10% 飽足度</span></div><div class="food-grid">' +
       FOODS.map(
         (food, index) =>
-          `<button data-food="${index}" aria-label="餵小海豹吃${food.name}"><b aria-hidden="true">${food.icon}</b><span>${food.name}</span><small>飽足度 +10%</small></button>`,
+          `<button data-food="${index}" aria-label="餵小海豹吃${food.name}"><b aria-hidden="true">${food.icon}</b><span>${food.name}</span><small>${food.note} · 飽足 +10%</small></button>`,
       ).join("") +
       "</div>";
+  }
+  if (mode === "care") {
+    const now = Date.now();
+    drawer.innerHTML =
+      '<div class="drawer-title"><div><small>每日照護</small><h2>維持健康、休息與乾淨棲地</h2></div><span>體力 ' +
+      `${Math.round(pet.energy)}% · 真實海豹需要固定上岸休息</span></div><div class="care-grid">` +
+      CARE_ACTIONS.map((action) => {
+        const remaining = careCooldown(action, now);
+        const cooldownText = remaining ? `${Math.ceil(remaining / 60000)} 分鐘後可再做` : action.note;
+        return `<button data-care="${action.id}" ${remaining ? "disabled" : ""} aria-label="${action.name}，${cooldownText}"><b aria-hidden="true">${action.icon}</b><span>${action.name}</span><small>${cooldownText}</small></button>`;
+      }).join("") +
+      '</div><p class="care-fact">海豹會上岸休息、調節體溫與換毛；不需要一直保持濕潤。這是照護模擬，野生海豹依法應保持距離。</p>';
   }
   if (mode === "shop") {
     drawer.innerHTML =
@@ -1965,6 +2017,9 @@ function renderDrawer(force = false) {
   });
   drawer.querySelectorAll("[data-decor]").forEach((button) => {
     button.onclick = () => buy(DECOR[Number(button.dataset.decor)]);
+  });
+  drawer.querySelectorAll("[data-care]").forEach((button) => {
+    button.onclick = () => performCare(button.dataset.care);
   });
 }
 
@@ -2279,7 +2334,9 @@ function feed(food, sourceButton) {
   const delay = matchMedia("(prefers-reduced-motion: reduce)").matches ? 80 : 480;
   setTimeout(() => {
     pet.satiety = clamp(pet.satiety + satietyGain);
-    pet.affection = clamp(pet.affection + 1);
+    pet.affection = clamp(pet.affection + 1 + (food.affection || 0));
+    pet.health = clamp(pet.health + (food.health || 0));
+    pet.energy = clamp(pet.energy + (food.energy || 0));
     pet.lastFedAt = Date.now();
     pet.dead = false;
     showNotice(`${food.name}吃光光了！＋${satietyGain}%`, "success");
@@ -2293,6 +2350,51 @@ function feed(food, sourceButton) {
     navigator.vibrate?.([10, 35, 9]);
     setTimeout(() => setBusy(false), 1500);
   }, delay);
+}
+
+function careCooldown(action, now = Date.now()) {
+  const lastDone = Number(pet.careLog?.[action.id]) || 0;
+  return Math.max(0, action.cooldown - (now - lastDone));
+}
+
+function performCare(actionId) {
+  if (pet.dead || interactionLock) return;
+  const action = CARE_ACTIONS.find((item) => item.id === actionId);
+  if (!action || careCooldown(action)) return;
+  pet.careLog = { ...pet.careLog, [action.id]: Date.now() };
+  let message = "";
+  let reaction = "♥";
+  if (action.id === "haul") {
+    pet.energy = clamp(pet.energy + 24);
+    pet.affection = clamp(pet.affection + 3);
+    message = "牠在乾燥岩台上安心休息，體力恢復了";
+    reaction = "💤";
+  }
+  if (action.id === "clean") {
+    pet.waterQuality = clamp(pet.waterQuality + 35);
+    pet.health = clamp(pet.health + 3);
+    message = "循環與過濾完成，泳池水質恢復清澈";
+    reaction = "💧";
+  }
+  if (action.id === "enrich") {
+    pet.affection = clamp(pet.affection + 8);
+    pet.energy = clamp(pet.energy - 4);
+    pet.coins += 2;
+    message = "牠用鬍鬚探索藏食冰塊，獲得 2 枚海豹幣";
+    reaction = "✦";
+  }
+  if (action.id === "check") {
+    pet.health = clamp(pet.health + 12);
+    pet.affection = clamp(pet.affection + 2);
+    message = "呼吸、眼睛、皮膚與活動力都記錄完成";
+    reaction = "🩺";
+  }
+  showNotice(message, "success");
+  react("pet", reaction);
+  sound(action.id === "clean" ? "water" : "pet", action.id === "clean" ? "fin" : "belly");
+  navigator.vibrate?.(10);
+  drawerKey = "";
+  render(true, true);
 }
 
 function addPetTrail(x, y) {
@@ -2548,6 +2650,10 @@ setInterval(() => {
   renderStats();
   if (!actionActive) $("speech").textContent = mood();
   $("dead-overlay").hidden = !pet.dead;
+  if (mode === "care") {
+    drawerKey = "";
+    renderDrawer(true);
+  }
   safeSave();
 }, 6e4);
 

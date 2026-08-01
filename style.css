@@ -159,6 +159,19 @@ button:focus-visible {
   text-align: right;
 }
 
+.care-ethics {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 4px 0 8px;
+  color: #356b75;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
 .status-panel {
   position: relative;
   z-index: 20;
@@ -196,6 +209,14 @@ button:focus-visible {
   color: #e56283;
   background: #ffe2ea;
   font-size: 20px;
+}
+
+.health-status .status-icon {
+  background: #e3f4e8;
+}
+
+.water-status .status-icon {
+  background: #dff3fa;
 }
 
 .status-main {
@@ -250,6 +271,14 @@ button:focus-visible {
 
 .love-meter {
   background: linear-gradient(90deg, #ff9fb6, #e95f86);
+}
+
+.health-meter {
+  background: linear-gradient(90deg, #7fd39e, #26a773);
+}
+
+.water-meter {
+  background: linear-gradient(90deg, #82d9e8, #229ebc);
 }
 
 .pool-scene {
@@ -944,7 +973,8 @@ button:focus-visible {
 }
 
 .shop-grid,
-.food-grid {
+.food-grid,
+.care-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 9px;
@@ -955,7 +985,8 @@ button:focus-visible {
 }
 
 .shop-grid button,
-.food-grid button {
+.food-grid button,
+.care-grid button {
   min-width: 0;
   min-height: 94px;
   padding: 10px 7px;
@@ -968,19 +999,22 @@ button:focus-visible {
 }
 
 .shop-grid button:hover,
-.food-grid button:hover {
+.food-grid button:hover,
+.care-grid button:hover {
   border-color: rgba(231, 171, 78, 0.25);
   background: #fff4c8;
   transform: translateY(-2px);
 }
 
 .shop-grid button:active,
-.food-grid button:active {
+.food-grid button:active,
+.care-grid button:active {
   transform: translateY(1px) scale(0.98);
 }
 
 .shop-grid button:disabled,
-.food-grid button:disabled {
+.food-grid button:disabled,
+.care-grid button:disabled {
   cursor: wait;
   opacity: 0.64;
 }
@@ -995,13 +1029,15 @@ button:focus-visible {
 }
 
 .shop-grid b,
-.food-grid b {
+.food-grid b,
+.care-grid b {
   display: block;
   font-size: 31px;
 }
 
 .shop-grid span,
-.food-grid span {
+.food-grid span,
+.care-grid span {
   display: block;
   margin: 4px 0;
   font-size: 12px;
@@ -1009,11 +1045,37 @@ button:focus-visible {
 }
 
 .shop-grid small,
-.food-grid small {
+.food-grid small,
+.care-grid small {
   display: block;
   color: var(--ink-soft);
   font-size: 10px;
   line-height: 1.2;
+}
+
+.care-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.care-grid button {
+  background: #e9f6f5;
+}
+
+.care-grid button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+  opacity: 0.58;
+}
+
+.care-fact {
+  margin: 11px 2px 0;
+  padding: 9px 11px;
+  border-radius: 12px;
+  color: #356b75;
+  background: #e8f5f2;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .interaction-card {
@@ -1043,7 +1105,7 @@ button:focus-visible {
   bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   width: min(550px, calc(100% - 30px));
   padding: 8px;
@@ -1691,22 +1753,26 @@ button:focus-visible {
     text-align: left;
   }
 
-  .shop-grid {
+  .shop-grid,
+  .care-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
   .shop-grid button,
-  .food-grid button {
+  .food-grid button,
+  .care-grid button {
     min-height: 86px;
   }
 
   .shop-grid span,
-  .food-grid span {
+  .food-grid span,
+  .care-grid span {
     font-size: 11px;
   }
 
   .shop-grid small,
-  .food-grid small {
+  .food-grid small,
+  .care-grid small {
     font-size: 9px;
   }
 

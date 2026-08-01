@@ -3,3 +3,4 @@ dist/
 .wrangler/
 .pnpm-store/
 *.tgz
+.DS_Store
