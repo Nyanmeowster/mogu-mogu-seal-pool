@@ -28,7 +28,7 @@ import poolBackground from "./assets/pool-background-cover-v1.jpg";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "30";
+const ASSET_VERSION = "31";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -2029,9 +2029,10 @@ function renderDecorations() {
   if (nextKey === decorKey) return;
   decorKey = nextKey;
   $("decorations").innerHTML = DECOR.filter((item) => pet.active.includes(item.id))
-    .map(
-      (item, index) =>
-        `<span class="pool-decor ${item.className}" style="--decor-delay:-${index * 0.63}s" aria-hidden="true">${item.icon}</span>`,
+    .map((item, index) =>
+      item.id === "ring"
+        ? `<button class="pool-decor ${item.className}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" aria-label="拖曳甜甜圈泳圈和海豹玩">${item.icon}</button>`
+        : `<span class="pool-decor ${item.className}" style="--decor-delay:-${index * 0.63}s" aria-hidden="true">${item.icon}</span>`,
     )
     .join("");
 }
@@ -2607,6 +2608,75 @@ let trailDistance = 0;
 let gesturePetTriggered = false;
 let pointerZone = "";
 let suppressClick = false;
+let ringDrag = null;
+
+function ringTouchesSeal(ring) {
+  const ringRect = ring.getBoundingClientRect();
+  const sealRect = $("seal").getBoundingClientRect();
+  const overlapX = Math.max(0, Math.min(ringRect.right, sealRect.right) - Math.max(ringRect.left, sealRect.left));
+  const overlapY = Math.max(0, Math.min(ringRect.bottom, sealRect.bottom) - Math.max(ringRect.top, sealRect.top));
+  return overlapX * overlapY > Math.min(ringRect.width * ringRect.height, sealRect.width * sealRect.height) * 0.12;
+}
+
+function returnRingToPool(ring) {
+  ring.classList.remove("is-dragging");
+  ring.classList.add("is-returning");
+  ring.style.translate = "0px 0px";
+  setTimeout(() => ring.classList.remove("is-returning", "is-playing"), 620);
+}
+
+$("decorations").addEventListener("pointerdown", (event) => {
+  const ring = event.target.closest('[data-pool-toy="ring"]');
+  if (!ring || pet.dead || interactionLock) return;
+  ensureAudio(true);
+  const poolRect = $("pool").getBoundingClientRect();
+  const ringRect = ring.getBoundingClientRect();
+  ringDrag = {
+    ring,
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    minX: poolRect.left - ringRect.left,
+    maxX: poolRect.right - ringRect.right,
+    minY: poolRect.top - ringRect.top,
+    maxY: poolRect.bottom - ringRect.bottom,
+  };
+  ring.classList.remove("is-returning");
+  ring.classList.add("is-dragging");
+  ring.setPointerCapture?.(event.pointerId);
+  event.preventDefault();
+});
+
+$("decorations").addEventListener("pointermove", (event) => {
+  if (!ringDrag || event.pointerId !== ringDrag.pointerId) return;
+  const x = Math.min(ringDrag.maxX, Math.max(ringDrag.minX, event.clientX - ringDrag.startX));
+  const y = Math.min(ringDrag.maxY, Math.max(ringDrag.minY, event.clientY - ringDrag.startY));
+  ringDrag.ring.style.translate = `${x}px ${y}px`;
+  ringDrag.ring.classList.toggle("is-over-seal", ringTouchesSeal(ringDrag.ring));
+  event.preventDefault();
+});
+
+function finishRingDrag(event) {
+  if (!ringDrag || event.pointerId !== ringDrag.pointerId) return;
+  const ring = ringDrag.ring;
+  const touchedSeal = ringTouchesSeal(ring);
+  ring.classList.remove("is-over-seal");
+  ringDrag = null;
+  if (touchedSeal) {
+    pet.affection = clamp(pet.affection + 5);
+    ring.classList.add("is-playing");
+    showNotice("海豹鑽進甜甜圈泳圈玩水！信任度＋5", "success");
+    render();
+    react("pet", "🍩", "ring", "walk", "ring-play");
+    sound("water", "fin");
+    navigator.vibrate?.([12, 35, 12]);
+    safeSave();
+  }
+  returnRingToPool(ring);
+}
+
+$("decorations").addEventListener("pointerup", finishRingDrag);
+$("decorations").addEventListener("pointercancel", finishRingDrag);
 
 $("seal").addEventListener("pointerdown", (event) => {
   if (mode !== "pet" || pet.dead || interactionLock) return;

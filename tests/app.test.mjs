@@ -97,3 +97,15 @@ test("上岸休息會實際移動到背景石台並停留", () => {
   assert.match(styles, /translate: clamp\(64px, 21cqw, 152px\) -68px;/);
   assert.match(styles, /@keyframes rock-sleep/);
 });
+
+test("甜甜圈泳圈會依海豹比例放大並可拖曳互動", () => {
+  assert.match(script, /data-pool-toy="ring"/);
+  assert.match(script, /function ringTouchesSeal\(ring\)/);
+  assert.match(script, /pointermove/);
+  assert.match(script, /pet\.affection = clamp\(pet\.affection \+ 5\)/);
+  assert.match(script, /"ring-play"/);
+  assert.match(styles, /width: clamp\(150px, 42cqw, 220px\);/);
+  assert.match(styles, /touch-action: none;/);
+  assert.match(styles, /\.decor-ring\.is-over-seal/);
+  assert.match(styles, /@keyframes interaction-ring-play/);
+});
