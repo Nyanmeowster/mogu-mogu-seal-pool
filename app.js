@@ -23,7 +23,7 @@ import poolBackground from "./assets/pool-background-cover-v1.jpg";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "26";
+const ASSET_VERSION = "27";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;

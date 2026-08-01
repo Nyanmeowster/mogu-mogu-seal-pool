@@ -44,6 +44,13 @@ test("不同互動會切換對應姿勢與動作", () => {
   assert.match(styles, /@keyframes interaction-fin-swim/);
 });
 
+test("餵食後會有連續咀嚼動畫", () => {
+  assert.match(styles, /\.pet-seal\.eat \.seal-action-sprite/);
+  assert.match(styles, /animation: seal-chew-cycle 1\.32s ease-in-out;/);
+  assert.match(styles, /@keyframes seal-chew-cycle/);
+  assert.match(styles, /15%, 31%, 47%, 63%, 79%/);
+});
+
 test("真實照護狀態包含飽足、信任、健康與水質", () => {
   assert.match(styles, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/);
   assert.match(html, /id="satiety-status"/);

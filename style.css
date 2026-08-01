@@ -802,7 +802,9 @@ button:focus-visible {
 }
 
 .pet-seal.eat .seal-action-sprite {
-  animation: none;
+  animation: seal-chew-cycle 1.32s ease-in-out;
+  transform-origin: 36% 42%;
+  will-change: transform;
 }
 
 .pet-seal.pet .seal-action-sprite {
@@ -1535,6 +1537,21 @@ button:focus-visible {
   }
   84% {
     transform: translateY(1px) scale(0.998, 1.004);
+  }
+}
+
+@keyframes seal-chew-cycle {
+  0%, 8%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  15%, 31%, 47%, 63%, 79% {
+    transform: translateY(1.5px) scale(1.006, 0.982);
+  }
+  23%, 39%, 55%, 71%, 87% {
+    transform: translateY(-1px) scale(0.998, 1.012);
+  }
+  94% {
+    transform: translateY(0) scale(1.002, 0.996);
   }
 }
 
