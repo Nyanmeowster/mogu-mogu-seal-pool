@@ -863,7 +863,19 @@ button:focus-visible {
 }
 
 .pet-seal[data-motion="haul"] {
-  animation: interaction-haul-settle 1.12s ease-in-out;
+  animation: rock-rest-breathe 6.8s ease-in-out;
+}
+
+.seal-roamer.reacting.resting-on-rock {
+  z-index: 7;
+  animation: haul-out-to-rock 7.05s cubic-bezier(0.22, 0.72, 0.25, 1) both;
+  animation-play-state: running;
+}
+
+.reaction-icon[data-zone="haul"] {
+  top: 22%;
+  left: 42%;
+  animation: rock-sleep 6.5s ease-in-out forwards;
 }
 
 .pet-seal[data-motion="clean"] {
@@ -1641,6 +1653,37 @@ button:focus-visible {
   72% { transform: translateY(3px) scale(1.008, 0.993); }
 }
 
+@keyframes haul-out-to-rock {
+  0% {
+    translate: 0 0;
+    scale: 1;
+  }
+  18%, 78% {
+    translate: clamp(64px, 21cqw, 152px) -68px;
+    scale: 0.84;
+  }
+  84% {
+    translate: clamp(64px, 21cqw, 152px) -70px;
+    scale: 0.84;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes rock-rest-breathe {
+  0%, 18%, 78%, 100% { transform: translateY(0) rotate(0); }
+  32%, 60% { transform: translateY(2px) rotate(-0.35deg) scale(1.006, 0.994); }
+  46% { transform: translateY(0) rotate(0.25deg) scale(0.998, 1.004); }
+}
+
+@keyframes rock-sleep {
+  0%, 12%, 92%, 100% { opacity: 0; transform: translateY(8px) scale(0.6); }
+  25%, 72% { opacity: 1; transform: translateY(-8px) scale(1); }
+  48% { opacity: 0.72; transform: translate(10px, -22px) scale(1.1); }
+}
+
 @keyframes interaction-clean-splash {
   0%, 100% { transform: translateX(0) rotate(0); }
   22% { transform: translate(-8px, -4px) rotate(-1.4deg); }
@@ -2117,6 +2160,11 @@ button:focus-visible {
 
   .seal-roamer {
     transform: none !important;
+  }
+
+  .seal-roamer.resting-on-rock {
+    translate: clamp(64px, 21cqw, 152px) -68px !important;
+    scale: 0.84 !important;
   }
 
   .seal-sprite {

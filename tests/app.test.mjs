@@ -87,3 +87,13 @@ test("遊戲泳池沿用封面風格的乾淨背景並預先載入", () => {
   assert.match(styles, /var\(--pool-background\)/);
   assert.match(styles, /background-size: cover;/);
 });
+
+test("上岸休息會實際移動到背景石台並停留", () => {
+  assert.match(script, /resting-on-rock/);
+  assert.match(script, /motion === "haul" \? 7200/);
+  assert.match(script, /if \(motion === "haul"\) setBusy\(true\);/);
+  assert.match(styles, /\.seal-roamer\.reacting\.resting-on-rock/);
+  assert.match(styles, /@keyframes haul-out-to-rock/);
+  assert.match(styles, /translate: clamp\(64px, 21cqw, 152px\) -68px;/);
+  assert.match(styles, /@keyframes rock-sleep/);
+});
