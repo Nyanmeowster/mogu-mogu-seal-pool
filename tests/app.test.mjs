@@ -26,11 +26,22 @@ test("舊版連擊資料會在讀檔時清除", () => {
 test("固定沿用最終 2D 海豹素材", () => {
   assert.match(script, /const FORCE_SPRITE_FALLBACK = true;/);
   assert.match(script, /const SPRITE_ASSETS = \[/);
-  assert.equal((script.match(/seal-stage-[1-5](?:-(?:eat|pet))?\.webp/g) || []).length, 15);
+  assert.equal((script.match(/seal-stage-[1-5](?:-(?:eat|pet|walk))?\.webp/g) || []).length, 20);
   assert.match(html, /id="seal-art-wrap"/);
   assert.doesNotMatch(html, /seal-three-canvas|GLTFLoader|three\.min\.js/);
   assert.match(styles, /background-size: contain;/);
   assert.doesNotMatch(styles, /background-size: 300% 200%;/);
+});
+
+test("不同互動會切換對應姿勢與動作", () => {
+  assert.match(script, /function react\(kind, icon, zone = "", visualAsset = "", motion = ""\)/);
+  assert.match(script, /seal\.dataset\.motion = motion/);
+  assert.match(script, /const careVisuals = \{/);
+  assert.match(script, /const petVisuals = \{/);
+  assert.match(script, /feed-\$\{food\.sound\}/);
+  assert.match(styles, /data-motion="head"/);
+  assert.match(styles, /data-motion="enrich"/);
+  assert.match(styles, /@keyframes interaction-fin-swim/);
 });
 
 test("真實照護狀態包含飽足、信任、健康與水質", () => {
