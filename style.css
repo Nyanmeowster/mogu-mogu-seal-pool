@@ -766,16 +766,16 @@ button:focus-visible {
 
 .seal-sprite,
 .seal-action-sprite {
-  background-position: 0 0;
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: 300% 200%;
+  background-size: contain;
   pointer-events: none;
+  transition: opacity 0.12s ease;
   user-select: none;
 }
 
 .seal-sprite {
-  animation: seal-sprite-walk var(--roam-time) steps(1, end) infinite;
-  will-change: background-position;
+  will-change: opacity;
 }
 
 .seal-action-sprite {
@@ -796,11 +796,11 @@ button:focus-visible {
 }
 
 .pet-seal.eat .seal-action-sprite {
-  animation: seal-sprite-eat 1.38s steps(1, end) both;
+  animation: none;
 }
 
 .pet-seal.pet .seal-action-sprite {
-  animation: seal-sprite-pet 1.05s steps(1, end) both;
+  animation: none;
 }
 
 .pet-seal.eat {
@@ -1947,15 +1947,15 @@ button:focus-visible {
   }
 
   .seal-sprite {
-    background-position: 0 0 !important;
+    background-position: center !important;
   }
 
   .pet-seal.eat .seal-action-sprite {
-    background-position: 0 100% !important;
+    background-position: center !important;
   }
 
   .pet-seal.pet .seal-action-sprite {
-    background-position: 100% 100% !important;
+    background-position: center !important;
   }
 
   .reaction-icon,

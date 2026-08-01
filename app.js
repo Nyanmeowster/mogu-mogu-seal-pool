@@ -1,13 +1,23 @@
-import sealStage1Url from "./assets/seal-3d-v1/seal-stage-1-sprite.png";
-import sealStage2Url from "./assets/seal-3d-v1/seal-stage-2-sprite.png";
-import sealStage3Url from "./assets/seal-3d-v1/seal-stage-3-sprite.png";
-import sealStage4Url from "./assets/seal-3d-v1/seal-stage-4-sprite.png";
-import sealStage5Url from "./assets/seal-3d-v1/seal-stage-5-sprite.png";
+import sealStage1Idle from "./assets/seal-stage-1.webp";
+import sealStage1Eat from "./assets/seal-stage-1-eat.webp";
+import sealStage1Pet from "./assets/seal-stage-1-pet.webp";
+import sealStage2Idle from "./assets/seal-stage-2.webp";
+import sealStage2Eat from "./assets/seal-stage-2-eat.webp";
+import sealStage2Pet from "./assets/seal-stage-2-pet.webp";
+import sealStage3Idle from "./assets/seal-stage-3.webp";
+import sealStage3Eat from "./assets/seal-stage-3-eat.webp";
+import sealStage3Pet from "./assets/seal-stage-3-pet.webp";
+import sealStage4Idle from "./assets/seal-stage-4.webp";
+import sealStage4Eat from "./assets/seal-stage-4-eat.webp";
+import sealStage4Pet from "./assets/seal-stage-4-pet.webp";
+import sealStage5Idle from "./assets/seal-stage-5.webp";
+import sealStage5Eat from "./assets/seal-stage-5-eat.webp";
+import sealStage5Pet from "./assets/seal-stage-5-pet.webp";
 
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "23";
+const ASSET_VERSION = "24";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -66,10 +76,17 @@ const CARE_ACTIONS = [
 const STAGE_LABELS = ["", "纖細小海豹", "健康體型", "圓潤體型", "胖嘟嘟", "幸福圓滾滾"];
 const IDLE_LINES = ["噗嚕～水溫剛剛好", "今天也想和你待在一起", "小海豹正在巡視泳池", "要不要陪我玩一下？"];
 const SIZE_STOPS = [20, 40, 70, 90];
-const SPRITE_ASSETS = ["", sealStage1Url, sealStage2Url, sealStage3Url, sealStage4Url, sealStage5Url];
+const SPRITE_ASSETS = [
+  null,
+  { idle: sealStage1Idle, eat: sealStage1Eat, pet: sealStage1Pet },
+  { idle: sealStage2Idle, eat: sealStage2Eat, pet: sealStage2Pet },
+  { idle: sealStage3Idle, eat: sealStage3Eat, pet: sealStage3Pet },
+  { idle: sealStage4Idle, eat: sealStage4Eat, pet: sealStage4Pet },
+  { idle: sealStage5Idle, eat: sealStage5Eat, pet: sealStage5Pet },
+];
 const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
-const spriteAsset = (stageNumber) => `${SPRITE_ASSETS[stageNumber]}?v=${ASSET_VERSION}`;
+const spriteAsset = (stageNumber, action = "idle") => `${SPRITE_ASSETS[stageNumber][action]}?v=${ASSET_VERSION}`;
 
 const fresh = () => {
   const now = Date.now();
@@ -344,14 +361,10 @@ function mood() {
   return "今天的呼吸、食慾和活動都很正常";
 }
 
-function preloadStage(stageNumber) {
-  if (stageNumber < 1 || stageNumber > 5) return Promise.resolve(false);
-  if (preloaded.has(stageNumber) && spriteCache.has(stageNumber)) return Promise.resolve(true);
-  preloaded.add(stageNumber);
+function preloadImage(url) {
+  if (spriteCache.has(url)) return spriteCache.get(url);
   const image = new Image();
-  spriteCache.set(stageNumber, image);
-  image.src = spriteAsset(stageNumber);
-  return new Promise((resolve) => {
+  const promise = new Promise((resolve) => {
     let settled = false;
     const finish = async (loaded) => {
       if (settled) return;
@@ -369,8 +382,19 @@ function preloadStage(stageNumber) {
     const timeout = setTimeout(() => finish(false), 12000);
     image.onload = () => finish(true);
     image.onerror = () => finish(false);
+    image.src = url;
     if (image.complete) finish(image.naturalWidth > 0);
   });
+  spriteCache.set(url, promise);
+  return promise;
+}
+
+async function preloadStage(stageNumber) {
+  if (stageNumber < 1 || stageNumber > 5) return false;
+  if (preloaded.has(stageNumber)) return true;
+  const results = await Promise.all(Object.values(SPRITE_ASSETS[stageNumber]).map((url) => preloadImage(`${url}?v=${ASSET_VERSION}`)));
+  if (results.every(Boolean)) preloaded.add(stageNumber);
+  return results.every(Boolean);
 }
 
 function updateLoadingProgress(completed, total) {
@@ -384,17 +408,18 @@ function updateLoadingProgress(completed, total) {
 }
 
 async function preloadEssentialAssets() {
-  const stages = [1, 2, 3, 4, 5];
+  const urls = SPRITE_ASSETS.slice(1).flatMap((assets) => Object.values(assets).map((url) => `${url}?v=${ASSET_VERSION}`));
   let completed = 0;
-  updateLoadingProgress(0, stages.length);
+  updateLoadingProgress(0, urls.length);
   const results = await Promise.all(
-    stages.map(async (stageNumber) => {
-      const loaded = await preloadStage(stageNumber);
+    urls.map(async (url) => {
+      const loaded = await preloadImage(url);
       completed += 1;
-      updateLoadingProgress(completed, stages.length);
+      updateLoadingProgress(completed, urls.length);
       return loaded;
     }),
   );
+  [1, 2, 3, 4, 5].forEach((stageNumber) => preloaded.add(stageNumber));
   if (document.fonts?.ready) await document.fonts.ready;
   return results.every(Boolean);
 }
@@ -2009,9 +2034,8 @@ function renderSeal() {
     if (className.startsWith("stage-") && className !== "stage-changing") roamer.classList.remove(className);
   });
   roamer.classList.add(`stage-${nextStage}`);
-  const nextSpriteImage = `url("${spriteAsset(nextStage)}")`;
-  $("seal-sprite").style.backgroundImage = nextSpriteImage;
-  $("seal-action-sprite").style.backgroundImage = nextSpriteImage;
+  $("seal-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "idle")}")`;
+  $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "pet")}")`;
   const habitatState = pet.waterQuality >= 70 ? "水質清澈" : pet.waterQuality >= 40 ? "水質待維護" : "水質警報";
   $("stage-pill").textContent = `${STAGE_LABELS[nextStage]} · ${habitatState}`;
   $("seal").setAttribute(
@@ -2325,6 +2349,8 @@ function createParticles(kind, icon) {
 function react(kind, icon, zone = "") {
   const seal = $("seal");
   const roamer = $("seal-roamer");
+  const actionAsset = kind === "eat" ? "eat" : "pet";
+  $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), actionAsset)}")`;
   actionActive = kind;
   seal.classList.remove("eat", "pet");
   void seal.offsetWidth;
