@@ -1,7 +1,13 @@
+import sealStage1Url from "./assets/seal-3d-v1/seal-stage-1-sprite.png";
+import sealStage2Url from "./assets/seal-3d-v1/seal-stage-2-sprite.png";
+import sealStage3Url from "./assets/seal-3d-v1/seal-stage-3-sprite.png";
+import sealStage4Url from "./assets/seal-3d-v1/seal-stage-4-sprite.png";
+import sealStage5Url from "./assets/seal-3d-v1/seal-stage-5-sprite.png";
+
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "22";
+const ASSET_VERSION = "23";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -60,10 +66,10 @@ const CARE_ACTIONS = [
 const STAGE_LABELS = ["", "纖細小海豹", "健康體型", "圓潤體型", "胖嘟嘟", "幸福圓滾滾"];
 const IDLE_LINES = ["噗嚕～水溫剛剛好", "今天也想和你待在一起", "小海豹正在巡視泳池", "要不要陪我玩一下？"];
 const SIZE_STOPS = [20, 40, 70, 90];
+const SPRITE_ASSETS = ["", sealStage1Url, sealStage2Url, sealStage3Url, sealStage4Url, sealStage5Url];
 const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
-const spriteAsset = (stageNumber) =>
-  `${import.meta.env.BASE_URL}assets/seal-3d-v1/seal-stage-${stageNumber}-sprite.png?v=${ASSET_VERSION}`;
+const spriteAsset = (stageNumber) => `${SPRITE_ASSETS[stageNumber]}?v=${ASSET_VERSION}`;
 
 const fresh = () => {
   const now = Date.now();
@@ -152,6 +158,7 @@ let ambientGain;
 let ambientSource;
 let soundUnlocked = false;
 const preloaded = new Set();
+const spriteCache = new Map();
 let threeState = {
   enabled: false,
   ready: false,
@@ -338,10 +345,58 @@ function mood() {
 }
 
 function preloadStage(stageNumber) {
-  if (preloaded.has(stageNumber) || stageNumber < 1 || stageNumber > 5) return;
+  if (stageNumber < 1 || stageNumber > 5) return Promise.resolve(false);
+  if (preloaded.has(stageNumber) && spriteCache.has(stageNumber)) return Promise.resolve(true);
   preloaded.add(stageNumber);
   const image = new Image();
+  spriteCache.set(stageNumber, image);
   image.src = spriteAsset(stageNumber);
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = async (loaded) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      if (loaded && typeof image.decode === "function") {
+        try {
+          await image.decode();
+        } catch {
+          loaded = false;
+        }
+      }
+      resolve(loaded);
+    };
+    const timeout = setTimeout(() => finish(false), 12000);
+    image.onload = () => finish(true);
+    image.onerror = () => finish(false);
+    if (image.complete) finish(image.naturalWidth > 0);
+  });
+}
+
+function updateLoadingProgress(completed, total) {
+  const progress = Math.round((completed / total) * 100);
+  const bar = $("loading-bar");
+  const percent = $("loading-percent");
+  const label = $("loading-text");
+  if (bar) bar.style.width = `${progress}%`;
+  if (percent) percent.textContent = `${progress}%`;
+  if (label) label.textContent = completed < total ? `正在載入海豹素材 ${completed}/${total}…` : "素材準備完成";
+}
+
+async function preloadEssentialAssets() {
+  const stages = [1, 2, 3, 4, 5];
+  let completed = 0;
+  updateLoadingProgress(0, stages.length);
+  const results = await Promise.all(
+    stages.map(async (stageNumber) => {
+      const loaded = await preloadStage(stageNumber);
+      completed += 1;
+      updateLoadingProgress(completed, stages.length);
+      return loaded;
+    }),
+  );
+  if (document.fonts?.ready) await document.fonts.ready;
+  return results.every(Boolean);
 }
 
 function shouldUseRealtime3D() {
@@ -2672,4 +2727,22 @@ if (pet.dead) {
   $("notice").textContent = "小海豹正在等你～";
 }
 
-render();
+async function bootApp() {
+  const loader = $("app-loader");
+  const startedAt = performance.now();
+  interactionLock = true;
+  const allLoaded = await preloadEssentialAssets();
+  const minimumDisplayTime = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 450;
+  const remaining = minimumDisplayTime - (performance.now() - startedAt);
+  if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
+  if (!allLoaded && $("loading-text")) $("loading-text").textContent = "部分素材稍後會自動補載";
+  interactionLock = false;
+  render();
+  document.body.classList.add("app-ready");
+  requestAnimationFrame(() => loader?.classList.add("is-complete"));
+  setTimeout(() => {
+    if (loader) loader.hidden = true;
+  }, 320);
+}
+
+bootApp();
