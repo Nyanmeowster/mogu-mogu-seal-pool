@@ -4,22 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#bcebe8">
-  <meta name="description" content="用真實照護概念陪伴 2D 小海豹：飲食、休息、健康、水質與環境豐富化。">
+  <meta name="description" content="陪伴一隻有名字、有作息、會記得你的 2D 小海豹：真實照護、健康觀察、天氣季節、生活回憶與自主行為。">
   <meta property="og:type" content="website">
   <meta property="og:title" content="MOGU MOGU｜我的海豹泳池">
-  <meta property="og:description" content="用真實照護概念陪伴 2D 小海豹：飲食、休息、健康、水質與環境豐富化。">
-  <meta property="og:image" content="https://nyanmeowster.github.io/mogu-mogu-seal-pool/og.png">
+  <meta property="og:description" content="有名字、有作息，也會記得你。陪伴小海豹生活、照護、探索並累積共同回憶。">
+  <meta property="og:image" content="https://nyanmeowster.github.io/mogu-mogu-seal-pool/og-v2.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="MOGU MOGU｜我的海豹泳池">
-  <meta name="twitter:description" content="用真實照護概念陪伴 2D 小海豹：飲食、休息、健康、水質與環境豐富化。">
-  <meta name="twitter:image" content="https://nyanmeowster.github.io/mogu-mogu-seal-pool/og.png">
+  <meta name="twitter:description" content="有名字、有作息，也會記得你。陪伴小海豹生活、照護、探索並累積共同回憶。">
+  <meta name="twitter:image" content="https://nyanmeowster.github.io/mogu-mogu-seal-pool/og-v2.png">
   <title>MOGU MOGU｜我的海豹泳池</title>
-  <link rel="preload" as="image" href="/assets/seal-stage-1.webp?v=33">
-  <link rel="preload" as="image" href="/assets/seal-stage-2.webp?v=33">
-  <link rel="preload" as="image" href="/assets/seal-stage-3.webp?v=33">
-  <link rel="preload" as="image" href="/assets/seal-stage-4.webp?v=33">
-  <link rel="preload" as="image" href="/assets/seal-stage-5.webp?v=33">
-  <link rel="stylesheet" href="/style.css?v=33">
+  <link rel="preload" as="image" href="/assets/seal-stage-1.webp?v=34">
+  <link rel="preload" as="image" href="/assets/seal-stage-2.webp?v=34">
+  <link rel="preload" as="image" href="/assets/seal-stage-3.webp?v=34">
+  <link rel="preload" as="image" href="/assets/seal-stage-4.webp?v=34">
+  <link rel="preload" as="image" href="/assets/seal-stage-5.webp?v=34">
+  <link rel="stylesheet" href="/style.css?v=34">
 </head>
 <body>
   <div id="app-loader" class="app-loader" role="status" aria-live="polite" aria-label="正在準備海豹泳池">
@@ -34,7 +34,7 @@
   </div>
   <main class="pet-app">
     <header class="pet-header">
-      <div class="pet-brand"><span>●</span><div><small>MOGU MOGU</small><h1>我的海豹泳池</h1></div></div>
+      <div class="pet-brand"><span>●</span><div><small>MOGU MOGU</small><h1><b id="seal-name-title">Mogu</b> 的海豹泳池</h1></div></div>
       <div class="header-actions">
         <button id="sound-toggle" class="sound-toggle" type="button" aria-label="關閉音效" aria-pressed="false"><span aria-hidden="true">🔊</span></button>
         <div class="coin-pill" aria-label="海豹幣"><span aria-hidden="true">🪙</span><strong id="coins">1000</strong></div>
@@ -43,6 +43,7 @@
     <p class="care-ethics"><span aria-hidden="true">🌊</span> 專業照護模擬 · 野生海豹受保護，請勿靠近、觸摸或餵食</p>
     <section class="life-strip" aria-label="海豹生活狀態">
       <div><span id="phase-icon" aria-hidden="true">☀️</span><small>目前作息</small><strong id="phase-label">白日探索</strong></div>
+      <div><span id="weather-icon" aria-hidden="true">🍃</span><small>季節天氣</small><strong id="weather-label">涼爽微風</strong></div>
       <div><span id="personality-icon" aria-hidden="true">🤍</span><small>海豹個性</small><strong id="personality-label">溫柔黏人</strong></div>
       <div><span aria-hidden="true">📖</span><small>共同回憶</small><strong id="memory-count">0 則</strong></div>
     </section>
@@ -81,7 +82,15 @@
     <div id="dead-overlay" class="dead-overlay" role="dialog" aria-modal="true" aria-labelledby="dead-title" hidden>
       <div class="dead-card"><span>🚑</span><small>健康狀態亮紅燈</small><h2 id="dead-title">已交由專業獸醫照護</h2><p>規律餵食、上岸休息、乾淨水質與健康檢查都很重要。</p><button id="adopt">重新開始照護</button></div>
     </div>
+    <div id="profile-overlay" class="profile-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-title" hidden>
+      <form id="profile-form" class="profile-card">
+        <span class="profile-seal" aria-hidden="true">●ᴥ●</span><small>建立專屬身分</small><h2 id="profile-title">牠要叫什麼名字？</h2><p>名字與相遇日會保存在生活紀錄裡，之後也能修改。</p>
+        <label>海豹名字<input id="profile-name" name="name" maxlength="12" value="Mogu" autocomplete="off" required></label>
+        <label>生日或相遇日<input id="profile-birthday" name="birthday" type="date"></label>
+        <button type="submit">開始一起生活</button>
+      </form>
+    </div>
   </main>
-  <script type="module" src="/app.js?v=33"></script>
+  <script type="module" src="/app.js?v=34"></script>
 </body>
 </html>

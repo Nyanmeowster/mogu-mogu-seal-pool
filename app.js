@@ -4,37 +4,67 @@ import sealStage1Chew from "./assets/seal-stage-1-eat-closed-v2.webp";
 import sealStage1Pet from "./assets/seal-stage-1-pet.webp";
 import sealStage1Walk from "./assets/seal-stage-1-walk.webp";
 import sealStage1Ring from "./assets/seal-stage-1-doflamingo-ring.webp";
+import sealStage1Swim from "./assets/seal-stage-1-swim-v1.webp";
+import sealStage1Haul from "./assets/seal-stage-1-haul-v1.webp";
+import sealStage1Sleep from "./assets/seal-stage-1-sleep-v1.webp";
+import sealStage1Sniff from "./assets/seal-stage-1-sniff-v1.webp";
+import sealStage1Approach from "./assets/seal-stage-1-approach-v1.webp";
+import sealStage1Space from "./assets/seal-stage-1-space-v1.webp";
 import sealStage2Idle from "./assets/seal-stage-2.webp";
 import sealStage2Eat from "./assets/seal-stage-2-eat.webp";
 import sealStage2Chew from "./assets/seal-stage-2-eat-closed-v2.webp";
 import sealStage2Pet from "./assets/seal-stage-2-pet.webp";
 import sealStage2Walk from "./assets/seal-stage-2-walk.webp";
 import sealStage2Ring from "./assets/seal-stage-2-doflamingo-ring.webp";
+import sealStage2Swim from "./assets/seal-stage-2-swim-v1.webp";
+import sealStage2Haul from "./assets/seal-stage-2-haul-v1.webp";
+import sealStage2Sleep from "./assets/seal-stage-2-sleep-v1.webp";
+import sealStage2Sniff from "./assets/seal-stage-2-sniff-v1.webp";
+import sealStage2Approach from "./assets/seal-stage-2-approach-v1.webp";
+import sealStage2Space from "./assets/seal-stage-2-space-v1.webp";
 import sealStage3Idle from "./assets/seal-stage-3.webp";
 import sealStage3Eat from "./assets/seal-stage-3-eat.webp";
 import sealStage3Chew from "./assets/seal-stage-3-eat-closed-v2.webp";
 import sealStage3Pet from "./assets/seal-stage-3-pet.webp";
 import sealStage3Walk from "./assets/seal-stage-3-walk.webp";
 import sealStage3Ring from "./assets/seal-stage-3-doflamingo-ring.webp";
+import sealStage3Swim from "./assets/seal-stage-3-swim-v1.webp";
+import sealStage3Haul from "./assets/seal-stage-3-haul-v1.webp";
+import sealStage3Sleep from "./assets/seal-stage-3-sleep-v1.webp";
+import sealStage3Sniff from "./assets/seal-stage-3-sniff-v1.webp";
+import sealStage3Approach from "./assets/seal-stage-3-approach-v1.webp";
+import sealStage3Space from "./assets/seal-stage-3-space-v1.webp";
 import sealStage4Idle from "./assets/seal-stage-4.webp";
 import sealStage4Eat from "./assets/seal-stage-4-eat.webp";
 import sealStage4Chew from "./assets/seal-stage-4-eat-closed-v2.webp";
 import sealStage4Pet from "./assets/seal-stage-4-pet.webp";
 import sealStage4Walk from "./assets/seal-stage-4-walk.webp";
 import sealStage4Ring from "./assets/seal-stage-4-doflamingo-ring.webp";
+import sealStage4Swim from "./assets/seal-stage-4-swim-v1.webp";
+import sealStage4Haul from "./assets/seal-stage-4-haul-v1.webp";
+import sealStage4Sleep from "./assets/seal-stage-4-sleep-v1.webp";
+import sealStage4Sniff from "./assets/seal-stage-4-sniff-v1.webp";
+import sealStage4Approach from "./assets/seal-stage-4-approach-v1.webp";
+import sealStage4Space from "./assets/seal-stage-4-space-v1.webp";
 import sealStage5Idle from "./assets/seal-stage-5.webp";
 import sealStage5Eat from "./assets/seal-stage-5-eat.webp";
 import sealStage5Chew from "./assets/seal-stage-5-eat-closed-v2.webp";
 import sealStage5Pet from "./assets/seal-stage-5-pet.webp";
 import sealStage5Walk from "./assets/seal-stage-5-walk.webp";
 import sealStage5Ring from "./assets/seal-stage-5-doflamingo-ring.webp";
+import sealStage5Swim from "./assets/seal-stage-5-swim-v1.webp";
+import sealStage5Haul from "./assets/seal-stage-5-haul-v1.webp";
+import sealStage5Sleep from "./assets/seal-stage-5-sleep-v1.webp";
+import sealStage5Sniff from "./assets/seal-stage-5-sniff-v1.webp";
+import sealStage5Approach from "./assets/seal-stage-5-approach-v1.webp";
+import sealStage5Space from "./assets/seal-stage-5-space-v1.webp";
 import poolBackground from "./assets/pool-background-cover-v1.jpg";
 import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
 
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "33";
+const ASSET_VERSION = "34";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -78,9 +108,9 @@ const DECOR = [
 ];
 
 const FOODS = [
-  { icon: "🐟", name: "鯡魚", sound: "fish", health: 2, note: "油脂與蛋白質" },
-  { icon: "🦑", name: "魷魚", sound: "squid", energy: 3, note: "增加食物變化" },
-  { icon: "🦐", name: "甜蝦", sound: "shrimp", affection: 2, note: "小份環境豐富化" },
+  { id: "fish", icon: "🐟", name: "鯡魚", sound: "fish", health: 2, note: "油脂與蛋白質", restock: 3 },
+  { id: "squid", icon: "🦑", name: "魷魚", sound: "squid", energy: 3, note: "增加食物變化", restock: 3 },
+  { id: "shrimp", icon: "🦐", name: "甜蝦", sound: "shrimp", affection: 2, note: "小份環境豐富化", restock: 3 },
 ];
 
 const CARE_ACTIONS = [
@@ -103,14 +133,36 @@ const DAILY_GOALS = [
   { id: "care", label: "完成 2 次專業照護", target: 2, icon: "🩺" },
   { id: "play", label: "陪伴或遊戲 2 次", target: 2, icon: "♥" },
 ];
+const WEATHER_TYPES = [
+  { id: "sunny", icon: "☀️", label: "晴朗", energy: 0.25, water: -0.15 },
+  { id: "cloudy", icon: "☁️", label: "多雲", energy: 0.08, water: 0 },
+  { id: "drizzle", icon: "🌦️", label: "短暫細雨", energy: -0.05, water: 0.08 },
+  { id: "breeze", icon: "🍃", label: "涼爽微風", energy: 0.18, water: 0.04 },
+];
+const HEALTH_EVENTS = {
+  appetite: { icon: "🐟", title: "食慾降低", detail: "牠反覆嗅聞食物卻沒有立刻靠近。", action: "check", hint: "先完成健康檢查，確認活動力與呼吸。" },
+  eyes: { icon: "👁️", title: "眼睛需要觀察", detail: "眼角看起來比平常濕潤。", action: "check", hint: "記錄眼睛狀況並安排健康檢查。" },
+  skin: { icon: "🦭", title: "皮膚狀態變化", detail: "上岸後有一小塊皮膚看起來乾燥。", action: "clean", hint: "先確認水質與循環系統。" },
+  tired: { icon: "💤", title: "活動力下降", detail: "牠今天游動的時間明顯變少。", action: "haul", hint: "讓牠安靜上岸休息並持續觀察。" },
+};
+const ACHIEVEMENTS = [
+  { id: "hello", icon: "🏡", title: "第一天的相遇", detail: "完成海豹身分設定", reward: 3 },
+  { id: "variety", icon: "🍽️", title: "營養輪替", detail: "近期餵過三種不同食物", reward: 5 },
+  { id: "clean-water", icon: "💎", title: "清澈泳池", detail: "水質維持在 90% 以上", reward: 5 },
+  { id: "trusted", icon: "🤍", title: "熟悉的照護員", detail: "信任度達到 60%", reward: 8 },
+  { id: "ring-friend", icon: "🦩", title: "泳圈好朋友", detail: "和羽毛泳圈互動三次", reward: 6 },
+  { id: "care-pro", icon: "🩺", title: "細心照護", detail: "累積完成十次照護", reward: 10 },
+  { id: "week", icon: "📅", title: "七日陪伴", detail: "累積七個不同日期的紀錄", reward: 15 },
+  { id: "best-friend", icon: "🏅", title: "親密夥伴", detail: "信任與健康同時達到 90%", reward: 20 },
+];
 const SIZE_STOPS = [20, 40, 70, 90];
 const SPRITE_ASSETS = [
   null,
-  { idle: sealStage1Idle, eat: sealStage1Eat, chew: sealStage1Chew, pet: sealStage1Pet, walk: sealStage1Walk, ring: sealStage1Ring },
-  { idle: sealStage2Idle, eat: sealStage2Eat, chew: sealStage2Chew, pet: sealStage2Pet, walk: sealStage2Walk, ring: sealStage2Ring },
-  { idle: sealStage3Idle, eat: sealStage3Eat, chew: sealStage3Chew, pet: sealStage3Pet, walk: sealStage3Walk, ring: sealStage3Ring },
-  { idle: sealStage4Idle, eat: sealStage4Eat, chew: sealStage4Chew, pet: sealStage4Pet, walk: sealStage4Walk, ring: sealStage4Ring },
-  { idle: sealStage5Idle, eat: sealStage5Eat, chew: sealStage5Chew, pet: sealStage5Pet, walk: sealStage5Walk, ring: sealStage5Ring },
+  { idle: sealStage1Idle, eat: sealStage1Eat, chew: sealStage1Chew, pet: sealStage1Pet, walk: sealStage1Walk, ring: sealStage1Ring, swim: sealStage1Swim, haul: sealStage1Haul, sleep: sealStage1Sleep, sniff: sealStage1Sniff, approach: sealStage1Approach, space: sealStage1Space },
+  { idle: sealStage2Idle, eat: sealStage2Eat, chew: sealStage2Chew, pet: sealStage2Pet, walk: sealStage2Walk, ring: sealStage2Ring, swim: sealStage2Swim, haul: sealStage2Haul, sleep: sealStage2Sleep, sniff: sealStage2Sniff, approach: sealStage2Approach, space: sealStage2Space },
+  { idle: sealStage3Idle, eat: sealStage3Eat, chew: sealStage3Chew, pet: sealStage3Pet, walk: sealStage3Walk, ring: sealStage3Ring, swim: sealStage3Swim, haul: sealStage3Haul, sleep: sealStage3Sleep, sniff: sealStage3Sniff, approach: sealStage3Approach, space: sealStage3Space },
+  { idle: sealStage4Idle, eat: sealStage4Eat, chew: sealStage4Chew, pet: sealStage4Pet, walk: sealStage4Walk, ring: sealStage4Ring, swim: sealStage4Swim, haul: sealStage4Haul, sleep: sealStage4Sleep, sniff: sealStage4Sniff, approach: sealStage4Approach, space: sealStage4Space },
+  { idle: sealStage5Idle, eat: sealStage5Eat, chew: sealStage5Chew, pet: sealStage5Pet, walk: sealStage5Walk, ring: sealStage5Ring, swim: sealStage5Swim, haul: sealStage5Haul, sleep: sealStage5Sleep, sniff: sealStage5Sniff, approach: sealStage5Approach, space: sealStage5Space },
 ];
 const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
@@ -120,6 +172,20 @@ document.documentElement.style.setProperty("--pool-background", `url("${poolBack
 function localDayKey(stamp = Date.now()) {
   const date = new Date(stamp);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function seasonProfile(stamp = Date.now()) {
+  const month = new Date(stamp).getMonth() + 1;
+  if ([3, 4, 5].includes(month)) return { id: "spring", icon: "🌱", label: "春季換毛期" };
+  if ([6, 7, 8].includes(month)) return { id: "summer", icon: "🌿", label: "夏季避暑期" };
+  if ([9, 10, 11].includes(month)) return { id: "autumn", icon: "🍂", label: "秋季活躍期" };
+  return { id: "winter", icon: "❄️", label: "冬季保暖期" };
+}
+
+function weatherToday(stamp = Date.now()) {
+  const key = localDayKey(stamp);
+  const score = [...key].reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 3), 0);
+  return WEATHER_TYPES[score % WEATHER_TYPES.length];
 }
 
 function normalizeDaily(value) {
@@ -164,6 +230,14 @@ const fresh = () => {
     lastRestAt: 0,
     lastCleanAt: 0,
     interactionFatigue: 0,
+    name: "Mogu",
+    birthday: "",
+    profileComplete: false,
+    inventory: { fish: 4, squid: 3, shrimp: 3 },
+    currentHealthEvent: "",
+    lastHealthEventDay: "",
+    lifetime: { feeds: 0, care: 0, play: 0, ring: 0, days: [localDayKey(now)] },
+    achievements: [],
   };
 };
 
@@ -201,6 +275,24 @@ function normalizePet(raw) {
     lastRestAt: numberOr(raw?.lastRestAt, 0),
     lastCleanAt: numberOr(raw?.lastCleanAt, 0),
     interactionFatigue: clamp(numberOr(raw?.interactionFatigue, 0)),
+    name: typeof raw?.name === "string" && raw.name.trim() ? raw.name.trim().replace(/[<>&"]/g, "").slice(0, 12) || base.name : base.name,
+    birthday: typeof raw?.birthday === "string" ? raw.birthday.slice(0, 10) : "",
+    profileComplete: Boolean(raw?.profileComplete),
+    inventory: {
+      fish: Math.max(0, Math.floor(numberOr(raw?.inventory?.fish, base.inventory.fish))),
+      squid: Math.max(0, Math.floor(numberOr(raw?.inventory?.squid, base.inventory.squid))),
+      shrimp: Math.max(0, Math.floor(numberOr(raw?.inventory?.shrimp, base.inventory.shrimp))),
+    },
+    currentHealthEvent: HEALTH_EVENTS[raw?.currentHealthEvent] ? raw.currentHealthEvent : "",
+    lastHealthEventDay: typeof raw?.lastHealthEventDay === "string" ? raw.lastHealthEventDay : "",
+    lifetime: {
+      feeds: Math.max(0, numberOr(raw?.lifetime?.feeds, 0)),
+      care: Math.max(0, numberOr(raw?.lifetime?.care, 0)),
+      play: Math.max(0, numberOr(raw?.lifetime?.play, 0)),
+      ring: Math.max(0, numberOr(raw?.lifetime?.ring, 0)),
+      days: Array.isArray(raw?.lifetime?.days) ? [...new Set(raw.lifetime.days.filter((day) => typeof day === "string"))].slice(-60) : [localDayKey()],
+    },
+    achievements: Array.isArray(raw?.achievements) ? [...new Set(raw.achievements.filter((id) => ACHIEVEMENTS.some((item) => item.id === id)))] : [],
     starterCoinsGranted: raw?.starterCoinsGranted === 1 ? 1 : 0,
   };
   normalized.active = normalized.active.filter((id) => normalized.owned.includes(id));
@@ -249,7 +341,50 @@ function personalityProfile() {
 }
 
 function ensureCurrentDay() {
-  if (pet.daily?.date !== localDayKey()) pet.daily = normalizeDaily(null);
+  const today = localDayKey();
+  if (pet.daily?.date !== today) pet.daily = normalizeDaily(null);
+  if (!pet.lifetime.days.includes(today)) pet.lifetime.days = [...pet.lifetime.days, today].slice(-60);
+  maybeCreateHealthEvent(today);
+}
+
+function maybeCreateHealthEvent(today = localDayKey()) {
+  if (pet.currentHealthEvent || pet.lastHealthEventDay === today || pet.dead) return;
+  const risks = [];
+  if (pet.satiety < 35 || new Set(pet.recentFoods.slice(-4)).size < 2) risks.push("appetite");
+  if (pet.health < 70) risks.push("eyes");
+  if (pet.waterQuality < 58) risks.push("skin");
+  if (pet.energy < 42) risks.push("tired");
+  const dateScore = [...today].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  if (risks.length && dateScore % 3 === 0) {
+    pet.currentHealthEvent = risks[dateScore % risks.length];
+    pet.lastHealthEventDay = today;
+    const event = HEALTH_EVENTS[pet.currentHealthEvent];
+    addActivity("health", `觀察到：${event.title}`, event.icon);
+  }
+}
+
+function achievementUnlocked(id) {
+  const variety = new Set(pet.recentFoods.slice(-4)).size;
+  if (id === "hello") return pet.profileComplete;
+  if (id === "variety") return variety >= 3;
+  if (id === "clean-water") return pet.waterQuality >= 90;
+  if (id === "trusted") return pet.affection >= 60;
+  if (id === "ring-friend") return pet.lifetime.ring >= 3;
+  if (id === "care-pro") return pet.lifetime.care >= 10;
+  if (id === "week") return pet.lifetime.days.length >= 7;
+  if (id === "best-friend") return pet.affection >= 90 && pet.health >= 90;
+  return false;
+}
+
+function checkAchievements(silent = false) {
+  const unlocked = ACHIEVEMENTS.filter((item) => !pet.achievements.includes(item.id) && achievementUnlocked(item.id));
+  if (!unlocked.length) return;
+  unlocked.forEach((item) => {
+    pet.achievements.push(item.id);
+    pet.coins += item.reward;
+    addActivity("milestone", `解鎖成就「${item.title}」`, item.icon);
+  });
+  if (!silent) showNotice(`解鎖成就：${unlocked[0].title}！`, "success");
 }
 
 function addActivity(type, text, icon = "•") {
@@ -267,9 +402,11 @@ function updateDaily(kind, foodName = "") {
   ensureCurrentDay();
   if (kind === "feed") {
     pet.daily.feed += 1;
+    pet.lifetime.feeds += 1;
     if (foodName) pet.daily.foods = [...new Set([...pet.daily.foods, foodName])].slice(-3);
   } else if (kind in pet.daily) {
     pet.daily[kind] += 1;
+    pet.lifetime[kind] = (pet.lifetime[kind] || 0) + 1;
   }
   const complete = DAILY_GOALS.every((goal) => {
     const value = goal.id === "feed" ? pet.daily.foods.length : pet.daily[goal.id];
@@ -281,6 +418,7 @@ function updateDaily(kind, foodName = "") {
     addActivity("milestone", "完成今天的照護目標，獲得 10 枚海豹幣", "🏅");
     showNotice("今日照護目標完成！海豹幣＋10", "success");
   }
+  checkAchievements(true);
 }
 
 function vibrate(pattern) {
@@ -349,12 +487,15 @@ function applyElapsedStats(now = Date.now()) {
   const elapsed = Math.max(0, now - pet.lastStatAt);
   if (!elapsed) return;
   const hours = elapsed / HOUR;
+  const weather = weatherToday(now);
+  const season = seasonProfile(now);
   pet.satiety = clamp(pet.satiety - hours * STAT_LOSS_PER_HOUR);
   pet.affection = clamp(pet.affection - hours * TRUST_LOSS_PER_HOUR);
-  pet.waterQuality = clamp(pet.waterQuality - hours * WATER_LOSS_PER_HOUR);
+  const seasonalWaterLoss = season.id === "summer" ? 0.45 : season.id === "winter" ? -0.18 : 0;
+  pet.waterQuality = clamp(pet.waterQuality - hours * (WATER_LOSS_PER_HOUR + seasonalWaterLoss + weather.water));
   pet.interactionFatigue = clamp(pet.interactionFatigue - hours * 18);
   const stableHabitat = pet.satiety >= 25 && pet.waterQuality >= 40;
-  pet.energy = clamp(pet.energy + hours * (stableHabitat ? 2.5 : -3));
+  pet.energy = clamp(pet.energy + hours * (stableHabitat ? 2.5 + weather.energy : -3));
   const dietVariety = new Set(pet.recentFoods.slice(-4)).size;
   const overdueRest = pet.lastRestAt && now - pet.lastRestAt > 18 * HOUR;
   const overdueClean = pet.lastCleanAt && now - pet.lastCleanAt > 24 * HOUR;
@@ -494,18 +635,18 @@ function chooseAutonomousBehavior() {
   const phase = dayPhase();
   const profile = personalityProfile();
   if (pet.energy < 28 || phase.id === "night" || profile.id === "sleepy" && Math.random() < 0.5) {
-    return { id: "rest", asset: "idle", icon: "💤", line: "小海豹自己爬上岩台休息了", duration: 6200 };
+    return { id: "rest", asset: "sleep", icon: "💤", line: `${pet.name} 自己爬上岩台休息了`, duration: 6200 };
   }
   if (pet.satiety < 25 || profile.id === "foodie" && Math.random() < 0.45) {
-    return { id: "forage", asset: "walk", icon: "🐟", line: "牠正在水邊嗅聞，尋找熟悉的食物氣味", duration: 4200 };
+    return { id: "forage", asset: "sniff", icon: "🐟", line: "牠正在水邊嗅聞，尋找熟悉的食物氣味", duration: 4200 };
   }
   if (pet.active.length && (profile.id === "curious" || Math.random() < 0.45)) {
-    return { id: "explore", asset: "walk", icon: "✨", line: "牠主動靠近泳池玩具研究了一會兒", duration: 4400 };
+    return { id: "explore", asset: "sniff", icon: "✨", line: "牠主動靠近泳池玩具研究了一會兒", duration: 4400 };
   }
   if (pet.affection > 55 && (profile.id === "gentle" || Math.random() < 0.5)) {
-    return { id: "approach", asset: "pet", icon: "🤍", line: "牠認出你了，主動游過來靠近", duration: 4000 };
+    return { id: "approach", asset: "approach", icon: "🤍", line: "牠認出你了，主動游過來靠近", duration: 4000 };
   }
-  return { id: "swim", asset: "walk", icon: "💧", line: "小海豹正在泳池裡自主巡游", duration: 4300 };
+  return { id: "swim", asset: "swim", icon: "💧", line: `${pet.name} 正在泳池裡自主巡游`, duration: 4300 };
 }
 
 function runAutonomousBehavior() {
@@ -2176,12 +2317,19 @@ function renderStats() {
 function renderLifeStrip() {
   const phase = dayPhase();
   const profile = personalityProfile();
+  const weather = weatherToday();
+  const season = seasonProfile();
+  $("seal-name-title").textContent = pet.name;
   $("phase-icon").textContent = phase.icon;
   $("phase-label").textContent = phase.label;
+  $("weather-icon").textContent = weather.icon;
+  $("weather-label").textContent = `${season.icon} ${weather.label}`;
   $("personality-icon").textContent = profile.icon;
   $("personality-label").textContent = profile.name;
   $("memory-count").textContent = `${pet.memories.length} 則`;
   $("pool").dataset.phase = phase.id;
+  $("pool").dataset.weather = weather.id;
+  $("pool").dataset.season = season.id;
 }
 
 function observationSummary() {
@@ -2197,6 +2345,69 @@ function observationSummary() {
 
 function formatLogTime(stamp) {
   return new Intl.DateTimeFormat("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(stamp);
+}
+
+function escapeAttribute(value) {
+  return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+function normalizeName(value) {
+  return String(value || "").trim().replace(/[<>&"]/g, "").slice(0, 12) || "Mogu";
+}
+
+function saveIdentity(name, birthday = "") {
+  const wasComplete = pet.profileComplete;
+  pet.name = normalizeName(name);
+  const validBirthday = /^\d{4}-\d{2}-\d{2}$/.test(birthday) && birthday <= localDayKey();
+  pet.birthday = validBirthday ? birthday : "";
+  pet.profileComplete = true;
+  if (!wasComplete) addActivity("milestone", `${pet.name} 正式加入泳池`, "🏡");
+  checkAchievements();
+  drawerKey = "";
+  render(true, true);
+}
+
+function saveProfileFromJournal() {
+  saveIdentity($("journal-name")?.value, $("journal-birthday")?.value);
+  showNotice("海豹身分已更新", "success");
+}
+
+function exportSave() {
+  safeSave();
+  const payload = { app: "MOGU MOGU", version: 2, exportedAt: new Date().toISOString(), pet };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `mogu-mogu-${localDayKey()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showNotice("完整照護備份已下載", "success");
+}
+
+async function importSave(event) {
+  const file = event.target.files?.[0];
+  if (!file || file.size > 2_000_000) {
+    showNotice("備份檔案無法讀取", "warning");
+    return;
+  }
+  try {
+    const payload = JSON.parse(await file.text());
+    if (payload?.app !== "MOGU MOGU" || !payload.pet || typeof payload.pet !== "object") throw new Error("invalid");
+    pet = normalizePet(payload.pet);
+    currentStage = 0;
+    drawerKey = "";
+    decorKey = "";
+    addActivity("milestone", "從備份恢復完整照護紀錄", "📥");
+    render(true, true);
+    showNotice("備份已安全恢復", "success");
+  } catch {
+    showNotice("這不是有效的 MOGU MOGU 備份", "warning");
+  } finally {
+    event.target.value = "";
+  }
 }
 
 function renderDecorations() {
@@ -2256,17 +2467,19 @@ function renderDrawer(force = false) {
   }
   if (mode === "feed") {
     drawer.innerHTML =
-      '<div class="drawer-title"><div><small>多樣化海洋飲食</small><h2>輪替魚類與無脊椎動物</h2></div><span>海豹從獵物取得水分，每份增加 10% 飽足度</span></div><div class="food-grid">' +
+      '<div class="drawer-title"><div><small>冷凍食物庫存</small><h2>輪替魚類與無脊椎動物</h2></div><span>每份增加 10% 飽足度，吃飽後會停止餵食</span></div><div class="food-grid">' +
       FOODS.map(
         (food, index) =>
-          `<button data-food="${index}" aria-label="餵小海豹吃${food.name}"><b aria-hidden="true">${food.icon}</b><span>${food.name}</span><small>${food.note} · 飽足 +10%</small></button>`,
+          `<div class="food-stock"><button data-food="${index}" ${pet.inventory[food.id] <= 0 ? "disabled" : ""} aria-label="餵小海豹吃${food.name}，剩下 ${pet.inventory[food.id]} 份"><b aria-hidden="true">${food.icon}</b><span>${food.name}</span><small>${food.note} · 庫存 ${pet.inventory[food.id]}</small></button><button class="restock-button" data-restock="${food.id}" aria-label="補充${food.name}三份，花費三枚海豹幣">補充 3 份 · 🪙3</button></div>`,
       ).join("") +
-      "</div>";
+      '</div><p class="care-fact">食物會保存在冷凍庫存中。輪替不同獵物有助於維持營養變化，但仍要觀察食慾與體態。</p>';
   }
   if (mode === "care") {
     const now = Date.now();
+    const healthEvent = pet.currentHealthEvent ? HEALTH_EVENTS[pet.currentHealthEvent] : null;
+    const eventCard = healthEvent ? `<section class="health-event"><span aria-hidden="true">${healthEvent.icon}</span><div><small>今日觀察事件</small><h3>${healthEvent.title}</h3><p>${healthEvent.detail}</p><strong>${healthEvent.hint}</strong></div></section>` : "";
     drawer.innerHTML =
-      '<div class="drawer-title"><div><small>每日照護</small><h2>維持健康、休息與乾淨棲地</h2></div><span>體力 ' +
+      eventCard + '<div class="drawer-title"><div><small>每日照護</small><h2>維持健康、休息與乾淨棲地</h2></div><span>體力 ' +
       `${Math.round(pet.energy)}% · 真實海豹需要固定上岸休息</span></div><div class="care-grid">` +
       CARE_ACTIONS.map((action) => {
         const remaining = careCooldown(action, now);
@@ -2287,6 +2500,10 @@ function renderDrawer(force = false) {
   }
   if (mode === "journal") {
     const profile = personalityProfile();
+    const achievements = ACHIEVEMENTS.map((item) => {
+      const unlocked = pet.achievements.includes(item.id);
+      return `<article class="achievement-card ${unlocked ? "is-unlocked" : ""}"><span aria-hidden="true">${unlocked ? item.icon : "🔒"}</span><div><strong>${item.title}</strong><small>${item.detail}${unlocked ? ` · 已獲得 ${item.reward} 幣` : ""}</small></div></article>`;
+    }).join("");
     const goals = DAILY_GOALS.map((goal) => {
       const value = goal.id === "feed" ? pet.daily.foods.length : pet.daily[goal.id];
       const done = value >= goal.target;
@@ -2298,10 +2515,13 @@ function renderDrawer(force = false) {
     const logs = pet.activityLog.length
       ? pet.activityLog.slice(-8).reverse().map((entry) => `<li><span aria-hidden="true">${entry.icon}</span><div><strong>${entry.text}</strong><small>${formatLogTime(entry.at)}</small></div></li>`).join("")
       : '<li class="empty-journal">今天還沒有照護紀錄</li>';
-    drawer.innerHTML = `<div class="journal-head"><div><small>${profile.icon} ${profile.name}</small><h2>海豹生活紀錄</h2><p>${profile.line}</p></div><div class="trust-badge">信任階段<strong>${pet.affection >= 80 ? "親密夥伴" : pet.affection >= 50 ? "熟悉照護員" : pet.affection >= 25 ? "逐漸信任" : "保持觀察"}</strong></div></div><section class="journal-section"><div class="section-title"><h3>今日照護目標</h3><span>${pet.daily.rewarded ? "🏅 已完成" : "全部完成獲得 10 幣"}</span></div><ul class="daily-goals">${goals}</ul></section><section class="health-report"><span aria-hidden="true">🩺</span><div><small>最近健康觀察</small><strong>${observationSummary()}</strong></div></section><section class="journal-section"><div class="section-title"><h3>照片回憶簿</h3><span>${pet.memories.length} / 18</span></div><div class="memory-grid">${memories}</div></section><section class="journal-section"><div class="section-title"><h3>最近活動</h3></div><ul class="activity-list">${logs}</ul></section><section class="journal-section preferences"><div class="section-title"><h3>遊戲回饋設定</h3></div><button data-setting="sound"><span>🔊</span><strong>自然音效</strong><small>${pet.soundOn ? "已開啟" : "已關閉"}</small></button><button data-setting="vibration"><span>📳</span><strong>互動震動</strong><small>${pet.vibrationOn ? "已開啟" : "已關閉"}</small></button></section>`;
+    drawer.innerHTML = `<div class="journal-head"><div><small>${profile.icon} ${profile.name}</small><h2>${pet.name} 的生活紀錄</h2><p>${profile.line}</p></div><div class="trust-badge">信任階段<strong>${pet.affection >= 80 ? "親密夥伴" : pet.affection >= 50 ? "熟悉照護員" : pet.affection >= 25 ? "逐漸信任" : "保持觀察"}</strong></div></div><section class="identity-editor"><label>名字<input id="journal-name" maxlength="12" value="${escapeAttribute(pet.name)}"></label><label>生日／相遇日<input id="journal-birthday" type="date" value="${escapeAttribute(pet.birthday)}"></label><button data-save-profile>儲存身分</button></section><section class="journal-section"><div class="section-title"><h3>今日照護目標</h3><span>${pet.daily.rewarded ? "🏅 已完成" : "全部完成獲得 10 幣"}</span></div><ul class="daily-goals">${goals}</ul></section><section class="health-report"><span aria-hidden="true">🩺</span><div><small>最近健康觀察</small><strong>${observationSummary()}</strong></div></section><section class="journal-section"><div class="section-title"><h3>照護成就</h3><span>${pet.achievements.length} / ${ACHIEVEMENTS.length}</span></div><div class="achievement-grid">${achievements}</div></section><section class="journal-section"><div class="section-title"><h3>照片回憶簿</h3><span>${pet.memories.length} / 18</span></div><div class="memory-grid">${memories}</div></section><section class="journal-section"><div class="section-title"><h3>最近活動</h3></div><ul class="activity-list">${logs}</ul></section><section class="journal-section preferences"><div class="section-title"><h3>遊戲與存檔設定</h3></div><button data-setting="sound"><span>🔊</span><strong>自然音效</strong><small>${pet.soundOn ? "已開啟" : "已關閉"}</small></button><button data-setting="vibration"><span>📳</span><strong>互動震動</strong><small>${pet.vibrationOn ? "已開啟" : "已關閉"}</small></button><button data-export-save><span>📤</span><strong>匯出備份</strong><small>下載完整照護紀錄</small></button><button data-import-save><span>📥</span><strong>匯入備份</strong><small>從備份恢復進度</small></button><input id="save-import-file" type="file" accept="application/json" hidden></section>`;
   }
   drawer.querySelectorAll("[data-food]").forEach((button) => {
     button.onclick = () => feed(FOODS[Number(button.dataset.food)], button);
+  });
+  drawer.querySelectorAll("[data-restock]").forEach((button) => {
+    button.onclick = () => restockFood(button.dataset.restock);
   });
   drawer.querySelectorAll("[data-decor]").forEach((button) => {
     button.onclick = () => buy(DECOR[Number(button.dataset.decor)]);
@@ -2321,6 +2541,11 @@ function renderDrawer(force = false) {
       }
     };
   });
+  drawer.querySelector("[data-save-profile]")?.addEventListener("click", saveProfileFromJournal);
+  if ($("journal-birthday")) $("journal-birthday").max = localDayKey();
+  drawer.querySelector("[data-export-save]")?.addEventListener("click", exportSave);
+  drawer.querySelector("[data-import-save]")?.addEventListener("click", () => $("save-import-file")?.click());
+  $("save-import-file")?.addEventListener("change", importSave);
 }
 
 function syncThreeModeVisuals() {
@@ -2334,6 +2559,8 @@ function syncThreeModeVisuals() {
 }
 
 function render(persist = true, forceDrawer = false) {
+  ensureCurrentDay();
+  checkAchievements(true);
   if (
     !FORCE_SPRITE_FALLBACK &&
     shouldUseRealtime3D() &&
@@ -2627,6 +2854,10 @@ function animateFood(icon, sourceButton) {
 
 function feed(food, sourceButton) {
   if (pet.dead || interactionLock) return;
+  if ((pet.inventory[food.id] || 0) <= 0) {
+    showNotice(`${food.name}庫存用完了，請先補充`, "warning");
+    return;
+  }
   if (pet.satiety >= 96) {
     showNotice("牠已經吃飽了，先觀察消化與活動狀況", "warning");
     addActivity("health", "吃飽後停止餵食，避免過量", "🩺");
@@ -2634,6 +2865,8 @@ function feed(food, sourceButton) {
     return;
   }
   const satietyGain = 10;
+  pet.inventory[food.id] = Math.max(0, pet.inventory[food.id] - 1);
+  safeSave();
   setBusy(true);
   animateFood(food.icon, sourceButton);
   if (threeState.ready) {
@@ -2676,6 +2909,22 @@ function feed(food, sourceButton) {
   }, delay);
 }
 
+function restockFood(foodId) {
+  const food = FOODS.find((item) => item.id === foodId);
+  if (!food) return;
+  if (pet.coins < 3) {
+    showNotice("海豹幣不足，完成每日目標或成就可獲得海豹幣", "warning");
+    return;
+  }
+  pet.coins -= 3;
+  pet.inventory[foodId] = (pet.inventory[foodId] || 0) + food.restock;
+  addActivity("care", `補充 ${food.name} ${food.restock} 份`, "🧊");
+  showNotice(`${food.name}已放入冷凍庫`, "success");
+  sound("coin");
+  drawerKey = "";
+  render(true, true);
+}
+
 function careCooldown(action, now = Date.now()) {
   const lastDone = Number(pet.careLog?.[action.id]) || 0;
   return Math.max(0, action.cooldown - (now - lastDone));
@@ -2685,6 +2934,7 @@ function performCare(actionId) {
   if (pet.dead || interactionLock) return;
   const action = CARE_ACTIONS.find((item) => item.id === actionId);
   if (!action || careCooldown(action)) return;
+  const activeEvent = pet.currentHealthEvent ? HEALTH_EVENTS[pet.currentHealthEvent] : null;
   pet.careLog = { ...pet.careLog, [action.id]: Date.now() };
   let message = "";
   let reaction = "♥";
@@ -2715,14 +2965,21 @@ function performCare(actionId) {
     message = "呼吸、眼睛、皮膚與活動力都記錄完成";
     reaction = "🩺";
   }
+  if (activeEvent && activeEvent.action === action.id) {
+    message += `；「${activeEvent.title}」已完成正確處置並持續記錄`;
+    pet.health = clamp(pet.health + 4);
+    pet.currentHealthEvent = "";
+  } else if (activeEvent) {
+    message += `；仍需處理「${activeEvent.title}」`;
+  }
   updateDaily("care");
   addActivity(action.id === "check" ? "health" : "care", `${action.name}：${message}`, reaction);
   showNotice(message, "success");
   const careVisuals = {
-    haul: { asset: "idle", motion: "haul" },
-    clean: { asset: "walk", motion: "clean" },
-    enrich: { asset: "walk", motion: "enrich" },
-    check: { asset: "pet", motion: "check" },
+    haul: { asset: "haul", motion: "haul" },
+    clean: { asset: "swim", motion: "clean" },
+    enrich: { asset: "sniff", motion: "enrich" },
+    check: { asset: "approach", motion: "check" },
   };
   sound(action.id === "clean" ? "water" : "pet", action.id === "clean" ? "fin" : "belly");
   vibrate(10);
@@ -2749,6 +3006,8 @@ function petSeal(zone = "belly") {
   if (pet.interactionFatigue >= 82) {
     showNotice("牠轉開身體了，現在想保有自己的空間", "warning");
     addActivity("health", "尊重海豹停止互動的訊號", "🤍");
+    react("pet", "🤍", "space", "space", "auto-space");
+    safeSave();
     return;
   }
   const safeZone = threeZoneRewards[zone] ? zone : "belly";
@@ -2897,7 +3156,9 @@ function finishRingDrag(event) {
   ringDrag = null;
   if (touchedSeal) {
     pet.affection = clamp(pet.affection + 5);
+    pet.lifetime.ring += 1;
     updateDaily("play");
+    checkAchievements();
     addActivity("play", "抱住 Doflamingo 羽毛泳圈玩水", "🦩");
     ring.classList.add("is-playing");
     showNotice("海豹抱住 Doflamingo 羽毛泳圈玩水！信任度＋5", "success");
@@ -2982,6 +3243,12 @@ document.querySelectorAll(".bottom-nav button").forEach((button) => {
 });
 
 $("sound-toggle").onclick = toggleSound;
+$("profile-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveIdentity($("profile-name").value, $("profile-birthday").value);
+  $("profile-overlay").hidden = true;
+  showNotice(`歡迎 ${pet.name} 來到泳池！`, "success");
+});
 $("adopt").onclick = () => {
   if (PREVIEW_DEAD) {
     location.href = `${location.pathname}?build=13`;
@@ -3004,6 +3271,9 @@ $("adopt").onclick = () => {
   }
   showNotice("新的小海豹來到泳池了，記得常常陪牠！", "success");
   render(true, true);
+  $("profile-name").value = pet.name;
+  $("profile-birthday").value = pet.birthday;
+  $("profile-overlay").hidden = false;
 };
 
 window.addEventListener(
@@ -3099,6 +3369,7 @@ if (pet.dead) {
 async function bootApp() {
   const loader = $("app-loader");
   const startedAt = performance.now();
+  $("profile-birthday").max = localDayKey();
   interactionLock = true;
   const allLoaded = await preloadEssentialAssets();
   const minimumDisplayTime = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 450;
@@ -3112,6 +3383,11 @@ async function bootApp() {
   setTimeout(() => {
     if (loader) loader.hidden = true;
   }, 320);
+  if (!pet.profileComplete && !PREVIEW_DEAD) {
+    $("profile-name").value = pet.name;
+    $("profile-birthday").value = pet.birthday;
+    $("profile-overlay").hidden = false;
+  }
   setTimeout(runAutonomousBehavior, 5200);
 }
 

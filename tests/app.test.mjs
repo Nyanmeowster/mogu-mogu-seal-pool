@@ -154,3 +154,33 @@ test("音效與震動可以分別調整", () => {
   assert.match(script, /data-setting="sound"/);
   assert.match(script, /data-setting="vibration"/);
 });
+
+test("正式版包含命名、生日、季節天氣與身分編輯", () => {
+  assert.match(html, /id="profile-overlay"/);
+  assert.match(html, /id="profile-name"/);
+  assert.match(html, /id="profile-birthday"/);
+  assert.match(html, /id="weather-label"/);
+  assert.match(script, /function seasonProfile\(stamp = Date\.now\(\)\)/);
+  assert.match(script, /function weatherToday\(stamp = Date\.now\(\)\)/);
+  assert.match(script, /function saveIdentity\(name, birthday = ""\)/);
+});
+
+test("食物庫存、健康事件、成就與存檔備份皆可操作", () => {
+  assert.match(script, /const HEALTH_EVENTS = \{/);
+  assert.match(script, /const ACHIEVEMENTS = \[/);
+  assert.match(script, /function restockFood\(foodId\)/);
+  assert.match(script, /pet\.inventory\[food\.id\] = Math\.max\(0, pet\.inventory\[food\.id\] - 1\)/);
+  assert.match(script, /function checkAchievements\(silent = false\)/);
+  assert.match(script, /function exportSave\(\)/);
+  assert.match(script, /async function importSave\(event\)/);
+  assert.match(script, /payload\?\.app !== "MOGU MOGU"/);
+});
+
+test("五種體型都有六張真正的自主生活動作圖", () => {
+  assert.equal((script.match(/seal-stage-[1-5]-(?:swim|haul|sleep|sniff|approach|space)-v1\.webp/g) || []).length, 30);
+  assert.match(script, /asset: "sleep"/);
+  assert.match(script, /asset: "sniff"/);
+  assert.match(script, /asset: "approach"/);
+  assert.match(script, /asset: "swim"/);
+  assert.match(script, /react\("pet", "🤍", "space", "space", "auto-space"\)/);
+});
