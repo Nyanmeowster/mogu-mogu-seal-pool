@@ -64,7 +64,7 @@ import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "34";
+const ASSET_VERSION = "35";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -2317,19 +2317,12 @@ function renderStats() {
 function renderLifeStrip() {
   const phase = dayPhase();
   const profile = personalityProfile();
-  const weather = weatherToday();
-  const season = seasonProfile();
   $("seal-name-title").textContent = pet.name;
   $("phase-icon").textContent = phase.icon;
   $("phase-label").textContent = phase.label;
-  $("weather-icon").textContent = weather.icon;
-  $("weather-label").textContent = `${season.icon} ${weather.label}`;
   $("personality-icon").textContent = profile.icon;
   $("personality-label").textContent = profile.name;
-  $("memory-count").textContent = `${pet.memories.length} 則`;
   $("pool").dataset.phase = phase.id;
-  $("pool").dataset.weather = weather.id;
-  $("pool").dataset.season = season.id;
 }
 
 function observationSummary() {
@@ -2462,24 +2455,20 @@ function renderDrawer(force = false) {
     return;
   }
   if (mode === "pet") {
-    drawer.innerHTML =
-      '<div class="interaction-card"><span class="big-hand" aria-hidden="true">🫳</span><div><small>信任建立</small><h2>輕柔互動，觀察牠是否願意靠近</h2><p>照護模擬中可輕點或撫摸；現實中的野生海豹請保持距離，不要觸摸或餵食。</p></div></div>';
+    drawer.innerHTML = `<div class="drawer-title companion-title"><div><small>和 ${escapeAttribute(pet.name)} 相處</small><h2>牠會回應你的陪伴</h2></div><button class="profile-edit" data-edit-profile type="button">改名字</button></div><p class="companion-hint">也可以直接點海豹，或在牠身上輕輕來回撫摸。</p><div class="companion-grid"><button data-companion="call"><b aria-hidden="true">👋</b><span>呼喚牠</span><small>看看牠會不會靠近</small></button><button data-companion="splash"><b aria-hidden="true">💦</b><span>一起玩水</span><small>陪牠游一小圈</small></button><button data-companion="quiet"><b aria-hidden="true">🌙</b><span>安靜陪伴</span><small>在旁邊休息一下</small></button><button data-companion="wave"><b aria-hidden="true">🤍</b><span>打招呼</span><small>讓牠熟悉你的聲音</small></button></div><button class="vibration-setting" data-setting="vibration" type="button">📳 互動震動：${pet.vibrationOn ? "開" : "關"}</button>`;
   }
   if (mode === "feed") {
     drawer.innerHTML =
-      '<div class="drawer-title"><div><small>冷凍食物庫存</small><h2>輪替魚類與無脊椎動物</h2></div><span>每份增加 10% 飽足度，吃飽後會停止餵食</span></div><div class="food-grid">' +
+      '<div class="drawer-title"><div><small>今天想吃什麼？</small><h2>選一份食物給海豹</h2></div><span>吃飽後牠會自己停下來</span></div><div class="food-grid">' +
       FOODS.map(
-        (food, index) =>
-          `<div class="food-stock"><button data-food="${index}" ${pet.inventory[food.id] <= 0 ? "disabled" : ""} aria-label="餵小海豹吃${food.name}，剩下 ${pet.inventory[food.id]} 份"><b aria-hidden="true">${food.icon}</b><span>${food.name}</span><small>${food.note} · 庫存 ${pet.inventory[food.id]}</small></button><button class="restock-button" data-restock="${food.id}" aria-label="補充${food.name}三份，花費三枚海豹幣">補充 3 份 · 🪙3</button></div>`,
+        (food, index) => `<button data-food="${index}" aria-label="餵小海豹吃${food.name}"><b aria-hidden="true">${food.icon}</b><span>${food.name}</span><small>${food.note}</small></button>`,
       ).join("") +
-      '</div><p class="care-fact">食物會保存在冷凍庫存中。輪替不同獵物有助於維持營養變化，但仍要觀察食慾與體態。</p>';
+      '</div><p class="care-fact">輪替不同食物能讓營養更多元，也要留意食慾與體態。</p>';
   }
   if (mode === "care") {
     const now = Date.now();
-    const healthEvent = pet.currentHealthEvent ? HEALTH_EVENTS[pet.currentHealthEvent] : null;
-    const eventCard = healthEvent ? `<section class="health-event"><span aria-hidden="true">${healthEvent.icon}</span><div><small>今日觀察事件</small><h3>${healthEvent.title}</h3><p>${healthEvent.detail}</p><strong>${healthEvent.hint}</strong></div></section>` : "";
     drawer.innerHTML =
-      eventCard + '<div class="drawer-title"><div><small>每日照護</small><h2>維持健康、休息與乾淨棲地</h2></div><span>體力 ' +
+      '<div class="drawer-title"><div><small>日常照護</small><h2>讓牠舒服又健康</h2></div><span>體力 ' +
       `${Math.round(pet.energy)}% · 真實海豹需要固定上岸休息</span></div><div class="care-grid">` +
       CARE_ACTIONS.map((action) => {
         const remaining = careCooldown(action, now);
@@ -2498,30 +2487,11 @@ function renderDrawer(force = false) {
       }).join("") +
       "</div>";
   }
-  if (mode === "journal") {
-    const profile = personalityProfile();
-    const achievements = ACHIEVEMENTS.map((item) => {
-      const unlocked = pet.achievements.includes(item.id);
-      return `<article class="achievement-card ${unlocked ? "is-unlocked" : ""}"><span aria-hidden="true">${unlocked ? item.icon : "🔒"}</span><div><strong>${item.title}</strong><small>${item.detail}${unlocked ? ` · 已獲得 ${item.reward} 幣` : ""}</small></div></article>`;
-    }).join("");
-    const goals = DAILY_GOALS.map((goal) => {
-      const value = goal.id === "feed" ? pet.daily.foods.length : pet.daily[goal.id];
-      const done = value >= goal.target;
-      return `<li class="${done ? "is-done" : ""}"><span aria-hidden="true">${done ? "✓" : goal.icon}</span><div><strong>${goal.label}</strong><small>${Math.min(value, goal.target)} / ${goal.target}</small></div></li>`;
-    }).join("");
-    const memories = pet.memories.length
-      ? pet.memories.slice().reverse().map((entry) => `<article class="memory-card"><img src="${spriteAsset(entry.stage || 2, "idle")}" alt=""><div><small>${formatLogTime(entry.at)}</small><strong>${entry.text}</strong></div></article>`).join("")
-      : '<p class="empty-journal">一起照護、遊戲與完成健康檢查後，回憶會收藏在這裡。</p>';
-    const logs = pet.activityLog.length
-      ? pet.activityLog.slice(-8).reverse().map((entry) => `<li><span aria-hidden="true">${entry.icon}</span><div><strong>${entry.text}</strong><small>${formatLogTime(entry.at)}</small></div></li>`).join("")
-      : '<li class="empty-journal">今天還沒有照護紀錄</li>';
-    drawer.innerHTML = `<div class="journal-head"><div><small>${profile.icon} ${profile.name}</small><h2>${pet.name} 的生活紀錄</h2><p>${profile.line}</p></div><div class="trust-badge">信任階段<strong>${pet.affection >= 80 ? "親密夥伴" : pet.affection >= 50 ? "熟悉照護員" : pet.affection >= 25 ? "逐漸信任" : "保持觀察"}</strong></div></div><section class="identity-editor"><label>名字<input id="journal-name" maxlength="12" value="${escapeAttribute(pet.name)}"></label><label>生日／相遇日<input id="journal-birthday" type="date" value="${escapeAttribute(pet.birthday)}"></label><button data-save-profile>儲存身分</button></section><section class="journal-section"><div class="section-title"><h3>今日照護目標</h3><span>${pet.daily.rewarded ? "🏅 已完成" : "全部完成獲得 10 幣"}</span></div><ul class="daily-goals">${goals}</ul></section><section class="health-report"><span aria-hidden="true">🩺</span><div><small>最近健康觀察</small><strong>${observationSummary()}</strong></div></section><section class="journal-section"><div class="section-title"><h3>照護成就</h3><span>${pet.achievements.length} / ${ACHIEVEMENTS.length}</span></div><div class="achievement-grid">${achievements}</div></section><section class="journal-section"><div class="section-title"><h3>照片回憶簿</h3><span>${pet.memories.length} / 18</span></div><div class="memory-grid">${memories}</div></section><section class="journal-section"><div class="section-title"><h3>最近活動</h3></div><ul class="activity-list">${logs}</ul></section><section class="journal-section preferences"><div class="section-title"><h3>遊戲與存檔設定</h3></div><button data-setting="sound"><span>🔊</span><strong>自然音效</strong><small>${pet.soundOn ? "已開啟" : "已關閉"}</small></button><button data-setting="vibration"><span>📳</span><strong>互動震動</strong><small>${pet.vibrationOn ? "已開啟" : "已關閉"}</small></button><button data-export-save><span>📤</span><strong>匯出備份</strong><small>下載完整照護紀錄</small></button><button data-import-save><span>📥</span><strong>匯入備份</strong><small>從備份恢復進度</small></button><input id="save-import-file" type="file" accept="application/json" hidden></section>`;
-  }
   drawer.querySelectorAll("[data-food]").forEach((button) => {
     button.onclick = () => feed(FOODS[Number(button.dataset.food)], button);
   });
-  drawer.querySelectorAll("[data-restock]").forEach((button) => {
-    button.onclick = () => restockFood(button.dataset.restock);
+  drawer.querySelectorAll("[data-companion]").forEach((button) => {
+    button.onclick = () => performCompanion(button.dataset.companion);
   });
   drawer.querySelectorAll("[data-decor]").forEach((button) => {
     button.onclick = () => buy(DECOR[Number(button.dataset.decor)]);
@@ -2541,11 +2511,11 @@ function renderDrawer(force = false) {
       }
     };
   });
-  drawer.querySelector("[data-save-profile]")?.addEventListener("click", saveProfileFromJournal);
-  if ($("journal-birthday")) $("journal-birthday").max = localDayKey();
-  drawer.querySelector("[data-export-save]")?.addEventListener("click", exportSave);
-  drawer.querySelector("[data-import-save]")?.addEventListener("click", () => $("save-import-file")?.click());
-  $("save-import-file")?.addEventListener("change", importSave);
+  drawer.querySelector("[data-edit-profile]")?.addEventListener("click", () => {
+    $("profile-name").value = pet.name;
+    $("profile-birthday").value = pet.birthday;
+    $("profile-overlay").hidden = false;
+  });
 }
 
 function syncThreeModeVisuals() {
@@ -2854,10 +2824,6 @@ function animateFood(icon, sourceButton) {
 
 function feed(food, sourceButton) {
   if (pet.dead || interactionLock) return;
-  if ((pet.inventory[food.id] || 0) <= 0) {
-    showNotice(`${food.name}庫存用完了，請先補充`, "warning");
-    return;
-  }
   if (pet.satiety >= 96) {
     showNotice("牠已經吃飽了，先觀察消化與活動狀況", "warning");
     addActivity("health", "吃飽後停止餵食，避免過量", "🩺");
@@ -2865,7 +2831,6 @@ function feed(food, sourceButton) {
     return;
   }
   const satietyGain = 10;
-  pet.inventory[food.id] = Math.max(0, pet.inventory[food.id] - 1);
   safeSave();
   setBusy(true);
   animateFood(food.icon, sourceButton);
@@ -2907,6 +2872,33 @@ function feed(food, sourceButton) {
     vibrate([10, 35, 9]);
     setTimeout(() => setBusy(false), 1500);
   }, delay);
+}
+
+function performCompanion(actionId) {
+  if (pet.dead || interactionLock) return;
+  if (pet.interactionFatigue >= 82) {
+    showNotice(`${pet.name} 現在想安靜一下，晚點再陪牠`, "warning");
+    react("pet", "🤍", "space", "space", "auto-space");
+    return;
+  }
+  const actions = {
+    call: { message: `${pet.name} 聽見你了，抬起頭慢慢靠近`, icon: "👋", asset: "approach", motion: "auto-approach", affection: 3, energy: -1, sound: "pet" },
+    splash: { message: `${pet.name} 跟著水花開心游了一圈`, icon: "💦", asset: "swim", motion: "auto-swim", affection: 4, energy: -3, sound: "water" },
+    quiet: { message: `${pet.name} 在你身邊放鬆地休息`, icon: "💤", asset: "sleep", motion: "auto-sleep", affection: 3, energy: 5, sound: "pet" },
+    wave: { message: `${pet.name} 眨眨眼，像是在回應你的招呼`, icon: "🤍", asset: "approach", motion: "auto-approach", affection: 2, energy: 0, sound: "pet" },
+  };
+  const action = actions[actionId];
+  if (!action) return;
+  pet.affection = clamp(pet.affection + action.affection);
+  pet.energy = clamp(pet.energy + action.energy);
+  pet.interactionFatigue = clamp(pet.interactionFatigue + 6);
+  updateDaily("play");
+  addActivity("play", action.message, action.icon);
+  showNotice(action.message, "success");
+  sound(action.sound, actionId);
+  vibrate(actionId === "splash" ? [8, 28, 8] : 10);
+  render(true, true);
+  react("pet", action.icon, actionId, action.asset, action.motion);
 }
 
 function restockFood(foodId) {
@@ -3347,7 +3339,7 @@ setInterval(() => {
   if (!actionActive) $("speech").textContent = mood();
   $("dead-overlay").hidden = !pet.dead;
   renderLifeStrip();
-  if (mode === "care" || mode === "journal") {
+  if (mode === "care") {
     drawerKey = "";
     renderDrawer(true);
   }

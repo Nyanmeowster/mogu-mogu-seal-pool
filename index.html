@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#bcebe8">
-  <meta name="description" content="陪伴一隻有名字、有作息、會記得你的 2D 小海豹：真實照護、健康觀察、天氣季節、生活回憶與自主行為。">
+  <meta name="description" content="陪伴有名字、有個性、會回應你的 2D 小海豹：餵食、摸摸、玩水與日常照護。">
   <meta property="og:type" content="website">
   <meta property="og:title" content="MOGU MOGU｜我的海豹泳池">
   <meta property="og:description" content="有名字、有作息，也會記得你。陪伴小海豹生活、照護、探索並累積共同回憶。">
@@ -14,12 +14,12 @@
   <meta name="twitter:description" content="有名字、有作息，也會記得你。陪伴小海豹生活、照護、探索並累積共同回憶。">
   <meta name="twitter:image" content="https://nyanmeowster.github.io/mogu-mogu-seal-pool/og-v2.png">
   <title>MOGU MOGU｜我的海豹泳池</title>
-  <link rel="preload" as="image" href="/assets/seal-stage-1.webp?v=34">
-  <link rel="preload" as="image" href="/assets/seal-stage-2.webp?v=34">
-  <link rel="preload" as="image" href="/assets/seal-stage-3.webp?v=34">
-  <link rel="preload" as="image" href="/assets/seal-stage-4.webp?v=34">
-  <link rel="preload" as="image" href="/assets/seal-stage-5.webp?v=34">
-  <link rel="stylesheet" href="/style.css?v=34">
+  <link rel="preload" as="image" href="/assets/seal-stage-1.webp?v=35">
+  <link rel="preload" as="image" href="/assets/seal-stage-2.webp?v=35">
+  <link rel="preload" as="image" href="/assets/seal-stage-3.webp?v=35">
+  <link rel="preload" as="image" href="/assets/seal-stage-4.webp?v=35">
+  <link rel="preload" as="image" href="/assets/seal-stage-5.webp?v=35">
+  <link rel="stylesheet" href="/style.css?v=35">
 </head>
 <body>
   <div id="app-loader" class="app-loader" role="status" aria-live="polite" aria-label="正在準備海豹泳池">
@@ -43,9 +43,7 @@
     <p class="care-ethics"><span aria-hidden="true">🌊</span> 專業照護模擬 · 野生海豹受保護，請勿靠近、觸摸或餵食</p>
     <section class="life-strip" aria-label="海豹生活狀態">
       <div><span id="phase-icon" aria-hidden="true">☀️</span><small>目前作息</small><strong id="phase-label">白日探索</strong></div>
-      <div><span id="weather-icon" aria-hidden="true">🍃</span><small>季節天氣</small><strong id="weather-label">涼爽微風</strong></div>
       <div><span id="personality-icon" aria-hidden="true">🤍</span><small>海豹個性</small><strong id="personality-label">溫柔黏人</strong></div>
-      <div><span aria-hidden="true">📖</span><small>共同回憶</small><strong id="memory-count">0 則</strong></div>
     </section>
     <section class="status-panel" aria-label="海豹狀態">
       <div id="satiety-status" class="status-item satiety-status"><div class="status-icon" aria-hidden="true">🐟</div><div class="status-main"><div class="status-copy"><span>飽足度</span><strong id="satiety-text">35%</strong></div><div id="satiety-meter" class="meter" role="progressbar" aria-label="飽足度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="35"><i id="satiety-bar" class="satiety-meter"></i></div></div></div>
@@ -73,11 +71,10 @@
     </section>
     <section id="drawer" class="action-drawer closed" aria-live="polite"></section>
     <nav class="bottom-nav" aria-label="主要功能">
-      <button data-mode="shop" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🏠</span><small>小屋</small></button>
-      <button data-mode="pet" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🫳</span><small>摸摸</small></button>
+      <button data-mode="pet" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🤍</span><small>陪伴</small></button>
       <button data-mode="feed" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🐟</span><small>餵食</small></button>
       <button data-mode="care" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🩺</span><small>照護</small></button>
-      <button data-mode="journal" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">📔</span><small>生活</small></button>
+      <button data-mode="shop" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🏠</span><small>小屋</small></button>
     </nav>
     <div id="dead-overlay" class="dead-overlay" role="dialog" aria-modal="true" aria-labelledby="dead-title" hidden>
       <div class="dead-card"><span>🚑</span><small>健康狀態亮紅燈</small><h2 id="dead-title">已交由專業獸醫照護</h2><p>規律餵食、上岸休息、乾淨水質與健康檢查都很重要。</p><button id="adopt">重新開始照護</button></div>
@@ -91,6 +88,6 @@
       </form>
     </div>
   </main>
-  <script type="module" src="/app.js?v=34"></script>
+  <script type="module" src="/app.js?v=35"></script>
 </body>
 </html>

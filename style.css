@@ -285,6 +285,44 @@ button:focus-visible {
   margin: 0 0 8px;
 }
 
+.life-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.companion-title { align-items: center; }
+.profile-edit,
+.vibration-setting {
+  border: 1px solid rgba(23, 71, 88, .12);
+  border-radius: 999px;
+  color: #2c6971;
+  background: rgba(255, 255, 255, .78);
+  font-weight: 900;
+  cursor: pointer;
+}
+.profile-edit { padding: 8px 12px; font-size: 10px; }
+.companion-hint { margin: 7px 0 10px; color: var(--ink-soft); font-size: 10px; }
+.companion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.companion-grid button {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  grid-template-rows: auto auto;
+  min-height: 60px;
+  padding: 9px 10px;
+  border: 1px solid rgba(23, 71, 88, .1);
+  border-radius: 14px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, .82);
+  text-align: left;
+  cursor: pointer;
+}
+.companion-grid button:active { transform: scale(.98); }
+.companion-grid b { grid-row: 1 / 3; align-self: center; font-size: 24px; }
+.companion-grid span { align-self: end; font-size: 12px; font-weight: 900; }
+.companion-grid small { color: var(--ink-soft); font-size: 9px; }
+.vibration-setting { margin-top: 9px; padding: 7px 11px; font-size: 9px; }
+
 .pet-brand h1 b { color: #0c7e89; }
 
 .profile-overlay {
