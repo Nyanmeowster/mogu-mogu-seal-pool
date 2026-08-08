@@ -114,3 +114,43 @@ test("Doflamingo 泳圈會依海豹比例放大並切換專屬玩耍圖", () => 
   assert.match(styles, /\.decor-ring\.is-over-seal/);
   assert.match(styles, /@keyframes interaction-ring-play/);
 });
+
+test("海豹會依作息、個性與身體狀況自主活動", () => {
+  assert.match(script, /const PERSONALITIES = \[/);
+  assert.match(script, /function dayPhase\(stamp = Date\.now\(\)\)/);
+  assert.match(script, /function chooseAutonomousBehavior\(\)/);
+  assert.match(script, /setInterval\(runAutonomousBehavior, 14500\)/);
+  assert.match(script, /pet\.energy < 28/);
+  assert.match(script, /pet\.satiety < 25/);
+  assert.match(styles, /@keyframes autonomous-swim/);
+  assert.match(styles, /@keyframes autonomous-approach/);
+});
+
+test("生活紀錄包含每日目標、健康觀察、回憶與個性", () => {
+  assert.match(html, /data-mode="journal"/);
+  assert.match(html, /id="personality-label"/);
+  assert.match(script, /const DAILY_GOALS = \[/);
+  assert.match(script, /function updateDaily\(kind, foodName = ""\)/);
+  assert.match(script, /function observationSummary\(\)/);
+  assert.match(script, /照片回憶簿/);
+  assert.match(script, /最近活動/);
+  assert.match(styles, /\.memory-grid/);
+  assert.match(styles, /\.daily-goals/);
+});
+
+test("照護會記錄長期後果並尊重海豹停止互動的訊號", () => {
+  assert.match(script, /recentFoods/);
+  assert.match(script, /lastRestAt/);
+  assert.match(script, /lastCleanAt/);
+  assert.match(script, /interactionFatigue >= 82/);
+  assert.match(script, /停止餵食，避免過量/);
+  assert.match(script, /dietVariety < 2/);
+});
+
+test("音效與震動可以分別調整", () => {
+  assert.match(script, /vibrationOn/);
+  assert.match(script, /function vibrate\(pattern\)/);
+  assert.doesNotMatch(script.replace(/navigator\.vibrate\?\.\(pattern\)/, ""), /navigator\.vibrate/);
+  assert.match(script, /data-setting="sound"/);
+  assert.match(script, /data-setting="vibration"/);
+});

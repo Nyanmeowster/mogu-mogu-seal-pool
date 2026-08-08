@@ -34,7 +34,7 @@ import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "32";
+const ASSET_VERSION = "33";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -92,6 +92,17 @@ const CARE_ACTIONS = [
 
 const STAGE_LABELS = ["", "纖細小海豹", "健康體型", "圓潤體型", "胖嘟嘟", "幸福圓滾滾"];
 const IDLE_LINES = ["噗嚕～水溫剛剛好", "今天也想和你待在一起", "小海豹正在巡視泳池", "要不要陪我玩一下？"];
+const PERSONALITIES = [
+  { id: "gentle", name: "溫柔黏人", icon: "🤍", line: "牠喜歡安靜靠近熟悉的照護員" },
+  { id: "curious", name: "好奇探險家", icon: "✨", line: "牠總會先去研究泳池裡的新東西" },
+  { id: "foodie", name: "貪吃小獵手", icon: "🐟", line: "牠對不同氣味的食物特別有興趣" },
+  { id: "sleepy", name: "悠閒睡神", icon: "💤", line: "牠最重視岩台上的安穩午睡" },
+];
+const DAILY_GOALS = [
+  { id: "feed", label: "提供 2 種不同食物", target: 2, icon: "🐟" },
+  { id: "care", label: "完成 2 次專業照護", target: 2, icon: "🩺" },
+  { id: "play", label: "陪伴或遊戲 2 次", target: 2, icon: "♥" },
+];
 const SIZE_STOPS = [20, 40, 70, 90];
 const SPRITE_ASSETS = [
   null,
@@ -105,6 +116,24 @@ const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 const spriteAsset = (stageNumber, action = "idle") => `${SPRITE_ASSETS[stageNumber][action]}?v=${ASSET_VERSION}`;
 document.documentElement.style.setProperty("--pool-background", `url("${poolBackground}?v=${ASSET_VERSION}")`);
+
+function localDayKey(stamp = Date.now()) {
+  const date = new Date(stamp);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function normalizeDaily(value) {
+  const date = localDayKey();
+  if (!value || value.date !== date) return { date, feed: 0, care: 0, play: 0, foods: [], rewarded: false };
+  return {
+    date,
+    feed: Math.max(0, Number(value.feed) || 0),
+    care: Math.max(0, Number(value.care) || 0),
+    play: Math.max(0, Number(value.play) || 0),
+    foods: Array.isArray(value.foods) ? [...new Set(value.foods)].slice(-3) : [],
+    rewarded: Boolean(value.rewarded),
+  };
+}
 
 const fresh = () => {
   const now = Date.now();
@@ -125,7 +154,16 @@ const fresh = () => {
     dead: false,
     starterCoinsGranted: 1,
     soundOn: true,
+    vibrationOn: true,
     careLog: {},
+    personality: PERSONALITIES[Math.floor(Math.random() * PERSONALITIES.length)].id,
+    recentFoods: [],
+    activityLog: [],
+    memories: [],
+    daily: { date: localDayKey(now), feed: 0, care: 0, play: 0, foods: [] },
+    lastRestAt: 0,
+    lastCleanAt: 0,
+    interactionFatigue: 0,
   };
 };
 
@@ -153,7 +191,16 @@ function normalizePet(raw) {
     active: listOrEmpty(raw?.active),
     dead: Boolean(raw?.dead),
     soundOn: raw?.soundOn !== false,
+    vibrationOn: raw?.vibrationOn !== false,
     careLog: raw?.careLog && typeof raw.careLog === "object" ? { ...raw.careLog } : {},
+    personality: PERSONALITIES.some((item) => item.id === raw?.personality) ? raw.personality : base.personality,
+    recentFoods: Array.isArray(raw?.recentFoods) ? raw.recentFoods.slice(-6) : [],
+    activityLog: Array.isArray(raw?.activityLog) ? raw.activityLog.slice(-40) : [],
+    memories: Array.isArray(raw?.memories) ? raw.memories.slice(-18) : [],
+    daily: normalizeDaily(raw?.daily),
+    lastRestAt: numberOr(raw?.lastRestAt, 0),
+    lastCleanAt: numberOr(raw?.lastCleanAt, 0),
+    interactionFatigue: clamp(numberOr(raw?.interactionFatigue, 0)),
     starterCoinsGranted: raw?.starterCoinsGranted === 1 ? 1 : 0,
   };
   normalized.active = normalized.active.filter((id) => normalized.owned.includes(id));
@@ -178,6 +225,8 @@ function safeRead() {
 
 let pet = normalizePet(safeRead());
 let mode = "home";
+let autonomousMood = "idle";
+let autonomousUntil = 0;
 let currentStage = 0;
 let actionActive = "";
 let reactionTimer;
@@ -194,6 +243,49 @@ let ambientSource;
 let soundUnlocked = false;
 const preloaded = new Set();
 const spriteCache = new Map();
+
+function personalityProfile() {
+  return PERSONALITIES.find((item) => item.id === pet.personality) || PERSONALITIES[0];
+}
+
+function ensureCurrentDay() {
+  if (pet.daily?.date !== localDayKey()) pet.daily = normalizeDaily(null);
+}
+
+function addActivity(type, text, icon = "•") {
+  const entry = { id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, at: Date.now(), type, text, icon };
+  pet.activityLog = [...pet.activityLog, entry].slice(-40);
+  if (["milestone", "play", "health"].includes(type)) {
+    const lastMemory = pet.memories.at(-1);
+    if (!lastMemory || lastMemory.text !== text || Date.now() - lastMemory.at > 6 * HOUR) {
+      pet.memories = [...pet.memories, { ...entry, stage: stage() }].slice(-18);
+    }
+  }
+}
+
+function updateDaily(kind, foodName = "") {
+  ensureCurrentDay();
+  if (kind === "feed") {
+    pet.daily.feed += 1;
+    if (foodName) pet.daily.foods = [...new Set([...pet.daily.foods, foodName])].slice(-3);
+  } else if (kind in pet.daily) {
+    pet.daily[kind] += 1;
+  }
+  const complete = DAILY_GOALS.every((goal) => {
+    const value = goal.id === "feed" ? pet.daily.foods.length : pet.daily[goal.id];
+    return value >= goal.target;
+  });
+  if (complete && !pet.daily.rewarded) {
+    pet.daily.rewarded = true;
+    pet.coins += 10;
+    addActivity("milestone", "完成今天的照護目標，獲得 10 枚海豹幣", "🏅");
+    showNotice("今日照護目標完成！海豹幣＋10", "success");
+  }
+}
+
+function vibrate(pattern) {
+  if (pet.vibrationOn) navigator.vibrate?.(pattern);
+}
 let threeState = {
   enabled: false,
   ready: false,
@@ -260,12 +352,19 @@ function applyElapsedStats(now = Date.now()) {
   pet.satiety = clamp(pet.satiety - hours * STAT_LOSS_PER_HOUR);
   pet.affection = clamp(pet.affection - hours * TRUST_LOSS_PER_HOUR);
   pet.waterQuality = clamp(pet.waterQuality - hours * WATER_LOSS_PER_HOUR);
+  pet.interactionFatigue = clamp(pet.interactionFatigue - hours * 18);
   const stableHabitat = pet.satiety >= 25 && pet.waterQuality >= 40;
   pet.energy = clamp(pet.energy + hours * (stableHabitat ? 2.5 : -3));
+  const dietVariety = new Set(pet.recentFoods.slice(-4)).size;
+  const overdueRest = pet.lastRestAt && now - pet.lastRestAt > 18 * HOUR;
+  const overdueClean = pet.lastCleanAt && now - pet.lastCleanAt > 24 * HOUR;
   const healthRisk =
     (pet.satiety < 20 ? 2 : 0) +
     (pet.waterQuality < 35 ? 2.5 : 0) +
-    (pet.energy < 20 ? 1.5 : 0);
+    (pet.energy < 20 ? 1.5 : 0) +
+    (overdueRest ? 0.35 : 0) +
+    (overdueClean ? 0.45 : 0) +
+    (dietVariety < 2 ? 0.25 : 0);
   pet.health = clamp(pet.health + hours * (healthRisk ? -healthRisk : 0.35));
   pet.lastStatAt = now;
   pet.dead = pet.health <= 0 || now - pet.lastFedAt >= FIVE_DAYS;
@@ -298,6 +397,9 @@ if (PREVIEW_DEAD) {
   pet.waterQuality = 0;
   pet.health = 0;
   pet.dead = true;
+}
+if (!pet.activityLog.length && !PREVIEW_DEAD) {
+  addActivity("milestone", "開始一起生活的第一天", "🏡");
 }
 
 function safeSave() {
@@ -377,6 +479,46 @@ function mood() {
   if (pet.affection > 80 && pet.satiety > 75) return "最喜歡和你待在一起！";
   if (pet.satiety > 90) return "飽飽的，好幸福～";
   return "今天的呼吸、食慾和活動都很正常";
+}
+
+function dayPhase(stamp = Date.now()) {
+  const hour = new Date(stamp).getHours();
+  if (hour < 6) return { id: "night", icon: "🌙", label: "深夜休息" };
+  if (hour < 11) return { id: "morning", icon: "🌤️", label: "早晨活動" };
+  if (hour < 17) return { id: "day", icon: "☀️", label: "白日探索" };
+  if (hour < 20) return { id: "evening", icon: "🌅", label: "傍晚放鬆" };
+  return { id: "night", icon: "🌙", label: "夜間休息" };
+}
+
+function chooseAutonomousBehavior() {
+  const phase = dayPhase();
+  const profile = personalityProfile();
+  if (pet.energy < 28 || phase.id === "night" || profile.id === "sleepy" && Math.random() < 0.5) {
+    return { id: "rest", asset: "idle", icon: "💤", line: "小海豹自己爬上岩台休息了", duration: 6200 };
+  }
+  if (pet.satiety < 25 || profile.id === "foodie" && Math.random() < 0.45) {
+    return { id: "forage", asset: "walk", icon: "🐟", line: "牠正在水邊嗅聞，尋找熟悉的食物氣味", duration: 4200 };
+  }
+  if (pet.active.length && (profile.id === "curious" || Math.random() < 0.45)) {
+    return { id: "explore", asset: "walk", icon: "✨", line: "牠主動靠近泳池玩具研究了一會兒", duration: 4400 };
+  }
+  if (pet.affection > 55 && (profile.id === "gentle" || Math.random() < 0.5)) {
+    return { id: "approach", asset: "pet", icon: "🤍", line: "牠認出你了，主動游過來靠近", duration: 4000 };
+  }
+  return { id: "swim", asset: "walk", icon: "💧", line: "小海豹正在泳池裡自主巡游", duration: 4300 };
+}
+
+function runAutonomousBehavior() {
+  if (document.hidden || actionActive || interactionLock || mode !== "home" || pet.dead) return;
+  const behavior = chooseAutonomousBehavior();
+  autonomousMood = behavior.id;
+  autonomousUntil = Date.now() + behavior.duration;
+  $("speech").textContent = behavior.line;
+  react("pet", behavior.icon, "autonomous", behavior.asset, `auto-${behavior.id}`);
+  if (behavior.id === "swim") sound("water");
+  setTimeout(() => {
+    if (Date.now() >= autonomousUntil) autonomousMood = "idle";
+  }, behavior.duration + 50);
 }
 
 function preloadImage(url) {
@@ -2031,6 +2173,32 @@ function renderStats() {
   setMeterState("water-status", pet.waterQuality);
 }
 
+function renderLifeStrip() {
+  const phase = dayPhase();
+  const profile = personalityProfile();
+  $("phase-icon").textContent = phase.icon;
+  $("phase-label").textContent = phase.label;
+  $("personality-icon").textContent = profile.icon;
+  $("personality-label").textContent = profile.name;
+  $("memory-count").textContent = `${pet.memories.length} 則`;
+  $("pool").dataset.phase = phase.id;
+}
+
+function observationSummary() {
+  const diet = new Set(pet.recentFoods.slice(-4)).size;
+  const parts = [
+    pet.health >= 75 ? "呼吸與眼睛穩定" : pet.health >= 40 ? "建議持續觀察活動力" : "健康狀況需要優先處理",
+    pet.waterQuality >= 70 ? "水質清澈" : pet.waterQuality >= 40 ? "水質接近維護線" : "水質不佳",
+    diet >= 3 ? "飲食種類豐富" : diet >= 2 ? "飲食變化尚可" : "最近食物較單一",
+    pet.energy >= 55 ? "休息量充足" : "需要更多上岸休息",
+  ];
+  return parts.join(" · ");
+}
+
+function formatLogTime(stamp) {
+  return new Intl.DateTimeFormat("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(stamp);
+}
+
 function renderDecorations() {
   const nextKey = pet.active.join("|");
   if (nextKey === decorKey) return;
@@ -2048,6 +2216,7 @@ function renderSeal() {
   const nextStage = stage();
   const roamer = $("seal-roamer");
   if (currentStage && currentStage !== nextStage) {
+    addActivity("milestone", `體態進入「${STAGE_LABELS[nextStage]}」階段`, "📷");
     roamer.classList.remove("stage-changing");
     void roamer.offsetWidth;
     roamer.classList.add("stage-changing");
@@ -2071,7 +2240,8 @@ function renderSeal() {
 }
 
 function renderDrawer(force = false) {
-  const key = `${mode}:${pet.owned.join(",")}:${pet.active.join(",")}:${Math.floor(pet.coins)}:${Math.floor(Date.now() / 60000)}:${Math.round(pet.energy)}`;
+  ensureCurrentDay();
+  const key = `${mode}:${pet.owned.join(",")}:${pet.active.join(",")}:${Math.floor(pet.coins)}:${Math.floor(Date.now() / 60000)}:${Math.round(pet.energy)}:${pet.activityLog.length}:${pet.memories.length}:${JSON.stringify(pet.daily)}:${pet.soundOn}:${pet.vibrationOn}`;
   if (!force && key === drawerKey) return;
   drawerKey = key;
   const drawer = $("drawer");
@@ -2115,6 +2285,21 @@ function renderDrawer(force = false) {
       }).join("") +
       "</div>";
   }
+  if (mode === "journal") {
+    const profile = personalityProfile();
+    const goals = DAILY_GOALS.map((goal) => {
+      const value = goal.id === "feed" ? pet.daily.foods.length : pet.daily[goal.id];
+      const done = value >= goal.target;
+      return `<li class="${done ? "is-done" : ""}"><span aria-hidden="true">${done ? "✓" : goal.icon}</span><div><strong>${goal.label}</strong><small>${Math.min(value, goal.target)} / ${goal.target}</small></div></li>`;
+    }).join("");
+    const memories = pet.memories.length
+      ? pet.memories.slice().reverse().map((entry) => `<article class="memory-card"><img src="${spriteAsset(entry.stage || 2, "idle")}" alt=""><div><small>${formatLogTime(entry.at)}</small><strong>${entry.text}</strong></div></article>`).join("")
+      : '<p class="empty-journal">一起照護、遊戲與完成健康檢查後，回憶會收藏在這裡。</p>';
+    const logs = pet.activityLog.length
+      ? pet.activityLog.slice(-8).reverse().map((entry) => `<li><span aria-hidden="true">${entry.icon}</span><div><strong>${entry.text}</strong><small>${formatLogTime(entry.at)}</small></div></li>`).join("")
+      : '<li class="empty-journal">今天還沒有照護紀錄</li>';
+    drawer.innerHTML = `<div class="journal-head"><div><small>${profile.icon} ${profile.name}</small><h2>海豹生活紀錄</h2><p>${profile.line}</p></div><div class="trust-badge">信任階段<strong>${pet.affection >= 80 ? "親密夥伴" : pet.affection >= 50 ? "熟悉照護員" : pet.affection >= 25 ? "逐漸信任" : "保持觀察"}</strong></div></div><section class="journal-section"><div class="section-title"><h3>今日照護目標</h3><span>${pet.daily.rewarded ? "🏅 已完成" : "全部完成獲得 10 幣"}</span></div><ul class="daily-goals">${goals}</ul></section><section class="health-report"><span aria-hidden="true">🩺</span><div><small>最近健康觀察</small><strong>${observationSummary()}</strong></div></section><section class="journal-section"><div class="section-title"><h3>照片回憶簿</h3><span>${pet.memories.length} / 18</span></div><div class="memory-grid">${memories}</div></section><section class="journal-section"><div class="section-title"><h3>最近活動</h3></div><ul class="activity-list">${logs}</ul></section><section class="journal-section preferences"><div class="section-title"><h3>遊戲回饋設定</h3></div><button data-setting="sound"><span>🔊</span><strong>自然音效</strong><small>${pet.soundOn ? "已開啟" : "已關閉"}</small></button><button data-setting="vibration"><span>📳</span><strong>互動震動</strong><small>${pet.vibrationOn ? "已開啟" : "已關閉"}</small></button></section>`;
+  }
   drawer.querySelectorAll("[data-food]").forEach((button) => {
     button.onclick = () => feed(FOODS[Number(button.dataset.food)], button);
   });
@@ -2123,6 +2308,18 @@ function renderDrawer(force = false) {
   });
   drawer.querySelectorAll("[data-care]").forEach((button) => {
     button.onclick = () => performCare(button.dataset.care);
+  });
+  drawer.querySelectorAll("[data-setting]").forEach((button) => {
+    button.onclick = () => {
+      if (button.dataset.setting === "sound") toggleSound();
+      if (button.dataset.setting === "vibration") {
+        pet.vibrationOn = !pet.vibrationOn;
+        vibrate(12);
+        showNotice(pet.vibrationOn ? "互動震動已開啟" : "互動震動已關閉");
+        drawerKey = "";
+        render(true, true);
+      }
+    };
   });
 }
 
@@ -2146,10 +2343,11 @@ function render(persist = true, forceDrawer = false) {
     ensureThreeReady();
   }
   renderStats();
+  renderLifeStrip();
   renderSeal();
   renderDecorations();
   $("speech").textContent = mood();
-  $("pool").className = `pool-scene mode-${mode}${document.hidden ? " is-paused" : ""}`;
+  $("pool").className = `pool-scene mode-${mode} auto-${autonomousMood}${document.hidden ? " is-paused" : ""}`;
   document.querySelectorAll(".bottom-nav button").forEach((button) => {
     const active = button.dataset.mode === mode;
     button.classList.toggle("active", active);
@@ -2384,14 +2582,14 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   void seal.offsetWidth;
   seal.classList.add(kind);
   roamer.classList.add("reacting");
-  roamer.classList.toggle("resting-on-rock", motion === "haul");
+  roamer.classList.toggle("resting-on-rock", motion === "haul" || motion === "auto-rest");
   if (motion === "haul") setBusy(true);
   $("reaction-icon").dataset.kind = kind;
   $("reaction-icon").dataset.zone = zone || "";
   $("reaction-icon").hidden = false;
   createParticles(kind, icon);
   clearTimeout(reactionTimer);
-  const duration = motion === "haul" ? 7200 : kind === "eat" ? 1480 : 1180;
+  const duration = motion === "haul" ? 7200 : motion.startsWith("auto-") ? (motion === "auto-rest" ? 6200 : 4300) : kind === "eat" ? 1480 : 1180;
   reactionTimer = setTimeout(() => {
     $("reaction-icon").hidden = true;
     $("reaction-icon").dataset.zone = "";
@@ -2429,6 +2627,12 @@ function animateFood(icon, sourceButton) {
 
 function feed(food, sourceButton) {
   if (pet.dead || interactionLock) return;
+  if (pet.satiety >= 96) {
+    showNotice("牠已經吃飽了，先觀察消化與活動狀況", "warning");
+    addActivity("health", "吃飽後停止餵食，避免過量", "🩺");
+    safeSave();
+    return;
+  }
   const satietyGain = 10;
   setBusy(true);
   animateFood(food.icon, sourceButton);
@@ -2443,15 +2647,21 @@ function feed(food, sourceButton) {
     threeState.feedTick = performance.now();
   }
   sound("select");
-  navigator.vibrate?.(8);
-  showNotice(`${food.name}送到嘴邊了～`);
+  vibrate(8);
+  showNotice(`牠看到${food.name}，正在靠近確認氣味…`);
   const delay = matchMedia("(prefers-reduced-motion: reduce)").matches ? 80 : 480;
+  if (delay > 100) setTimeout(() => showNotice(`咬住${food.name}，開始咀嚼…`), 330);
   setTimeout(() => {
     pet.satiety = clamp(pet.satiety + satietyGain);
     pet.affection = clamp(pet.affection + 1 + (food.affection || 0));
     pet.health = clamp(pet.health + (food.health || 0));
     pet.energy = clamp(pet.energy + (food.energy || 0));
     pet.lastFedAt = Date.now();
+    pet.recentFoods = [...pet.recentFoods, food.name].slice(-6);
+    updateDaily("feed", food.name);
+    const variety = new Set(pet.recentFoods.slice(-4)).size;
+    if (variety >= 3) pet.health = clamp(pet.health + 1);
+    addActivity("feed", `吃了${food.name}${variety >= 3 ? "，近期飲食種類豐富" : ""}`, food.icon);
     pet.dead = false;
     showNotice(`${food.name}吃光光了！＋${satietyGain}%`, "success");
     render(true, true);
@@ -2461,7 +2671,7 @@ function feed(food, sourceButton) {
     }
     react("eat", food.icon, food.sound, "eat", `feed-${food.sound}`);
     sound("eat", food.sound);
-    navigator.vibrate?.([10, 35, 9]);
+    vibrate([10, 35, 9]);
     setTimeout(() => setBusy(false), 1500);
   }, delay);
 }
@@ -2483,12 +2693,14 @@ function performCare(actionId) {
     pet.affection = clamp(pet.affection + 3);
     message = "牠在乾燥岩台上安心休息，體力恢復了";
     reaction = "💤";
+    pet.lastRestAt = Date.now();
   }
   if (action.id === "clean") {
     pet.waterQuality = clamp(pet.waterQuality + 35);
     pet.health = clamp(pet.health + 3);
     message = "循環與過濾完成，泳池水質恢復清澈";
     reaction = "💧";
+    pet.lastCleanAt = Date.now();
   }
   if (action.id === "enrich") {
     pet.affection = clamp(pet.affection + 8);
@@ -2503,6 +2715,8 @@ function performCare(actionId) {
     message = "呼吸、眼睛、皮膚與活動力都記錄完成";
     reaction = "🩺";
   }
+  updateDaily("care");
+  addActivity(action.id === "check" ? "health" : "care", `${action.name}：${message}`, reaction);
   showNotice(message, "success");
   const careVisuals = {
     haul: { asset: "idle", motion: "haul" },
@@ -2511,7 +2725,7 @@ function performCare(actionId) {
     check: { asset: "pet", motion: "check" },
   };
   sound(action.id === "clean" ? "water" : "pet", action.id === "clean" ? "fin" : "belly");
-  navigator.vibrate?.(10);
+  vibrate(10);
   drawerKey = "";
   render(true, true);
   const careVisual = careVisuals[action.id];
@@ -2532,10 +2746,17 @@ function addPetTrail(x, y) {
 function petSeal(zone = "belly") {
   const now = Date.now();
   if (pet.dead || mode !== "pet" || interactionLock || now - lastPetAt < 700) return;
+  if (pet.interactionFatigue >= 82) {
+    showNotice("牠轉開身體了，現在想保有自己的空間", "warning");
+    addActivity("health", "尊重海豹停止互動的訊號", "🤍");
+    return;
+  }
   const safeZone = threeZoneRewards[zone] ? zone : "belly";
   const reward = threeZoneRewards[safeZone];
   lastPetAt = now;
   pet.affection = clamp(pet.affection + reward.affection);
+  pet.interactionFatigue = clamp(pet.interactionFatigue + 18);
+  updateDaily("play");
   if (threeState.ready) {
     const actionPose = reward.mode || THREE_POSE_STATES.PET;
     setThreeAction(actionPose, safeZone === "fin" ? 1160 : 920, safeZone, reward.expression);
@@ -2554,6 +2775,7 @@ function petSeal(zone = "belly") {
     fin: "💧",
     poke: "⚡",
   };
+  addActivity("play", reward.line, zoneVisual[safeZone] || "♥");
   const petVisuals = {
     head: { asset: "pet", motion: "head" },
     cheek: { asset: "idle", motion: "cheek" },
@@ -2564,15 +2786,19 @@ function petSeal(zone = "belly") {
   const petVisual = petVisuals[safeZone];
   react("pet", zoneVisual[safeZone] || "♥", safeZone, petVisual.asset, petVisual.motion);
   sound(safeZone === "fin" ? "water" : "pet", safeZone);
-  navigator.vibrate?.(10);
+  vibrate(10);
+  safeSave();
 }
 
 function greetSeal() {
   if (pet.dead || interactionLock || actionActive) return;
   const line = IDLE_LINES[Math.floor(Math.random() * IDLE_LINES.length)];
+  updateDaily("play");
+  addActivity("play", "小海豹主動回應你的招呼", "♪");
   showNotice(line);
   react("pet", "♪", "greet", "walk", "greet");
   sound("pet");
+  safeSave();
 }
 
 function buy(item) {
@@ -2671,12 +2897,14 @@ function finishRingDrag(event) {
   ringDrag = null;
   if (touchedSeal) {
     pet.affection = clamp(pet.affection + 5);
+    updateDaily("play");
+    addActivity("play", "抱住 Doflamingo 羽毛泳圈玩水", "🦩");
     ring.classList.add("is-playing");
     showNotice("海豹抱住 Doflamingo 羽毛泳圈玩水！信任度＋5", "success");
     render();
     react("pet", "🦩", "ring", "ring", "ring-play");
     sound("water", "fin");
-    navigator.vibrate?.([12, 35, 12]);
+    vibrate([12, 35, 12]);
     safeSave();
   }
   returnRingToPool(ring);
@@ -2848,17 +3076,15 @@ setInterval(() => {
   renderStats();
   if (!actionActive) $("speech").textContent = mood();
   $("dead-overlay").hidden = !pet.dead;
-  if (mode === "care") {
+  renderLifeStrip();
+  if (mode === "care" || mode === "journal") {
     drawerKey = "";
     renderDrawer(true);
   }
   safeSave();
 }, 6e4);
 
-setInterval(() => {
-  if (document.hidden || actionActive || mode !== "home" || pet.dead) return;
-  $("speech").textContent = IDLE_LINES[Math.floor(Math.random() * IDLE_LINES.length)];
-}, 17000);
+setInterval(runAutonomousBehavior, 14500);
 
 if (pet.dead) {
   $("notice").textContent = "你太久沒回來了……";
@@ -2886,6 +3112,7 @@ async function bootApp() {
   setTimeout(() => {
     if (loader) loader.hidden = true;
   }, 320);
+  setTimeout(runAutonomousBehavior, 5200);
 }
 
 bootApp();
