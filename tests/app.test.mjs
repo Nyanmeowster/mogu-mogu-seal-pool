@@ -70,13 +70,19 @@ test("真實照護狀態包含飽足、信任、健康與水質", () => {
   assert.match(script, /pet\.energy/);
 });
 
-test("進入網站會先載入並解碼全部 2D 體型素材", () => {
+test("進入網站會分階段載入並解碼目前與相鄰體型素材", () => {
   assert.match(html, /id="app-loader"/);
-  assert.equal((html.match(/rel="preload" as="image"/g) || []).length, 5);
+  assert.equal((html.match(/rel="preload" as="image"/g) || []).length, 0);
   assert.match(script, /async function preloadEssentialAssets\(\)/);
-  assert.match(script, /SPRITE_ASSETS\.slice\(1\)\.flatMap/);
+  assert.match(script, /\[current, current - 1, current \+ 1\]/);
+  assert.match(script, /async function preloadRemainingAssets\(\)/);
+  assert.match(script, /const \[baseResults, currentLoaded\] = await Promise\.all/);
+  assert.match(script, /Promise\.all\(neighborStages\.map/);
+  assert.match(script, /await waitForIdle\(\)/);
+  assert.match(script, /scheduleBackgroundPreload\(\)/);
   assert.match(script, /function preloadImage\(url\)/);
   assert.match(script, /await image\.decode\(\)/);
+  assert.match(script, /spriteCache\.delete\(url\)/);
   assert.match(script, /async function bootApp\(\)/);
   assert.match(script, /interactionLock = true;/);
   assert.match(script, /interactionLock = false;/);
@@ -92,7 +98,7 @@ test("遊戲泳池沿用封面風格的乾淨背景並預先載入", () => {
 
 test("上岸休息會實際移動到背景石台並停留", () => {
   assert.match(script, /resting-on-rock/);
-  assert.match(script, /motion === "haul" \? 7200/);
+  assert.match(script, /if \(motion === "haul"\) return \{ attention, main: 7200, settle \};/);
   assert.match(script, /if \(motion === "haul"\) setBusy\(true\);/);
   assert.match(styles, /\.seal-roamer\.reacting\.resting-on-rock/);
   assert.match(styles, /@keyframes haul-out-to-rock/);
@@ -142,7 +148,7 @@ test("主畫面只保留四個清楚入口", () => {
 test("所有海豹姿勢都有一致畫布與底部基準版本", () => {
   assert.equal(assets.filter((name) => name.endsWith("-aligned-v1.webp")).length, 60);
   assert.equal((script.match(/-aligned-v1\.webp/g) || []).length, 60);
-  assert.match(html, /seal-stage-1-aligned-v1\.webp/);
+  assert.doesNotMatch(html, /seal-stage-1-aligned-v1\.webp/);
 });
 
 test("首次遊玩以非彈窗方式引導陪伴、餵食與照護", () => {
@@ -210,7 +216,8 @@ test("陪伴動作會先注意玩家、互動，再自然離開", () => {
 
 test("停留會被注視，快速亂點會讓海豹退開", () => {
   assert.match(script, /addEventListener\("pointerenter"/);
-  assert.match(script, /rapidTouches\.length >= 4/);
+  assert.match(script, /const rapidTouchLimit = COARSE_POINTER \? 5 : 4/);
+  assert.match(script, /rapidTouches\.length >= rapidTouchLimit/);
   assert.match(script, /被嚇到了，先轉身保持一點距離/);
   assert.match(script, /"auto-space"/);
   assert.match(styles, /\.seal-roamer\.noticing-player/);
@@ -263,4 +270,43 @@ test("五種體型都有六張真正的自主生活動作圖", () => {
   assert.match(script, /asset: "approach"/);
   assert.match(script, /asset: "swim"/);
   assert.match(script, /react\("pet", "🤍", "space", "space", "auto-space"\)/);
+});
+
+test("互動圖片會交叉淡化並在入水時補上水紋過場", () => {
+  assert.match(script, /function setActionSprite\(asset\)/);
+  assert.match(script, /sprite-swapping/);
+  assert.ok(script.indexOf('roamer.classList.add("reacting");', script.indexOf("function react")) < script.indexOf("setActionSprite(actionAsset);", script.indexOf("function react")));
+  assert.match(script, /function createWaterTransition\(strength = "soft"\)/);
+  assert.match(styles, /\.seal-roamer\.reacting\.sprite-swapping \.seal-action-sprite/);
+  assert.match(styles, /@keyframes water-transition-ripple/);
+});
+
+test("互動句子會避開連續重複並使用對應情境音", () => {
+  assert.match(script, /function pickVariant\(key, options\)/);
+  assert.match(script, /lastResponseIndexes/);
+  assert.match(script, /const ATTENTION_LINES = \[/);
+  assert.match(script, /const COMPANION_LINES = \{/);
+  assert.match(script, /kind === "approach"/);
+  assert.match(script, /kind === "haul"/);
+  assert.match(script, /kind === "sleep"/);
+});
+
+test("手機與減少動態效果模式使用較短互動節奏", () => {
+  assert.match(script, /const COARSE_POINTER = matchMedia/);
+  assert.match(script, /function sequenceTiming\(motion, requestedMain\)/);
+  assert.match(script, /if \(prefersReducedMotion\(\)\) return \{ attention: 60, main: 120, settle: 100 \}/);
+  assert.match(script, /const trailThreshold = COARSE_POINTER \? 34 : 22/);
+  assert.match(script, /const petThreshold = COARSE_POINTER \? 68 : 58/);
+});
+
+test("存檔有版本遷移、安全備份與新版本寫入保護", () => {
+  assert.match(script, /const SAVE_SCHEMA_VERSION = 3/);
+  assert.match(script, /function migrateSave\(raw\)/);
+  assert.match(script, /function isRecognizableSave\(raw\)/);
+  assert.match(script, /function hasFutureSchema\(raw\)/);
+  assert.match(script, /SAVE_BACKUP_KEY/);
+  assert.match(script, /saveWriteProtected = true/);
+  assert.match(script, /if \(hasFutureSchema\(decodeSavedPet\(currentValue\)\)\)/);
+  assert.match(script, /schemaVersion: SAVE_SCHEMA_VERSION/);
+  assert.match(script, /await preloadStage\(stageForSatiety\(incoming\.satiety\)\)/);
 });

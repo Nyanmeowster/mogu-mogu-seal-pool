@@ -64,6 +64,8 @@ import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
+const SAVE_BACKUP_KEY = "mogu-pet-v1-backup";
+const SAVE_SCHEMA_VERSION = 3;
 const ASSET_VERSION = "38";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
@@ -72,6 +74,7 @@ const PREVIEW_DEAD = new URLSearchParams(location.search).get("preview") === "de
 const QUERY_PARAMS = new URLSearchParams(location.search);
 const FORCE_REALTIME_3D = false;
 const FORCE_SPRITE_FALLBACK = true;
+const COARSE_POINTER = matchMedia("(pointer: coarse)").matches;
 const MODEL_BASE_SCALE = 0.7;
 const THREE_POSE_STATES = {
   IDLE: "idle",
@@ -122,6 +125,21 @@ const CARE_ACTIONS = [
 
 const STAGE_LABELS = ["", "纖細小海豹", "健康體型", "圓潤體型", "胖嘟嘟", "幸福圓滾滾"];
 const IDLE_LINES = ["噗嚕～水溫剛剛好", "今天也想和你待在一起", "小海豹正在巡視泳池", "要不要陪我玩一下？"];
+const ATTENTION_LINES = ["注意到你，正慢慢靠近", "聽見你的動靜，抬頭看了過來", "認出是你，沿著池邊游近"];
+const COMPANION_LINES = {
+  call: ["聽見你的聲音，牠抬起頭慢慢靠近", "牠認出你在叫牠，沿著池邊游過來", "牠眨眨眼，帶著好奇心靠近你"],
+  splash: ["牠跟著水花開心游了一圈", "牠拍起一小片水花，又回頭等你", "牠潛進水裡繞了一圈，開心地浮上來"],
+  quiet: ["牠在你身邊放鬆地休息", "牠靠著池邊，呼吸慢慢平穩下來", "你安靜陪著牠，牠放心地閉上眼睛"],
+  wave: ["牠眨眨眼，像是在回應你的招呼", "牠抬起前鰭，輕輕動了一下", "牠歪著頭看你，鬍鬚微微顫動"],
+};
+const PET_LINES = {
+  head: ["牠抬起頭迎著你的手", "牠瞇起眼睛，鬍鬚放鬆下來", "牠輕輕晃頭，像是還想再摸一下"],
+  cheek: ["牠把臉頰靠過來了一點", "牠眨眨眼，對這個觸感很好奇", "牠的鬍鬚輕輕碰了碰你的手"],
+  belly: ["牠放鬆地攤平肚子", "牠舒服得小幅扭了扭身體", "牠安穩趴著，呼吸變得又慢又深"],
+  fin: ["牠動了動前鰭，濺起一點水花", "牠用前鰭輕拍水面回應你", "牠轉動身體，邀請你一起玩水"],
+  poke: ["牠稍微縮了一下，提醒你輕一點", "牠轉頭看你，想確認剛才發生什麼", "牠把身體挪開一點，請你放慢動作"],
+};
+const FEED_LINES = ["吃光光了，滿足地舔了舔嘴邊", "仔細咀嚼完，牠期待地看向你", "吞下最後一口，牠開心地拍了拍水面"];
 const PERSONALITIES = [
   { id: "gentle", name: "溫柔黏人", icon: "🤍", line: "牠喜歡安靜靠近熟悉的照護員" },
   { id: "curious", name: "好奇探險家", icon: "✨", line: "牠總會先去研究泳池裡的新東西" },
@@ -248,6 +266,8 @@ const fresh = () => {
     lastInteraction: null,
     dailyMoment: { date: "", id: "", choice: "" },
     onboardingStep: 0,
+    schemaVersion: SAVE_SCHEMA_VERSION,
+    lastResponseIndexes: {},
     name: "Mogu",
     birthday: "",
     profileComplete: false,
@@ -297,6 +317,8 @@ function normalizePet(raw) {
     lastInteraction: raw?.lastInteraction && typeof raw.lastInteraction === "object" ? { ...raw.lastInteraction } : null,
     dailyMoment: raw?.dailyMoment && typeof raw.dailyMoment === "object" ? { ...raw.dailyMoment } : { date: "", id: "", choice: "" },
     onboardingStep: Object.hasOwn(raw || {}, "onboardingStep") ? Math.min(4, Math.max(0, Math.floor(numberOr(raw.onboardingStep, 0)))) : raw?.profileComplete ? 4 : 0,
+    schemaVersion: SAVE_SCHEMA_VERSION,
+    lastResponseIndexes: raw?.lastResponseIndexes && typeof raw.lastResponseIndexes === "object" ? { ...raw.lastResponseIndexes } : {},
     name: typeof raw?.name === "string" && raw.name.trim() ? raw.name.trim().replace(/[<>&"]/g, "").slice(0, 12) || base.name : base.name,
     birthday: typeof raw?.birthday === "string" ? raw.birthday.slice(0, 10) : "",
     profileComplete: Boolean(raw?.profileComplete),
@@ -326,15 +348,88 @@ function normalizePet(raw) {
 
 let storageAvailable = true;
 let storageWarningShown = false;
+let recoveredSave = false;
+let saveWriteProtected = false;
+let futureSaveWarningShown = false;
+
+function decodeSavedPet(value) {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function isRecognizableSave(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  const hasFiniteNumber = (key) => raw[key] !== null && raw[key] !== "" && Number.isFinite(Number(raw[key]));
+  return hasFiniteNumber("satiety")
+    || hasFiniteNumber("lastSeenAt")
+    || typeof raw.name === "string" && Boolean(raw.name.trim())
+    || Array.isArray(raw.owned)
+    || typeof raw.profileComplete === "boolean";
+}
+
+function hasFutureSchema(raw) {
+  const version = Number(raw?.schemaVersion ?? 1);
+  return isRecognizableSave(raw) && Number.isInteger(version) && version > SAVE_SCHEMA_VERSION;
+}
+
+function protectFutureSave() {
+  saveWriteProtected = true;
+  if (!futureSaveWarningShown && document.body?.classList.contains("app-ready")) {
+    futureSaveWarningShown = true;
+    showNotice("偵測到較新版本的存檔，已停止覆寫以保護資料", "warning");
+  }
+}
+
+function migrateSave(raw) {
+  if (!isRecognizableSave(raw)) return null;
+  let version = Number(raw.schemaVersion ?? 1);
+  if (!Number.isInteger(version) || version < 1 || version > SAVE_SCHEMA_VERSION) return null;
+  const migrated = { ...raw };
+  if (version === 1) {
+    delete migrated.feedStreak;
+    delete migrated.lastFeedComboAt;
+    delete migrated.bestFeedStreak;
+    migrated.schemaVersion = 2;
+    version = 2;
+  }
+  if (version === 2) {
+    migrated.lastResponseIndexes = migrated.lastResponseIndexes && typeof migrated.lastResponseIndexes === "object"
+      ? { ...migrated.lastResponseIndexes }
+      : {};
+    migrated.schemaVersion = 3;
+  }
+  return migrated;
+}
+
+function parseSavedPet(value) {
+  return migrateSave(decodeSavedPet(value));
+}
 
 function safeRead() {
+  let currentValue;
+  let backupValue;
   try {
-    const value = localStorage.getItem(SAVE_KEY);
-    return value ? JSON.parse(value) : null;
+    currentValue = localStorage.getItem(SAVE_KEY);
+    backupValue = localStorage.getItem(SAVE_BACKUP_KEY);
   } catch {
     storageAvailable = false;
     return null;
   }
+  const rawCurrent = decodeSavedPet(currentValue);
+  if (hasFutureSchema(rawCurrent)) {
+    saveWriteProtected = true;
+    return rawCurrent;
+  }
+  const current = migrateSave(rawCurrent);
+  if (current) return current;
+  const backup = parseSavedPet(backupValue);
+  if (backup) recoveredSave = true;
+  return backup;
 }
 
 let pet = normalizePet(safeRead());
@@ -344,6 +439,7 @@ let autonomousUntil = 0;
 let currentStage = 0;
 let actionActive = "";
 let reactionTimer;
+let spriteSwapTimer;
 let interactionLock = false;
 let lastPetAt = 0;
 let drawerKey = "";
@@ -380,6 +476,15 @@ function ensureCurrentDay() {
 function rememberInteraction(id, label) {
   pet.interactionCounts[id] = Math.max(0, Number(pet.interactionCounts[id]) || 0) + 1;
   pet.lastInteraction = { id, label, at: Date.now() };
+}
+
+function pickVariant(key, options) {
+  if (!Array.isArray(options) || options.length === 0) return "";
+  const previous = Number(pet.lastResponseIndexes?.[key]);
+  const candidates = options.map((_, index) => index).filter((index) => options.length === 1 || index !== previous);
+  const index = candidates[Math.floor(Math.random() * candidates.length)];
+  pet.lastResponseIndexes = { ...pet.lastResponseIndexes, [key]: index };
+  return options[index];
 }
 
 function favoriteInteraction() {
@@ -589,9 +694,17 @@ function safeSave() {
   if (PREVIEW_DEAD) return;
   pet.lastSeenAt = Date.now();
   pet.updatedAt = Date.now();
-  if (!storageAvailable) return;
+  pet.schemaVersion = SAVE_SCHEMA_VERSION;
+  if (!storageAvailable || saveWriteProtected) return;
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(pet));
+    const nextValue = JSON.stringify(pet);
+    const currentValue = localStorage.getItem(SAVE_KEY);
+    if (hasFutureSchema(decodeSavedPet(currentValue))) {
+      protectFutureSave();
+      return;
+    }
+    if (parseSavedPet(currentValue)) localStorage.setItem(SAVE_BACKUP_KEY, currentValue);
+    localStorage.setItem(SAVE_KEY, nextValue);
   } catch {
     storageAvailable = false;
     if (!storageWarningShown) {
@@ -601,8 +714,12 @@ function safeSave() {
   }
 }
 
+function stageForSatiety(satiety) {
+  return satiety < 20 ? 1 : satiety < 40 ? 2 : satiety < 70 ? 3 : satiety < 90 ? 4 : 5;
+}
+
 function stage() {
-  return pet.satiety < 20 ? 1 : pet.satiety < 40 ? 2 : pet.satiety < 70 ? 3 : pet.satiety < 90 ? 4 : 5;
+  return stageForSatiety(pet.satiety);
 }
 
 function getSizeMorphBlend(value) {
@@ -716,7 +833,7 @@ function runAutonomousBehavior() {
 function preloadImage(url) {
   if (spriteCache.has(url)) return spriteCache.get(url);
   const image = new Image();
-  const promise = new Promise((resolve) => {
+  const request = new Promise((resolve) => {
     let settled = false;
     const finish = async (loaded) => {
       if (settled) return;
@@ -737,14 +854,24 @@ function preloadImage(url) {
     image.src = url;
     if (image.complete) finish(image.naturalWidth > 0);
   });
-  spriteCache.set(url, promise);
-  return promise;
+  const retriableRequest = request.then((loaded) => {
+    if (!loaded && spriteCache.get(url) === retriableRequest) spriteCache.delete(url);
+    return loaded;
+  });
+  spriteCache.set(url, retriableRequest);
+  return retriableRequest;
 }
 
-async function preloadStage(stageNumber) {
+async function preloadStage(stageNumber, onAssetLoaded = null) {
   if (stageNumber < 1 || stageNumber > 5) return false;
   if (preloaded.has(stageNumber)) return true;
-  const results = await Promise.all(Object.values(SPRITE_ASSETS[stageNumber]).map((url) => preloadImage(`${url}?v=${ASSET_VERSION}`)));
+  const results = await Promise.all(
+    Object.values(SPRITE_ASSETS[stageNumber]).map(async (url) => {
+      const loaded = await preloadImage(`${url}?v=${ASSET_VERSION}`);
+      onAssetLoaded?.();
+      return loaded;
+    }),
+  );
   if (results.every(Boolean)) preloaded.add(stageNumber);
   return results.every(Boolean);
 }
@@ -760,24 +887,61 @@ function updateLoadingProgress(completed, total) {
 }
 
 async function preloadEssentialAssets() {
-  const urls = [
+  const current = stage();
+  const essentialStages = [current, current - 1, current + 1].filter((value) => value >= 1 && value <= 5);
+  const neighborStages = essentialStages.filter((stageNumber) => stageNumber !== current);
+  const baseUrls = [
     `${poolBackground}?v=${ASSET_VERSION}`,
     `${doflamingoRing}?v=${ASSET_VERSION}`,
-    ...SPRITE_ASSETS.slice(1).flatMap((assets) => Object.values(assets).map((url) => `${url}?v=${ASSET_VERSION}`)),
   ];
+  const total = baseUrls.length + essentialStages.reduce((sum, stageNumber) => sum + Object.keys(SPRITE_ASSETS[stageNumber]).length, 0);
   let completed = 0;
-  updateLoadingProgress(0, urls.length);
-  const results = await Promise.all(
-    urls.map(async (url) => {
+  let allLoaded = true;
+  const markComplete = () => {
+    completed += 1;
+    updateLoadingProgress(completed, total);
+  };
+  updateLoadingProgress(0, total);
+  const baseRequest = Promise.all(
+    baseUrls.map(async (url) => {
       const loaded = await preloadImage(url);
-      completed += 1;
-      updateLoadingProgress(completed, urls.length);
+      markComplete();
       return loaded;
     }),
   );
-  [1, 2, 3, 4, 5].forEach((stageNumber) => preloaded.add(stageNumber));
+  const [baseResults, currentLoaded] = await Promise.all([
+    baseRequest,
+    preloadStage(current, markComplete),
+  ]);
+  allLoaded = baseResults.every(Boolean) && currentLoaded;
+  const neighborResults = await Promise.all(neighborStages.map((stageNumber) => preloadStage(stageNumber, markComplete)));
+  allLoaded = neighborResults.every(Boolean) && allLoaded;
   if (document.fonts?.ready) await document.fonts.ready;
-  return results.every(Boolean);
+  updateLoadingProgress(total, total);
+  return allLoaded;
+}
+
+function waitForIdle(timeout = 1400) {
+  return new Promise((resolve) => {
+    if ("requestIdleCallback" in window) window.requestIdleCallback(() => resolve(), { timeout });
+    else setTimeout(resolve, 240);
+  });
+}
+
+async function preloadRemainingAssets() {
+  const remaining = [1, 2, 3, 4, 5].filter((stageNumber) => !preloaded.has(stageNumber));
+  const results = [];
+  for (const stageNumber of remaining) {
+    await waitForIdle();
+    results.push(await preloadStage(stageNumber));
+  }
+  return results;
+}
+
+function scheduleBackgroundPreload() {
+  const load = () => preloadRemainingAssets().catch(() => {});
+  if ("requestIdleCallback" in window) window.requestIdleCallback(load, { timeout: 2600 });
+  else setTimeout(load, 900);
 }
 
 function shouldUseRealtime3D() {
@@ -2419,7 +2583,7 @@ function saveProfileFromJournal() {
 
 function exportSave() {
   safeSave();
-  const payload = { app: "MOGU MOGU", version: 2, exportedAt: new Date().toISOString(), pet };
+  const payload = { app: "MOGU MOGU", schemaVersion: SAVE_SCHEMA_VERSION, exportedAt: new Date().toISOString(), pet };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -2441,7 +2605,12 @@ async function importSave(event) {
   try {
     const payload = JSON.parse(await file.text());
     if (payload?.app !== "MOGU MOGU" || !payload.pet || typeof payload.pet !== "object") throw new Error("invalid");
-    pet = normalizePet(payload.pet);
+    const migrated = migrateSave(payload.pet);
+    if (!migrated || Number(payload.schemaVersion ?? payload.version ?? 1) > SAVE_SCHEMA_VERSION) throw new Error("unsupported");
+    const incoming = normalizePet(migrated);
+    await preloadStage(stageForSatiety(incoming.satiety));
+    pet = incoming;
+    saveWriteProtected = false;
     currentStage = 0;
     drawerKey = "";
     decorKey = "";
@@ -2483,7 +2652,10 @@ function renderSeal() {
   });
   roamer.classList.add(`stage-${nextStage}`);
   $("seal-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "idle")}")`;
-  $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "pet")}")`;
+  if (!actionActive) {
+    $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "pet")}")`;
+    $("seal-action-sprite").dataset.asset = `${nextStage}:pet`;
+  }
   $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "chew")}")`;
   const habitatState = pet.waterQuality >= 70 ? "水質清澈" : pet.waterQuality >= 40 ? "水質待維護" : "水質警報";
   $("stage-pill").textContent = `${STAGE_LABELS[nextStage]} · ${habitatState}`;
@@ -2794,6 +2966,18 @@ function sound(kind, kindDetail = "fish") {
       tone(650, now + 0.1, 0.25, 0.045, "sine", 770);
     }
   }
+  if (kind === "approach") {
+    tone(290, now, 0.18, 0.026, "sine", 390);
+    tone(470, now + 0.12, 0.24, 0.022, "triangle", 560);
+  }
+  if (kind === "haul") {
+    noiseBurst(now, 0.24, 190, 0.035, 2.6);
+    tone(125, now + 0.08, 0.34, 0.026, "sine", 88);
+  }
+  if (kind === "sleep") {
+    tone(118, now, 0.52, 0.018, "sine", 92);
+    tone(96, now + 0.42, 0.62, 0.014, "sine", 76);
+  }
   if (kind === "coin") {
     [620, 820, 1080].forEach((frequency, index) =>
       tone(frequency, now + index * 0.07, 0.16, 0.048, "triangle", frequency * 1.08),
@@ -2872,11 +3056,83 @@ function createParticles(kind, icon) {
   $("reaction-icon").textContent = icon;
 }
 
+function prefersReducedMotion() {
+  return matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function sequenceTiming(motion, requestedMain) {
+  if (prefersReducedMotion()) return { attention: 60, main: 120, settle: 100 };
+  const attention = COARSE_POINTER ? 520 : 620;
+  const settle = COARSE_POINTER ? 880 : 1050;
+  if (motion === "haul") return { attention, main: 7200, settle };
+  const mainLimit = motion === "auto-sleep"
+    ? (COARSE_POINTER ? 3200 : 3600)
+    : (COARSE_POINTER ? 2900 : 3400);
+  return { attention, main: Math.min(requestedMain, mainLimit), settle };
+}
+
+function reactionDuration(kind, motion = "") {
+  if (prefersReducedMotion()) {
+    if (motion === "notice-player") return 60;
+    if (motion === "settle-away") return 100;
+    return motion === "haul" ? 180 : 120;
+  }
+  if (motion === "notice-player") return COARSE_POINTER ? 520 : 620;
+  if (motion === "settle-away") return COARSE_POINTER ? 880 : 1050;
+  if (motion === "haul") return 7200;
+  if (motion === "auto-rest") return COARSE_POINTER ? 4600 : 6200;
+  if (motion === "auto-sleep") return COARSE_POINTER ? 3200 : 3600;
+  if (motion.startsWith("auto-")) return COARSE_POINTER ? 2900 : 3400;
+  if (kind === "eat") return COARSE_POINTER ? 1250 : 1480;
+  return COARSE_POINTER ? 1000 : 1180;
+}
+
+function createWaterTransition(strength = "soft") {
+  if (prefersReducedMotion()) return;
+  const pool = $("pool");
+  const seal = $("seal");
+  if (!pool || !seal) return;
+  pool.querySelector(".water-transition")?.remove();
+  const poolRect = pool.getBoundingClientRect();
+  const sealRect = seal.getBoundingClientRect();
+  const splash = document.createElement("span");
+  splash.className = `water-transition is-${strength}`;
+  splash.style.left = `${sealRect.left - poolRect.left + sealRect.width * 0.5}px`;
+  splash.style.top = `${sealRect.top - poolRect.top + sealRect.height * 0.78}px`;
+  splash.setAttribute("aria-hidden", "true");
+  pool.appendChild(splash);
+  setTimeout(() => splash.remove(), 760);
+}
+
+function setActionSprite(asset) {
+  const sprite = $("seal-action-sprite");
+  const roamer = $("seal-roamer");
+  const stageNumber = currentStage || stage();
+  const key = `${stageNumber}:${asset}`;
+  if (sprite.dataset.asset === key) return;
+  const apply = () => {
+    sprite.style.backgroundImage = `url("${spriteAsset(stageNumber, asset)}")`;
+    sprite.dataset.asset = key;
+  };
+  clearTimeout(spriteSwapTimer);
+  if (prefersReducedMotion() || !roamer.classList.contains("reacting")) {
+    roamer.classList.remove("sprite-swapping");
+    apply();
+    return;
+  }
+  roamer.classList.add("sprite-swapping");
+  spriteSwapTimer = setTimeout(() => {
+    apply();
+    requestAnimationFrame(() => roamer.classList.remove("sprite-swapping"));
+  }, 100);
+}
+
 function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   const seal = $("seal");
   const roamer = $("seal-roamer");
   const actionAsset = visualAsset || (kind === "eat" ? "eat" : "pet");
-  $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), actionAsset)}")`;
+  roamer.classList.add("reacting");
+  setActionSprite(actionAsset);
   if (kind === "eat") {
     $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), "chew")}")`;
   }
@@ -2885,15 +3141,24 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   seal.classList.remove("eat", "pet");
   void seal.offsetWidth;
   seal.classList.add(kind);
-  roamer.classList.add("reacting");
   roamer.classList.toggle("resting-on-rock", motion === "haul" || motion === "auto-rest");
   if (motion === "haul") setBusy(true);
   $("reaction-icon").dataset.kind = kind;
   $("reaction-icon").dataset.zone = zone || "";
   $("reaction-icon").hidden = false;
   createParticles(kind, icon);
+  if (actionAsset === "swim" || motion === "clean" || motion === "fin" || motion.startsWith("feed-")) {
+    createWaterTransition(motion === "clean" || motion === "auto-swim" ? "strong" : "soft");
+  }
   clearTimeout(reactionTimer);
-  const duration = motion === "notice-player" ? 720 : motion === "settle-away" ? 1350 : motion === "haul" ? 7200 : motion.startsWith("auto-") ? (motion === "auto-rest" ? 6200 : 4300) : kind === "eat" ? 1480 : 1180;
+  const duration = reactionDuration(kind, motion);
+  seal.style.animationDuration = `${duration}ms`;
+  if (motion === "haul") {
+    createWaterTransition("strong");
+    setTimeout(() => {
+      if (actionActive === kind && seal.dataset.motion === "haul") createWaterTransition("soft");
+    }, Math.max(0, duration - 720));
+  }
   reactionTimer = setTimeout(() => {
     $("reaction-icon").hidden = true;
     $("reaction-icon").dataset.zone = "";
@@ -2902,6 +3167,7 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
     roamer.classList.remove("reacting");
     roamer.classList.remove("resting-on-rock");
     if (motion === "haul") setBusy(false);
+    seal.style.removeProperty("animation-duration");
     actionActive = "";
   }, duration);
 }
@@ -2911,20 +3177,34 @@ function playInteractionSequence({ icon, zone, asset, motion, onMain, onComplete
   clearTimeout(sequenceTimer);
   clearTimeout(settleTimer);
   setBusy(true);
-  $("speech").textContent = `${pet.name} 注意到你，正慢慢靠近…`;
+  const timing = sequenceTiming(motion, mainDuration);
+  $("speech").textContent = `${pet.name} ${pickVariant("sequence-attention", ATTENTION_LINES)}…`;
   react("pet", "•", "attention", "approach", "notice-player");
+  sound("approach");
   sequenceTimer = setTimeout(() => {
     onMain?.();
     react("pet", icon, zone, asset, motion);
     settleTimer = setTimeout(() => {
-      $("speech").textContent = pet.energy < 35 ? `${pet.name} 安心地停在你身邊休息` : `${pet.name} 回到水裡，仍不時回頭看你`;
-      react("pet", "♡", "settle", pet.energy < 35 ? "sleep" : "swim", "settle-away");
-      setTimeout(() => {
+      const settleOptions = pet.energy < 35
+        ? [
+            { line: `${pet.name} 安心地停在你身邊休息`, asset: "sleep", sound: "sleep" },
+            { line: `${pet.name} 靠著池邊，慢慢閉上眼睛`, asset: "sleep", sound: "sleep" },
+          ]
+        : [
+            { line: `${pet.name} 回到水裡，仍不時回頭看你`, asset: "swim", sound: "water" },
+            { line: `${pet.name} 輕輕滑回池中，又繞回你附近`, asset: "swim", sound: "water" },
+            { line: `${pet.name} 停在池邊多看了你一會兒`, asset: "approach", sound: "approach" },
+          ];
+      const settle = pickVariant(`settle-${zone}`, settleOptions);
+      $("speech").textContent = settle.line;
+      react("pet", "♡", "settle", settle.asset, "settle-away");
+      sound(settle.sound);
+      settleTimer = setTimeout(() => {
         setBusy(false);
         onComplete?.();
-      }, 1350);
-    }, mainDuration);
-  }, 720);
+      }, timing.settle);
+    }, timing.main);
+  }, timing.attention);
 }
 
 function animateFood(icon, sourceButton) {
@@ -2975,7 +3255,7 @@ function feed(food, sourceButton) {
   sound("select");
   vibrate(8);
   showNotice(`牠看到${food.name}，正在靠近確認氣味…`);
-  const delay = matchMedia("(prefers-reduced-motion: reduce)").matches ? 80 : 480;
+  const delay = prefersReducedMotion() ? 60 : COARSE_POINTER ? 400 : 480;
   if (delay > 100) setTimeout(() => showNotice(`咬住${food.name}，開始咀嚼…`), 330);
   setTimeout(() => {
     pet.satiety = clamp(pet.satiety + satietyGain);
@@ -2990,7 +3270,7 @@ function feed(food, sourceButton) {
     if (variety >= 3) pet.health = clamp(pet.health + 1);
     addActivity("feed", `吃了${food.name}${variety >= 3 ? "，近期飲食種類豐富" : ""}`, food.icon);
     pet.dead = false;
-    showNotice(`${food.name}吃光光了！＋${satietyGain}%`, "success");
+    showNotice(`${food.name}：${pickVariant(`feed-${food.id}`, FEED_LINES)}　＋${satietyGain}%`, "success");
     render(true, true);
     setBusy(true);
     if (threeState.ready) {
@@ -3002,7 +3282,7 @@ function feed(food, sourceButton) {
     setTimeout(() => {
       setBusy(false);
       advanceOnboarding(2);
-    }, 1500);
+    }, prefersReducedMotion() ? 120 : COARSE_POINTER ? 1250 : 1500);
   }, delay);
 }
 
@@ -3014,21 +3294,22 @@ function performCompanion(actionId) {
     return;
   }
   const actions = {
-    call: { message: `${pet.name} 聽見你了，抬起頭慢慢靠近`, icon: "👋", asset: "approach", motion: "auto-approach", affection: 3, energy: -1, sound: "pet" },
-    splash: { message: `${pet.name} 跟著水花開心游了一圈`, icon: "💦", asset: "swim", motion: "auto-swim", affection: 4, energy: -3, sound: "water" },
-    quiet: { message: `${pet.name} 在你身邊放鬆地休息`, icon: "💤", asset: "sleep", motion: "auto-sleep", affection: 3, energy: 5, sound: "pet" },
-    wave: { message: `${pet.name} 眨眨眼，像是在回應你的招呼`, icon: "🤍", asset: "approach", motion: "auto-approach", affection: 2, energy: 0, sound: "pet" },
+    call: { icon: "👋", asset: "approach", motion: "auto-approach", affection: 3, energy: -1, sound: "pet" },
+    splash: { icon: "💦", asset: "swim", motion: "auto-swim", affection: 4, energy: -3, sound: "water" },
+    quiet: { icon: "💤", asset: "sleep", motion: "auto-sleep", affection: 3, energy: 5, sound: "sleep" },
+    wave: { icon: "🤍", asset: "approach", motion: "auto-approach", affection: 2, energy: 0, sound: "pet" },
   };
   const action = actions[actionId];
   if (!action) return;
+  const message = `${pet.name} ${pickVariant(`companion-${actionId}`, COMPANION_LINES[actionId])}`;
   playInteractionSequence({ icon: action.icon, zone: actionId, asset: action.asset, motion: action.motion, mainDuration: 4300, onComplete: () => advanceOnboarding(1), onMain: () => {
     pet.affection = clamp(pet.affection + action.affection);
     pet.energy = clamp(pet.energy + action.energy);
     pet.interactionFatigue = clamp(pet.interactionFatigue + 6);
-    rememberInteraction(actionId, action.message);
+    rememberInteraction(actionId, message);
     updateDaily("play");
-    addActivity("play", action.message, action.icon);
-    showNotice(action.message, "success");
+    addActivity("play", message, action.icon);
+    showNotice(message, "success");
     sound(action.sound, actionId);
     vibrate(actionId === "splash" ? [8, 28, 8] : 10);
     render(true, true);
@@ -3127,7 +3408,8 @@ function performCare(actionId) {
     enrich: { asset: "sniff", motion: "enrich" },
     check: { asset: "approach", motion: "check" },
   };
-  sound(action.id === "clean" ? "water" : "pet", action.id === "clean" ? "fin" : "belly");
+  const careSounds = { haul: "haul", clean: "water", enrich: "approach", check: "pet" };
+  sound(careSounds[action.id] || "pet", action.id === "clean" ? "fin" : "belly");
   vibrate(10);
   drawerKey = "";
   render(true, true);
@@ -3136,7 +3418,7 @@ function performCare(actionId) {
   setTimeout(() => {
     setBusy(false);
     advanceOnboarding(3);
-  }, action.id === "haul" ? 7200 : 1200);
+  }, reactionDuration("pet", careVisual.motion));
 }
 
 function addPetTrail(x, y) {
@@ -3164,11 +3446,12 @@ function petSeal(zone = "belly") {
   }
   const safeZone = threeZoneRewards[zone] ? zone : "belly";
   const reward = threeZoneRewards[safeZone];
+  const responseLine = pickVariant(`pet-${safeZone}`, PET_LINES[safeZone] || [reward.line]);
   lastPetAt = now;
   setBusy(true);
   pet.affection = clamp(pet.affection + reward.affection);
   pet.interactionFatigue = clamp(pet.interactionFatigue + 18);
-  rememberInteraction("pet", reward.line);
+  rememberInteraction("pet", responseLine);
   updateDaily("play");
   if (threeState.ready) {
     const actionPose = reward.mode || THREE_POSE_STATES.PET;
@@ -3179,7 +3462,7 @@ function petSeal(zone = "belly") {
     }
   }
   threeState.lastInteractionStamp = performance.now();
-  showNotice(reward.line, "success");
+  showNotice(responseLine, "success");
   render();
   const zoneVisual = {
     head: "•",
@@ -3188,7 +3471,7 @@ function petSeal(zone = "belly") {
     fin: "💧",
     poke: "⚡",
   };
-  addActivity("play", reward.line, zoneVisual[safeZone] || "♥");
+  addActivity("play", responseLine, zoneVisual[safeZone] || "♥");
   const petVisuals = {
     head: { asset: "pet", motion: "head" },
     cheek: { asset: "idle", motion: "cheek" },
@@ -3204,12 +3487,12 @@ function petSeal(zone = "belly") {
   setTimeout(() => {
     setBusy(false);
     advanceOnboarding(1);
-  }, 1180);
+  }, reactionDuration("pet", petVisual.motion));
 }
 
 function greetSeal() {
   if (pet.dead || interactionLock || actionActive) return;
-  const line = IDLE_LINES[Math.floor(Math.random() * IDLE_LINES.length)];
+  const line = pickVariant("greet", IDLE_LINES);
   updateDaily("play");
   addActivity("play", "小海豹主動回應你的招呼", "♪");
   showNotice(line);
@@ -3351,7 +3634,8 @@ $("seal").addEventListener("pointerdown", (event) => {
   activePetPointerId = event.pointerId;
   const now = Date.now();
   rapidTouches = [...rapidTouches.filter((stamp) => now - stamp < 1200), now];
-  if (rapidTouches.length >= 4) {
+  const rapidTouchLimit = COARSE_POINTER ? 5 : 4;
+  if (rapidTouches.length >= rapidTouchLimit) {
     rapidTouches = [];
     activePetPointerId = null;
     pet.interactionFatigue = clamp(pet.interactionFatigue + 12);
@@ -3409,11 +3693,13 @@ $("seal").addEventListener("pointermove", (event) => {
   } else {
     pointerZone = resolveFallbackHitZone(event);
   }
-  if (trailDistance > 22) {
+  const trailThreshold = COARSE_POINTER ? 34 : 22;
+  const petThreshold = COARSE_POINTER ? 68 : 58;
+  if (trailDistance > trailThreshold) {
     trailDistance = 0;
     addPetTrail(event.clientX, event.clientY);
   }
-  if (pointerTravel > 58 && !gesturePetTriggered) {
+  if (pointerTravel > petThreshold && !gesturePetTriggered) {
     gesturePetTriggered = true;
     suppressClick = true;
     petSeal(pointerZone);
@@ -3526,10 +3812,19 @@ window.addEventListener("pageshow", () => {
   render();
 });
 
-window.addEventListener("storage", (event) => {
+window.addEventListener("storage", async (event) => {
   if (event.key !== SAVE_KEY || !event.newValue) return;
   try {
-    const incoming = normalizePet(JSON.parse(event.newValue));
+    const rawIncoming = decodeSavedPet(event.newValue);
+    if (hasFutureSchema(rawIncoming)) {
+      protectFutureSave();
+      return;
+    }
+    const migrated = migrateSave(rawIncoming);
+    if (!migrated) return;
+    const incoming = normalizePet(migrated);
+    if (incoming.updatedAt <= pet.updatedAt) return;
+    await preloadStage(stageForSatiety(incoming.satiety));
     if (incoming.updatedAt <= pet.updatedAt) return;
     pet = incoming;
     currentStage = 0;
@@ -3594,6 +3889,12 @@ async function bootApp() {
   setTimeout(() => {
     if (loader) loader.hidden = true;
   }, 320);
+  scheduleBackgroundPreload();
+  if (saveWriteProtected) {
+    setTimeout(() => showNotice("這份存檔來自較新版本，目前以唯讀方式開啟", "warning"), 300);
+  } else if (recoveredSave) {
+    setTimeout(() => showNotice("已從上一份安全備份恢復照護進度", "success"), 300);
+  }
   if (!pet.profileComplete && !PREVIEW_DEAD) {
     $("profile-name").value = pet.name;
     $("profile-birthday").value = pet.birthday;
@@ -3610,7 +3911,7 @@ async function bootApp() {
       showNotice(welcome, "success");
       $("speech").textContent = welcome;
       react("pet", "🤍", "welcome", "approach", "auto-approach");
-    }, 360);
+    }, recoveredSave || saveWriteProtected ? 2200 : 360);
   }
   setTimeout(runAutonomousBehavior, 5200);
 }
