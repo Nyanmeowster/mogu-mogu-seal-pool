@@ -31,8 +31,8 @@
     <header class="pet-header">
       <div class="pet-brand"><span>●</span><div><small>MOGU MOGU</small><h1><b id="seal-name-title">Mogu</b> 的海豹泳池</h1></div></div>
       <div class="header-actions">
-        <button id="sound-toggle" class="sound-toggle" type="button" aria-label="關閉音效" aria-pressed="false"><span aria-hidden="true">🔊</span></button>
-        <div class="coin-pill" aria-label="海豹幣"><span aria-hidden="true">🪙</span><strong id="coins">1000</strong></div>
+        <button id="sound-toggle" class="sound-toggle" type="button" aria-label="音效" aria-pressed="true"><span aria-hidden="true">🔊</span></button>
+        <div class="coin-pill" aria-label="海豹幣"><span aria-hidden="true">🪙</span><strong id="coins">11</strong></div>
       </div>
     </header>
     <p class="care-ethics"><span aria-hidden="true">🌊</span> 專業照護模擬 · 野生海豹受保護，請勿靠近、觸摸或餵食</p>
@@ -64,7 +64,7 @@
       <div id="notice" class="notice" aria-live="polite">歡迎回來～</div>
       <div class="foreground-water" aria-hidden="true"><i></i><i></i><i></i></div>
     </section>
-    <section id="drawer" class="action-drawer closed" aria-live="polite"></section>
+    <section id="drawer" class="action-drawer closed" aria-live="polite" tabindex="-1"></section>
     <aside id="onboarding-tip" class="onboarding-tip" aria-live="polite" hidden>
       <span id="onboarding-copy"></span>
       <button id="onboarding-skip" type="button">先自己探索</button>
@@ -75,18 +75,18 @@
       <button data-mode="care" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🩺</span><small>照護</small></button>
       <button data-mode="shop" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🏠</span><small>小屋</small></button>
     </nav>
-    <div id="dead-overlay" class="dead-overlay" role="dialog" aria-modal="true" aria-labelledby="dead-title" hidden>
-      <div class="dead-card"><span>🚑</span><small>健康狀態亮紅燈</small><h2 id="dead-title">已交由專業獸醫照護</h2><p>規律餵食、上岸休息、乾淨水質與健康檢查都很重要。</p><button id="adopt">重新開始照護</button></div>
-    </div>
-    <div id="profile-overlay" class="profile-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-title" hidden>
-      <form id="profile-form" class="profile-card">
-        <span class="profile-seal" aria-hidden="true">●ᴥ●</span><small>建立專屬身分</small><h2 id="profile-title">牠要叫什麼名字？</h2><p>名字與相遇日會保存在生活紀錄裡，之後也能修改。</p>
-        <label>海豹名字<input id="profile-name" name="name" maxlength="12" value="Mogu" autocomplete="off" required></label>
-        <label>生日或相遇日<input id="profile-birthday" name="birthday" type="date"></label>
-        <button type="submit">開始一起生活</button>
-      </form>
-    </div>
   </main>
+  <div id="dead-overlay" class="dead-overlay" role="dialog" aria-modal="true" aria-labelledby="dead-title" tabindex="-1" hidden>
+    <div class="dead-card"><span aria-hidden="true">🚑</span><small>健康狀態亮紅燈</small><h2 id="dead-title">已交由專業獸醫照護</h2><p>規律餵食、上岸休息、乾淨水質與健康檢查都很重要。</p><button id="adopt" type="button">重新開始照護</button></div>
+  </div>
+  <div id="profile-overlay" class="profile-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-title" aria-describedby="profile-description" tabindex="-1" hidden>
+    <form id="profile-form" class="profile-card">
+      <span class="profile-seal" aria-hidden="true">●ᴥ●</span><small>建立專屬身分</small><h2 id="profile-title">牠要叫什麼名字？</h2><p id="profile-description">名字與相遇日會保存在生活紀錄裡，之後也能修改。</p>
+      <label>海豹名字<input id="profile-name" name="name" maxlength="12" value="Mogu" autocomplete="off" required></label>
+      <label>生日或相遇日<input id="profile-birthday" name="birthday" type="date"></label>
+      <div class="profile-actions"><button id="profile-cancel" class="profile-cancel" type="button" hidden>取消</button><button id="profile-submit" type="submit">開始一起生活</button></div>
+    </form>
+  </div>
   <script type="module" src="/app.js?v=39"></script>
 </body>
 </html>

@@ -95,6 +95,7 @@ function completeSave(overrides = {}) {
     energy: 72,
     waterQuality: 86,
     health: 91,
+    bodyCondition: 52,
     coins: 18,
     lastFedAt: now,
     lastSeenAt: now,
@@ -137,6 +138,8 @@ function createSaveHarness({ current = null, backup = null, pet = completeSave()
     extractConstant("SAVE_BACKUP_KEY"),
     extractConstant("SAVE_SCHEMA_VERSION"),
     extractConstant("HOUR"),
+    extractConstant("COIN_INTERVAL"),
+    "const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));",
     "const PREVIEW_DEAD = false;",
     "let storageAvailable = true;",
     "let storageWarningShown = false;",
@@ -219,6 +222,35 @@ test("舊程式不會覆寫較新 schema 的存檔", () => {
   assert.equal(api.state().saveWriteProtected, true);
 });
 
+test("schema 4 會用舊體型資料建立持久化體態，且保留舊幣", () => {
+  const legacy = completeSave({
+    schemaVersion: 4,
+    satiety: 63,
+    bodyCondition: undefined,
+    coins: 1000,
+  });
+  const { api } = createSaveHarness({ current: legacy });
+
+  const restored = api.safeRead();
+
+  assert.equal(restored.schemaVersion, currentSchemaVersion);
+  assert.equal(restored.bodyCondition, 63);
+  assert.equal(restored.coins, 1000);
+});
+
+test("舊存檔缺少照護時間時會回填穩定的照護基準", () => {
+  const checkpoint = 1_750_000_000_000;
+  const context = vm.createContext({});
+  vm.runInContext([
+    extractFunction("positiveTimestampOr"),
+    `const careCheckpoint = positiveTimestampOr(${checkpoint}, 123);`,
+    "globalThis.restCheckpoint = positiveTimestampOr(0, careCheckpoint);",
+    "globalThis.cleanCheckpoint = positiveTimestampOr(null, careCheckpoint);",
+  ].join("\n"), context);
+  assert.equal(context.restCheckpoint, checkpoint);
+  assert.equal(context.cleanCheckpoint, checkpoint);
+});
+
 test("殘缺的未來 schema 會保持寫入保護並顯示有效備份", () => {
   const backup = completeSave({ satiety: 67, updatedAt: 1_750_000_000_700 });
   const { api } = createSaveHarness({ current: { schemaVersion: 99 }, backup });
@@ -265,6 +297,7 @@ function createInteractionHarness() {
     "let tabReadOnly = false;",
     "let saveWriteProtected = false;",
     "let ringDrag = null;",
+    "let poolToyDrag = null;",
     extractFunction("setBusy"),
     extractFunction("syncInteractionState"),
     "globalThis.interactionApi = { setBusy, state: () => interactionLock };",
@@ -306,6 +339,29 @@ test("較早動作的計時器不能提早解除較新的互動鎖", () => {
   assert.equal(api.state(), true);
   assert.equal(api.setBusy(false, secondAction), true);
   assert.equal(api.state(), false);
+});
+
+test("今日進度卡會計算三個目標並跳脫匯入紀錄內容", () => {
+  const context = vm.createContext({});
+  vm.runInContext([
+    extractConstant("DAILY_GOALS"),
+    `const pet = {
+      daily: { feed: 1, care: 2, play: 0, foods: ['鯡魚'] },
+      activityLog: [{ id: 'unsafe', icon: '<img src=x>', text: '<script>壞紀錄</script>' }],
+    };`,
+    extractFunction("escapeAttribute"),
+    extractFunction("dailyGoalValue"),
+    extractFunction("renderCareProgressCard"),
+    "globalThis.progressMarkup = renderCareProgressCard();",
+  ].join("\n"), context);
+
+  const markup = context.progressMarkup;
+  assert.match(markup, /1／3 完成/);
+  assert.match(markup, /1／2 進行中/);
+  assert.match(markup, /2／2 完成/);
+  assert.equal((markup.match(/class="is-done"/g) || []).length, 1);
+  assert.doesNotMatch(markup, /<script>|<img src=x>/);
+  assert.match(markup, /&lt;script&gt;壞紀錄&lt;\/script&gt;/);
 });
 
 function createFakeTimers() {
@@ -360,6 +416,7 @@ function createFeedHarness() {
       affection: 20,
       health: 90,
       energy: 72,
+      bodyCondition: 39.5,
       recentFoods: [],
     };`,
     "let currentStage = 2;",
@@ -393,6 +450,7 @@ function createFeedHarness() {
     "function render() { renderedStages.push(visualStageLock || stage()); }",
     "function react() { reactionStages.push(visualStageLock || stage()); }",
     "function advanceOnboarding(step) { completedOnboardingSteps.push(step); }",
+    extractFunction("stageForBodyCondition"),
     extractFunction("stageForSatiety"),
     extractFunction("stage"),
     extractFunction("setBusy"),
@@ -401,6 +459,7 @@ function createFeedHarness() {
       start: () => feed({ id: 'fish', icon: '🐟', name: '鯡魚', sound: 'fish', health: 2 }, {}),
       state: () => ({
         satiety: pet.satiety,
+        bodyCondition: pet.bodyCondition,
         interactionLock,
         visualStageLock,
         visibleStage: visualStageLock || stage(),
@@ -422,6 +481,7 @@ test("餵食跨越體型門檻時，咀嚼完成前維持原圖並持續鎖定�
 
   harness.timers.advance(60);
   assert.equal(harness.api.state().satiety, 45);
+  assert.equal(harness.api.state().bodyCondition, 40.1);
   assert.equal(harness.api.state().visibleStage, 2);
   assert.equal(harness.api.state().interactionLock, true);
   assert.deepEqual(harness.renderedStages, [2]);
@@ -437,4 +497,119 @@ test("餵食跨越體型門檻時，咀嚼完成前維持原圖並持續鎖定�
   assert.equal(harness.api.state().interactionLock, false);
   assert.deepEqual(harness.renderedStages, [2, 3]);
   assert.deepEqual(harness.completedOnboardingSteps, [2]);
+});
+
+function createElapsedStatsHarness(overrides = {}) {
+  const start = 1_750_000_000_000;
+  const context = vm.createContext({ seedPet: {
+    dead: false, satiety: 35, affection: 20, energy: 72, waterQuality: 86, health: 90,
+    bodyCondition: 48, interactionFatigue: 0, recentFoods: [], lastRestAt: start,
+    lastCleanAt: start, lastFedAt: start, lastStatAt: start, ...overrides,
+  } });
+  vm.runInContext([
+    extractConstant("HOUR"), extractConstant("FIVE_DAYS"),
+    "const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));",
+    "let pet = globalThis.seedPet;", extractFunction("applyElapsedStats"),
+    "globalThis.elapsedApi = { applyElapsedStats, pet: () => pet };",
+  ].join("\n"), context);
+  return { api: context.elapsedApi, start };
+}
+
+test("全新健康海豹離線 24 小時不會死亡，衰減有合理上限", () => {
+  const { api, start } = createElapsedStatsHarness();
+  api.applyElapsedStats(start + 24 * 36e5);
+  assert.equal(api.pet().dead, false);
+  assert.ok(api.pet().satiety >= 27);
+  assert.ok(api.pet().waterQuality >= 80);
+  assert.ok(api.pet().health >= 80);
+});
+
+test("一次結算與逐時計算的照護衰減一致", () => {
+  const batch = createElapsedStatsHarness();
+  const stepped = createElapsedStatsHarness();
+  batch.api.applyElapsedStats(batch.start + 96 * 36e5);
+  for (let hour = 1; hour <= 96; hour += 1) {
+    stepped.api.applyElapsedStats(stepped.start + hour * 36e5);
+  }
+  for (const key of ["satiety", "affection", "energy", "waterQuality", "health", "bodyCondition"]) {
+    assert.ok(Math.abs(batch.api.pet()[key] - stepped.api.pet()[key]) < 0.001, `${key} should be stable across batching`);
+  }
+  assert.equal(batch.api.pet().dead, false);
+  assert.equal(stepped.api.pet().dead, false);
+});
+
+test("長時間離線傷害會封頂，但五天未餵規則仍保留", () => {
+  const fourDays = createElapsedStatsHarness();
+  fourDays.api.applyElapsedStats(fourDays.start + 4 * 24 * 36e5);
+  assert.equal(fourDays.api.pet().dead, false);
+  assert.ok(fourDays.api.pet().health >= 70);
+  const fiveDays = createElapsedStatsHarness();
+  fiveDays.api.applyElapsedStats(fiveDays.start + 5 * 24 * 36e5);
+  assert.equal(fiveDays.api.pet().dead, true);
+});
+
+test("外觀階段只看長期 bodyCondition，不隨當下飽足度跳動", () => {
+  const context = vm.createContext({});
+  vm.runInContext([
+    "let pet = { satiety: 99, bodyCondition: 30 };", extractFunction("stageForBodyCondition"),
+    extractFunction("stageForSatiety"), extractFunction("stage"),
+    "globalThis.stageApi = { stage, satiety: (value) => { pet.satiety = value; }, body: (value) => { pet.bodyCondition = value; } };",
+  ].join("\n"), context);
+  assert.equal(context.stageApi.stage(), 2);
+  context.stageApi.satiety(1);
+  assert.equal(context.stageApi.stage(), 2);
+  context.stageApi.body(75);
+  assert.equal(context.stageApi.stage(), 4);
+});
+
+function createCareHarness() {
+  const context = vm.createContext({});
+  vm.runInContext([
+    "const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));",
+    `const CARE_ACTIONS = [{ id: "check", name: "健康檢查", cooldown: 0 }, { id: "enrich", name: "探索活動", cooldown: 0 }];`,
+    `const HEALTH_EVENTS = { appetite: { title: "食慾降低", treatment: "enrich", requiresCheck: true } };`,
+    `let pet = { dead: false, health: 60, affection: 30, energy: 70, currentHealthEvent: "appetite", diagnosedHealthEvent: "", careLog: {} };`,
+    "let interactionLock = false; let tabReadOnly = false; let saveWriteProtected = false; let drawerKey = '';",
+    "function setBusy() { return 1; } function updateDaily() {} function addActivity() {} function showNotice() {} function sound() {} function vibrate() {} function render() {} function react() {} function advanceOnboarding() {}",
+    "function reactionDuration() { return 0; } function setTimeout() {}",
+    extractFunction("careCooldown"), extractFunction("performCare"),
+    "globalThis.careApi = { performCare, pet: () => pet };",
+  ].join("\n"), context);
+  return context.careApi;
+}
+
+test("健康檢查只建立診斷記錄，正確處置後才小幅恢復", () => {
+  const api = createCareHarness();
+  api.performCare("check");
+  assert.equal(api.pet().health, 60);
+  assert.equal(api.pet().currentHealthEvent, "appetite");
+  assert.equal(api.pet().diagnosedHealthEvent, "appetite");
+  api.performCare("enrich");
+  assert.equal(api.pet().health, 64);
+  assert.equal(api.pet().currentHealthEvent, "");
+});
+
+test("互動疲勞只會讓收益漸減，不會硬鎖為零", () => {
+  const context = vm.createContext({});
+  vm.runInContext([
+    "let pet = { interactionFatigue: 82 };", extractFunction("interactionAffectionGain"),
+    "globalThis.fatigueApi = { gain: interactionAffectionGain, set: (value) => { pet.interactionFatigue = value; } };",
+  ].join("\n"), context);
+  const tiredGain = context.fatigueApi.gain(9);
+  assert.ok(tiredGain > 0 && tiredGain < 9);
+  context.fatigueApi.set(100);
+  assert.equal(context.fatigueApi.gain(2), 1);
+});
+
+test("離線幣改為每六小時一枚", () => {
+  const start = 1_750_000_000_000;
+  const context = vm.createContext({});
+  vm.runInContext([
+    extractConstant("HOUR"), extractConstant("COIN_INTERVAL"),
+    `let pet = { lastCoinAt: ${start}, lastSeenAt: ${start}, offlineRemainderMs: 0, coins: 11 };`,
+    extractFunction("collectOfflineCoins"),
+    `globalThis.coinApi = { collect: () => collectOfflineCoins(${start} + 24 * HOUR), pet: () => pet };`,
+  ].join("\n"), context);
+  assert.equal(context.coinApi.collect(), 4);
+  assert.equal(context.coinApi.pet().coins, 15);
 });

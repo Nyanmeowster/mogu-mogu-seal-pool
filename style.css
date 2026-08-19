@@ -32,6 +32,10 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 .app-loader {
   position: fixed;
   z-index: 200;
@@ -341,24 +345,34 @@ button:focus-visible {
 
 .profile-overlay {
   position: fixed;
-  z-index: 100;
+  z-index: 240;
   inset: 0;
-  display: grid;
-  padding: 20px;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  overflow-y: auto;
   background: rgba(9, 62, 74, 0.72);
   backdrop-filter: blur(10px);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .profile-overlay[hidden] { display: none; }
-.profile-card { width: min(390px, 100%); padding: 28px; border: 2px solid rgba(255,255,255,.7); border-radius: 28px; background: #fffdf4; box-shadow: 0 24px 70px rgba(5, 53, 65, .3); }
+.profile-card { width: min(390px, 100%); max-height: calc(100dvh - max(32px, env(safe-area-inset-top) + env(safe-area-inset-bottom))); margin: auto 0; padding: 28px; overflow-y: auto; border: 2px solid rgba(255,255,255,.7); border-radius: 28px; background: #fffdf4; box-shadow: 0 24px 70px rgba(5, 53, 65, .3); overscroll-behavior: contain; }
 .profile-seal { display: grid; width: 62px; height: 52px; margin: 0 auto 8px; place-items: center; border-radius: 50%; color: white; background: var(--teal); font-size: 14px; }
 .profile-card > small { display: block; color: var(--teal); font-weight: 900; letter-spacing: .12em; text-align: center; }
 .profile-card h2 { margin: 5px 0 6px; font-size: 24px; text-align: center; }
 .profile-card p { margin: 0 0 16px; color: var(--ink-soft); font-size: 11px; line-height: 1.5; text-align: center; }
 .profile-card label { display: block; margin-top: 10px; font-size: 11px; font-weight: 900; }
 .profile-card input { display: block; width: 100%; min-height: 44px; margin-top: 5px; padding: 9px 11px; border: 2px solid rgba(23, 71, 88, .12); border-radius: 12px; background: white; color: var(--ink); font: inherit; }
-.profile-card button { width: 100%; min-height: 46px; margin-top: 17px; border: 0; border-radius: 14px; color: white; background: var(--teal); font-weight: 900; cursor: pointer; }
+.profile-actions { display: flex; gap: 9px; }
+.profile-card button { flex: 1; min-height: 46px; margin-top: 17px; border: 0; border-radius: 14px; color: white; background: var(--teal); font-weight: 900; cursor: pointer; }
+.profile-card .profile-cancel { border: 2px solid rgba(23, 71, 88, .15); color: var(--ink); background: #f3f4ed; }
 
 .life-strip > div {
   display: grid;
@@ -803,7 +817,7 @@ button:focus-visible {
 
 .mode-pet .pet-seal {
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-y pinch-zoom;
 }
 
 .mode-pet .pet-seal:active {
@@ -1308,6 +1322,64 @@ button:focus-visible {
   animation: float-object 4.7s ease-in-out infinite reverse;
 }
 
+.decor-ball,
+.decor-duck {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  line-height: 1;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.decor-ball > span,
+.decor-duck > span {
+  pointer-events: none;
+}
+
+.decor-ball:focus-visible,
+.decor-duck:focus-visible {
+  outline: 4px solid rgba(255, 246, 157, 0.94);
+  outline-offset: 3px;
+}
+
+.decor-ball.is-dragging,
+.decor-duck.is-dragging {
+  z-index: 12;
+  cursor: grabbing;
+  filter: drop-shadow(0 10px 7px rgba(0, 70, 90, 0.25));
+  animation: none;
+  scale: 1.1;
+}
+
+.decor-ball.is-over-seal,
+.decor-duck.is-over-seal {
+  filter: drop-shadow(0 0 10px rgba(255, 239, 137, 0.96));
+  scale: 1.14;
+}
+
+.decor-ball.is-returning,
+.decor-duck.is-returning {
+  transition: translate 0.56s cubic-bezier(0.2, 0.9, 0.3, 1.15), scale 0.25s ease;
+}
+
+.decor-ball.is-playing,
+.decor-duck.is-playing {
+  animation: pool-toy-play-pop 0.62s ease-in-out;
+  animation-delay: 0s;
+}
+
+.decor-ball.is-cooling-down,
+.decor-duck.is-cooling-down,
+.decor-ball:disabled,
+.decor-duck:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  filter: saturate(0.78) drop-shadow(0 4px 3px rgba(0, 70, 90, 0.12));
+}
+
 .decor-plant {
   z-index: 2;
   top: 94px;
@@ -1361,6 +1433,151 @@ button:focus-visible {
 
 .action-drawer.closed {
   display: none;
+}
+
+.care-progress-card {
+  margin-bottom: 13px;
+  padding: 11px;
+  border: 1px solid rgba(22, 122, 127, 0.14);
+  border-radius: 16px;
+  color: #315f67;
+  background: linear-gradient(135deg, rgba(232, 247, 240, 0.98), rgba(244, 249, 235, 0.98));
+}
+
+.care-progress-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.care-progress-card header small,
+.care-progress-card header h3 {
+  display: block;
+  margin: 0;
+}
+
+.care-progress-card header small {
+  color: #17666b;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.care-progress-card header h3 {
+  margin-top: 2px;
+  font-size: 15px;
+}
+
+.care-progress-card header > span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #627771;
+  background: rgba(255, 255, 255, 0.76);
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.care-progress-card header > span.is-complete {
+  color: #16756c;
+  background: #d7f2df;
+}
+
+.care-progress-card ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.care-progress-card li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 5px;
+  min-width: 0;
+  padding: 7px 18px 7px 7px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.care-progress-card li.is-done {
+  background: #dbf3e3;
+}
+
+.care-progress-card li > span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 13px;
+}
+
+.care-progress-card li strong,
+.care-progress-card li small {
+  display: block;
+  line-height: 1.25;
+}
+
+.care-progress-card li strong {
+  font-size: 10px;
+}
+
+.care-progress-card li small {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.care-progress-card li > b {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: #1b8a7d;
+  font-size: 10px;
+}
+
+.latest-care-activity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(22, 122, 127, 0.12);
+}
+
+.latest-care-activity > small {
+  color: #17666b;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.latest-care-activity p {
+  overflow: hidden;
+  margin: 0;
+  color: #526f72;
+  font-size: 10px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.latest-care-activity p span {
+  margin-right: 4px;
+}
+
+.action-drawer:focus-visible {
+  outline: 3px solid rgba(245, 177, 69, 0.9);
+  outline-offset: 3px;
 }
 
 .drawer-title {
@@ -1679,13 +1896,21 @@ button:focus-visible {
 
 .dead-overlay {
   position: fixed;
-  z-index: 80;
+  z-index: 240;
   inset: 0;
-  display: grid;
-  padding: 24px;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  overflow-y: auto;
   background: rgba(8, 44, 54, 0.72);
   backdrop-filter: blur(9px);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dead-overlay[hidden] {
@@ -1694,11 +1919,15 @@ button:focus-visible {
 
 .dead-card {
   width: min(370px, 100%);
+  max-height: calc(100dvh - max(32px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+  margin: auto 0;
   padding: 30px;
+  overflow-y: auto;
   border-radius: 28px;
   background: #fffdf3;
   box-shadow: 0 15px 0 rgba(0, 0, 0, 0.16);
   text-align: center;
+  overscroll-behavior: contain;
 }
 
 .dead-card > span {
@@ -2054,6 +2283,12 @@ button:focus-visible {
   78% { transform: translate(4px, -3px) rotate(0.8deg); }
 }
 
+@keyframes pool-toy-play-pop {
+  0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+  35% { transform: translateY(-10px) rotate(-8deg) scale(1.16); }
+  68% { transform: translateY(2px) rotate(5deg) scale(0.96); }
+}
+
 @keyframes autonomous-swim {
   0%, 100% { transform: translateX(0) rotate(0); }
   24% { transform: translate(-24px, -7px) rotate(-2deg); }
@@ -2327,6 +2562,14 @@ button:focus-visible {
 }
 
 @media (max-width: 600px) {
+  .care-progress-card ul {
+    grid-template-columns: 1fr;
+  }
+
+  .care-progress-card li small {
+    white-space: normal;
+  }
+
   .pet-app {
     padding:
       max(10px, env(safe-area-inset-top))
@@ -2578,6 +2821,50 @@ button:focus-visible {
   .seal-roamer {
     width: min(320px, 76cqw);
     margin-top: 56px;
+  }
+}
+
+@media (max-height: 560px) {
+  .profile-overlay,
+  .dead-overlay {
+    align-items: flex-start;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .profile-card,
+  .dead-card {
+    max-height: calc(100dvh - max(16px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+    padding: 17px 20px;
+    border-radius: 20px;
+  }
+
+  .profile-seal {
+    width: 50px;
+    height: 40px;
+    margin-bottom: 4px;
+  }
+
+  .profile-card h2 {
+    margin-top: 2px;
+    font-size: 20px;
+  }
+
+  .profile-card p {
+    margin-bottom: 8px;
+  }
+
+  .profile-card label {
+    margin-top: 7px;
+  }
+
+  .profile-card button,
+  .dead-card button {
+    margin-top: 10px;
+  }
+
+  .dead-card > span {
+    font-size: 34px;
   }
 }
 

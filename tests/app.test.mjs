@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
-const [html, script, styles, readme, assets] = await Promise.all([
+const [html, script, styles, readme, workflow, smokeScript, assets] = await Promise.all([
   readFile(new URL("../index.html", import.meta.url), "utf8"),
   readFile(new URL("../app.js", import.meta.url), "utf8"),
   readFile(new URL("../style.css", import.meta.url), "utf8"),
   readFile(new URL("../README.md", import.meta.url), "utf8"),
+  readFile(new URL("../.github/workflows/pages.yml", import.meta.url), "utf8"),
+  readFile(new URL("../scripts/smoke-deployment.mjs", import.meta.url), "utf8"),
   readdir(new URL("../assets/", import.meta.url)),
 ]);
 
@@ -123,13 +125,33 @@ test("Doflamingo 泳圈會依海豹比例放大並切換專屬玩耍圖", () => 
   assert.match(script, /<img src="\$\{doflamingoRing\}/);
   assert.match(script, /function ringTouchesSeal\(ring\)/);
   assert.match(script, /pointermove/);
-  assert.match(script, /pet\.affection = clamp\(pet\.affection \+ 5\)/);
+  assert.match(script, /const affectionGain = interactionAffectionGain\(5\)/);
+  assert.match(script, /pet\.affection = clamp\(pet\.affection \+ affectionGain\)/);
   assert.match(script, /"ring-play"/);
   assert.match(script, /react\("pet", "🦩", "ring", "ring", "ring-play"\)/);
   assert.match(styles, /width: clamp\(150px, 42cqw, 220px\);/);
   assert.match(styles, /touch-action: none;/);
   assert.match(styles, /\.decor-ring\.is-over-seal/);
   assert.match(styles, /@keyframes interaction-ring-play/);
+});
+
+test("海灘球與小鴨都能點擊、拖曳及用鍵盤和海豹玩", () => {
+  assert.match(script, /const POOL_TOY_REACTIONS = \{/);
+  assert.match(script, /ball: \{[\s\S]*?asset: "swim"[\s\S]*?sound: "water"/);
+  assert.match(script, /duck: \{[\s\S]*?asset: "sniff"[\s\S]*?sound: "pet"/);
+  assert.match(script, /data-pool-toy="\$\{item\.id\}"/);
+  assert.match(script, /function playWithPoolToy\(toy, lockToken = 0\)/);
+  assert.match(script, /function finishPoolToyDrag\(event\)/);
+  assert.match(script, /!drag\.moved \|\| poolToyTouchesSeal\(toy\)/);
+  assert.match(script, /event\.detail !== 0/);
+  assert.match(script, /ringDrag \|\| poolToyDrag/);
+  assert.match(script, /poolToyInteractionAvailableAt\[toyId\]/);
+  assert.match(script, /delete toy\.dataset\.busyDisabled/);
+  assert.match(script, /function scheduleDecorationRefresh\(delay = 0\)/);
+  assert.match(script, /if \(ringDrag \|\| poolToyDrag \|\| interactionLock \|\| actionActive\)/);
+  assert.match(styles, /\.decor-ball\.is-dragging/);
+  assert.match(styles, /\.decor-duck\.is-over-seal/);
+  assert.match(styles, /@keyframes pool-toy-play-pop/);
 });
 
 test("海豹會依作息、個性與身體狀況自主活動", () => {
@@ -197,7 +219,22 @@ test("陪伴頁提供四種直接互動並切換不同動作", () => {
   assert.match(script, /asset: "approach"/);
   assert.match(script, /asset: "swim"/);
   assert.match(script, /asset: "sleep"/);
+  assert.match(script, /call: \{ icon: "👋", asset: "approach", motion: "auto-approach"/);
+  assert.match(script, /wave: \{ icon: "🤍", asset: "pet", motion: "greet"/);
   assert.match(styles, /\.companion-grid/);
+});
+
+test("照護頁精簡顯示三項今日進度與安全處理的最近紀錄", () => {
+  assert.match(script, /function renderCareProgressCard\(\)/);
+  assert.match(script, /const goals = DAILY_GOALS\.map/);
+  assert.match(script, /Math\.min\(goal\.value, goal\.target\)/);
+  assert.match(script, /latestIcon = latest \? escapeAttribute/);
+  assert.match(script, /latestText = latest \? escapeAttribute/);
+  assert.match(script, /progressCard \+ healthCard/);
+  assert.match(script, /pet\.activityLog\.at\(-1\)\?\.id/);
+  assert.match(styles, /\.care-progress-card ul/);
+  assert.match(styles, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/);
+  assert.match(styles, /\.latest-care-activity/);
 });
 
 test("海豹會記住互動偏好並在回訪時主動迎接", () => {
@@ -243,9 +280,16 @@ test("心情透過畫面反應而非新增數值欄", () => {
 
 test("照護會記錄長期後果並尊重海豹停止互動的訊號", () => {
   assert.match(script, /recentFoods/);
-  assert.match(script, /lastRestAt/);
-  assert.match(script, /lastCleanAt/);
-  assert.match(script, /interactionFatigue >= 82/);
+  assert.match(script, /lastRestAt: now/);
+  assert.match(script, /lastCleanAt: now/);
+  assert.match(script, /function positiveTimestampOr\(value, fallback\)/);
+  assert.match(script, /lastRestAt: positiveTimestampOr\(raw\?\.lastRestAt, careCheckpoint\)/);
+  assert.match(script, /simulatedAt - restCheckpoint > 18 \* HOUR/);
+  assert.match(script, /simulatedAt - cleanCheckpoint > 24 \* HOUR/);
+  assert.match(script, /function interactionAffectionGain\(baseGain\)/);
+  assert.match(script, /Math\.max\(0\.35, 1 - pet\.interactionFatigue \/ 130\)/);
+  assert.match(script, /function interactionRestCue\(\)/);
+  assert.doesNotMatch(script, /if \(pet\.interactionFatigue >= 82\) return/);
   assert.match(script, /停止餵食，避免過量/);
   assert.match(script, /dietVariety < 2/);
 });
@@ -255,6 +299,9 @@ test("音效與震動可以分別調整", () => {
   assert.match(script, /function vibrate\(pattern\)/);
   assert.doesNotMatch(script.replace(/navigator\.vibrate\?\.\(pattern\)/, ""), /navigator\.vibrate/);
   assert.match(html, /id="sound-toggle"/);
+  assert.match(html, /id="sound-toggle"[^>]+aria-label="音效"[^>]+aria-pressed="true"/);
+  assert.match(script, /button\.setAttribute\("aria-label", "音效"\)/);
+  assert.match(script, /button\.setAttribute\("aria-pressed", String\(pet\.soundOn\)\)/);
   assert.match(script, /data-setting="vibration"/);
 });
 
@@ -266,13 +313,47 @@ test("正式版保留命名、相遇日與簡單身分編輯", () => {
   assert.match(script, /function saveIdentity\(name, birthday = ""\)/);
 });
 
+test("命名與醫療視窗是真正鎖定背景且可用鍵盤操作的 modal", () => {
+  assert.match(html, /id="profile-overlay"[^>]+role="dialog"[^>]+aria-modal="true"/);
+  assert.match(html, /id="dead-overlay"[^>]+role="dialog"[^>]+aria-modal="true"/);
+  assert.match(html, /id="profile-cancel"[^>]+hidden/);
+  assert.match(script, /function openModal\(modal, initialFocus\)/);
+  assert.match(script, /app\.inert = inert/);
+  assert.match(script, /function handleModalKeydown\(event\)/);
+  assert.match(script, /event\.key === "Escape"/);
+  assert.match(script, /profileEditCancelable\) closeProfileDialog\(\)/);
+  assert.match(script, /event\.key !== "Tab"/);
+  assert.match(script, /modalRestoreFocus/);
+  assert.match(script, /document\.querySelector\("\[data-edit-profile\]"\)/);
+  assert.match(styles, /body\.modal-open/);
+  assert.match(styles, /\.profile-overlay[\s\S]*?overflow-y: auto/);
+  assert.match(styles, /\.dead-overlay[\s\S]*?overflow-y: auto/);
+  assert.match(styles, /@media \(max-height: 560px\)/);
+});
+
+test("鍵盤開啟抽屜會聚焦內容且重繪只還原鍵盤焦點", () => {
+  assert.match(html, /id="drawer"[^>]+tabindex="-1"/);
+  assert.match(script, /function drawerFocusToken\(element, drawer\)/);
+  assert.match(script, /if \(!lastInputWasKeyboard/);
+  assert.match(script, /function restoreDrawerFocus\(drawer, token\)/);
+  assert.match(script, /switchMode\(button\.dataset\.mode, event\.detail === 0\)/);
+  assert.match(script, /if \(focusDrawer\) focusElement\(drawer\)/);
+});
+
+test("撫摸區保留直向捲動，不會用整面 touch-action none 困住手機", () => {
+  assert.match(styles, /\.mode-pet \.pet-seal\s*\{[^}]*touch-action: pan-y pinch-zoom;/);
+  assert.doesNotMatch(styles, /\.mode-pet \.pet-seal\s*\{[^}]*touch-action: none;/);
+  assert.match(script, /addEventListener\("pointercancel", \(event\) => endPetPointer\(event, true\)\)/);
+});
+
 test("餵食不要求庫存補充，照護狀況會直接告知玩家", () => {
   assert.doesNotMatch(script, /data-restock=/);
   assert.doesNotMatch(script, /冷凍食物庫存|今日觀察事件/);
   assert.doesNotMatch(script, /pet\.inventory\[food\.id\] = Math\.max\(0, pet\.inventory\[food\.id\] - 1\)/);
   assert.doesNotMatch(script, /照片回憶簿|匯出備份|匯入備份/);
   assert.match(script, /const healthCard = healthEvent/);
-  assert.match(script, /healthEvent\.hint/);
+  assert.match(script, /const healthHint = pet\.diagnosedHealthEvent === pet\.currentHealthEvent/);
+  assert.match(script, /healthEvent\?\.afterCheckHint/);
 });
 
 test("五種體型都有六張真正的自主生活動作圖", () => {
@@ -309,6 +390,7 @@ test("手機與減少動態效果模式使用較短互動節奏", () => {
   assert.match(script, /if \(prefersReducedMotion\(\)\) return \{ attention: 60, main: 120, settle: 100 \}/);
   assert.match(script, /const trailThreshold = COARSE_POINTER \? 34 : 22/);
   assert.match(script, /const petThreshold = COARSE_POINTER \? 68 : 58/);
+  assert.match(script, /behavior: prefersReducedMotion\(\) \? "auto" : "smooth"/);
 });
 
 test("存檔有版本遷移、安全備份與新版本寫入保護", () => {
@@ -320,5 +402,14 @@ test("存檔有版本遷移、安全備份與新版本寫入保護", () => {
   assert.match(script, /saveWriteProtected = true/);
   assert.match(script, /if \(hasFutureSchema\(decodeSavedPet\(currentValue\)\)\)/);
   assert.match(script, /schemaVersion: SAVE_SCHEMA_VERSION/);
-  assert.match(script, /await preloadStage\(stageForSatiety\(incoming\.satiety\)\)/);
+  assert.match(script, /await preloadStageActions\(stageForBodyCondition\(incoming\.bodyCondition\), \["idle"\]\)/);
+  assert.match(script, /if \(!tabReadOnly && !saveWriteProtected\) ensureCurrentDay\(\)/);
+});
+
+test("部署流程會測試公開首頁與正式素材", () => {
+  assert.match(workflow, /Checkout smoke test/);
+  assert.match(workflow, /node scripts\/smoke-deployment\.mjs/);
+  assert.match(smokeScript, /AbortSignal\.timeout\(requestTimeout\)/);
+  assert.match(smokeScript, /homepage identity is missing/);
+  assert.match(smokeScript, /built JS or CSS reference is missing/);
 });

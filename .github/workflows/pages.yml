@@ -59,6 +59,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - name: Checkout smoke test
+        uses: actions/checkout@v4
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Smoke test deployed assets
+        run: node scripts/smoke-deployment.mjs "${{ steps.deployment.outputs.page_url }}"
