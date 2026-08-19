@@ -297,7 +297,7 @@ button:focus-visible {
   font-weight: 900;
   cursor: pointer;
 }
-.profile-edit { padding: 8px 12px; font-size: 10px; }
+.profile-edit { min-height: 44px; padding: 8px 12px; font-size: 10px; }
 .companion-hint { margin: 7px 0 10px; color: var(--ink-soft); font-size: 10px; }
 .companion-grid {
   display: grid;
@@ -321,7 +321,7 @@ button:focus-visible {
 .companion-grid b { grid-row: 1 / 3; align-self: center; font-size: 24px; }
 .companion-grid span { align-self: end; font-size: 12px; font-weight: 900; }
 .companion-grid small { color: var(--ink-soft); font-size: 9px; }
-.vibration-setting { margin-top: 9px; padding: 7px 11px; font-size: 9px; }
+.vibration-setting { min-height: 44px; margin-top: 9px; padding: 7px 11px; font-size: 9px; }
 .remembered-line { margin: 4px 0 0; color: #488188; font-size: 9px; font-weight: 800; }
 .daily-moment {
   margin-bottom: 11px;
@@ -333,7 +333,7 @@ button:focus-visible {
 .daily-moment > small { display: block; color: #dd755e; font-size: 9px; font-weight: 900; }
 .daily-moment > strong { display: block; margin: 3px 0 9px; font-size: 12px; }
 .daily-moment > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-.daily-moment button { padding: 8px; border: 0; border-radius: 10px; color: #3e6870; background: #fff; font-size: 10px; font-weight: 900; cursor: pointer; }
+.daily-moment button { min-height: 44px; padding: 8px; border: 0; border-radius: 10px; color: #3e6870; background: #fff; font-size: 10px; font-weight: 900; cursor: pointer; }
 .daily-moment button:active { transform: scale(.98); }
 .daily-moment button span { margin-right: 4px; }
 
@@ -1485,7 +1485,7 @@ button:focus-visible {
   bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   width: min(550px, calc(100% - 30px));
   padding: 8px;
@@ -1496,6 +1496,36 @@ button:focus-visible {
   transform: translateX(-50%);
   backdrop-filter: blur(14px);
 }
+
+.onboarding-tip {
+  position: fixed;
+  z-index: 51;
+  right: 50%;
+  bottom: calc(91px + env(safe-area-inset-bottom));
+  display: flex;
+  width: min(520px, calc(100% - 34px));
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(207, 111, 89, .22);
+  border-radius: 15px;
+  color: #335f67;
+  background: rgba(255, 250, 232, .96);
+  box-shadow: 0 8px 24px rgba(11, 70, 82, .18);
+  font-size: 10px;
+  font-weight: 900;
+  transform: translateX(50%);
+  backdrop-filter: blur(10px);
+}
+
+.onboarding-tip[hidden] { display: none; }
+.onboarding-tip button { min-height: 36px; padding: 6px 10px; border: 0; border-radius: 999px; color: #8b6057; background: #fff; font-size: 9px; font-weight: 900; white-space: nowrap; cursor: pointer; }
+.bottom-nav button.is-guide-target { outline: 3px solid rgba(242, 144, 115, .5); animation: guide-target 1.5s ease-in-out infinite; }
+.pet-app.is-interacting .notice::after { margin-left: 5px; content: "•••"; letter-spacing: 2px; animation: busy-dots 1s steps(3, end) infinite; }
+#drawer[aria-busy="true"] { cursor: wait; }
+#drawer button:disabled,
+.bottom-nav button:disabled { cursor: wait; opacity: .58; }
 
 .journal-head {
   display: flex;
@@ -2022,6 +2052,17 @@ button:focus-visible {
   50% { transform: translateY(-3px); }
 }
 
+@keyframes guide-target {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(242, 144, 115, .12); }
+  50% { box-shadow: 0 0 0 7px rgba(242, 144, 115, .16); }
+}
+
+@keyframes busy-dots {
+  0% { opacity: .25; }
+  50% { opacity: 1; }
+  100% { opacity: .25; }
+}
+
 @keyframes autonomous-thought {
   0% { opacity: 0; transform: translateY(8px) scale(0.6); }
   18%, 70% { opacity: 0.85; transform: translateY(-8px) scale(1); }
@@ -2497,7 +2538,8 @@ button:focus-visible {
   .pool-decor,
   .big-hand,
   .loader-seal,
-  .status-item {
+  .status-item,
+  .bottom-nav button.is-guide-target {
     animation: none !important;
   }
 
@@ -2529,4 +2571,11 @@ button:focus-visible {
   .notice {
     animation-duration: 0.01ms !important;
   }
+}
+
+@media (max-width: 360px) {
+  .daily-moment > div { grid-template-columns: 1fr; }
+  .onboarding-tip { align-items: stretch; flex-direction: column; bottom: calc(86px + env(safe-area-inset-bottom)); }
+  .onboarding-tip button { width: 100%; }
+  .action-drawer { scroll-margin-bottom: calc(98px + env(safe-area-inset-bottom)); }
 }

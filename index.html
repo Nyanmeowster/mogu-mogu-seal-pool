@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#bcebe8">
   <meta name="description" content="陪伴有名字、有個性、會回應你的 2D 小海豹：餵食、摸摸、玩水與日常照護。">
   <meta property="og:type" content="website">
@@ -14,12 +14,12 @@
   <meta name="twitter:description" content="有名字、有作息，也會記得你。陪伴小海豹生活、照護、探索並累積共同回憶。">
   <meta name="twitter:image" content="https://nyanmeowster.github.io/mogu-mogu-seal-pool/og-v2.png">
   <title>MOGU MOGU｜我的海豹泳池</title>
-  <link rel="preload" as="image" href="/assets/seal-stage-1.webp?v=37">
-  <link rel="preload" as="image" href="/assets/seal-stage-2.webp?v=37">
-  <link rel="preload" as="image" href="/assets/seal-stage-3.webp?v=37">
-  <link rel="preload" as="image" href="/assets/seal-stage-4.webp?v=37">
-  <link rel="preload" as="image" href="/assets/seal-stage-5.webp?v=37">
-  <link rel="stylesheet" href="/style.css?v=37">
+  <link rel="preload" as="image" href="/assets/seal-stage-1-aligned-v1.webp?v=38">
+  <link rel="preload" as="image" href="/assets/seal-stage-2-aligned-v1.webp?v=38">
+  <link rel="preload" as="image" href="/assets/seal-stage-3-aligned-v1.webp?v=38">
+  <link rel="preload" as="image" href="/assets/seal-stage-4-aligned-v1.webp?v=38">
+  <link rel="preload" as="image" href="/assets/seal-stage-5-aligned-v1.webp?v=38">
+  <link rel="stylesheet" href="/style.css?v=38">
 </head>
 <body>
   <div id="app-loader" class="app-loader" role="status" aria-live="polite" aria-label="正在準備海豹泳池">
@@ -70,6 +70,10 @@
       <div class="foreground-water" aria-hidden="true"><i></i><i></i><i></i></div>
     </section>
     <section id="drawer" class="action-drawer closed" aria-live="polite"></section>
+    <aside id="onboarding-tip" class="onboarding-tip" aria-live="polite" hidden>
+      <span id="onboarding-copy"></span>
+      <button id="onboarding-skip" type="button">先自己探索</button>
+    </aside>
     <nav class="bottom-nav" aria-label="主要功能">
       <button data-mode="pet" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🤍</span><small>陪伴</small></button>
       <button data-mode="feed" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🐟</span><small>餵食</small></button>
@@ -88,6 +92,6 @@
       </form>
     </div>
   </main>
-  <script type="module" src="/app.js?v=37"></script>
+  <script type="module" src="/app.js?v=38"></script>
 </body>
 </html>

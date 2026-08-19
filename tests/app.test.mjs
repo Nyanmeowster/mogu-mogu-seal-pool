@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
-const [html, script, styles, readme] = await Promise.all([
+const [html, script, styles, readme, assets] = await Promise.all([
   readFile(new URL("../index.html", import.meta.url), "utf8"),
   readFile(new URL("../app.js", import.meta.url), "utf8"),
   readFile(new URL("../style.css", import.meta.url), "utf8"),
   readFile(new URL("../README.md", import.meta.url), "utf8"),
+  readdir(new URL("../assets/", import.meta.url)),
 ]);
 
 test("餵食連擊介面與加成已完整移除", () => {
@@ -26,9 +27,9 @@ test("舊版連擊資料會在讀檔時清除", () => {
 test("固定沿用最終 2D 海豹素材", () => {
   assert.match(script, /const FORCE_SPRITE_FALLBACK = true;/);
   assert.match(script, /const SPRITE_ASSETS = \[/);
-  assert.equal((script.match(/seal-stage-[1-5](?:-(?:eat|pet|walk))?\.webp/g) || []).length, 20);
-  assert.equal((script.match(/seal-stage-[1-5]-eat-closed-v2\.webp/g) || []).length, 5);
-  assert.equal((script.match(/seal-stage-[1-5]-doflamingo-ring\.webp/g) || []).length, 5);
+  assert.equal((script.match(/seal-stage-[1-5](?:-(?:eat|pet|walk))?-aligned-v1\.webp/g) || []).length, 20);
+  assert.equal((script.match(/seal-stage-[1-5]-eat-closed-v2-aligned-v1\.webp/g) || []).length, 5);
+  assert.equal((script.match(/seal-stage-[1-5]-doflamingo-ring-aligned-v1\.webp/g) || []).length, 5);
   assert.match(html, /id="seal-art-wrap"/);
   assert.doesNotMatch(html, /seal-three-canvas|GLTFLoader|three\.min\.js/);
   assert.match(styles, /background-size: contain;/);
@@ -135,6 +136,40 @@ test("主畫面只保留四個清楚入口", () => {
   assert.match(html, />餵食</);
   assert.match(html, />照護</);
   assert.match(html, />小屋</);
+  assert.match(styles, /repeat\(4, minmax\(0, 1fr\)\)/);
+});
+
+test("所有海豹姿勢都有一致畫布與底部基準版本", () => {
+  assert.equal(assets.filter((name) => name.endsWith("-aligned-v1.webp")).length, 60);
+  assert.equal((script.match(/-aligned-v1\.webp/g) || []).length, 60);
+  assert.match(html, /seal-stage-1-aligned-v1\.webp/);
+});
+
+test("首次遊玩以非彈窗方式引導陪伴、餵食與照護", () => {
+  assert.match(html, /id="onboarding-tip"/);
+  assert.match(script, /onboardingStep: 0/);
+  assert.match(script, /function startOnboarding\(\)/);
+  assert.match(script, /function advanceOnboarding\(completedStep\)/);
+  assert.match(script, /mode = "feed"/);
+  assert.match(script, /mode = "care"/);
+  assert.match(styles, /\.bottom-nav button\.is-guide-target/);
+});
+
+test("互動期間所有操作會顯示忙碌並防止重複點擊", () => {
+  assert.match(script, /function syncInteractionState\(\)/);
+  assert.match(script, /#drawer button, \.bottom-nav button/);
+  assert.match(script, /if \(interactionLock\) return;/);
+  assert.match(styles, /\.pet-app\.is-interacting/);
+  assert.match(styles, /#drawer\[aria-busy="true"\]/);
+});
+
+test("手機觸控限制單一指標並安全處理取消事件", () => {
+  assert.match(html, /viewport-fit=cover/);
+  assert.match(script, /!event\.isPrimary/);
+  assert.match(script, /activePetPointerId/);
+  assert.match(script, /function cancelRingDrag\(event\)/);
+  assert.match(script, /lostpointercapture/);
+  assert.match(styles, /@media \(max-width: 360px\)/);
 });
 
 test("陪伴頁提供四種直接互動並切換不同動作", () => {
@@ -222,7 +257,7 @@ test("餵食不再要求庫存補充，照護不顯示隨機事件", () => {
 });
 
 test("五種體型都有六張真正的自主生活動作圖", () => {
-  assert.equal((script.match(/seal-stage-[1-5]-(?:swim|haul|sleep|sniff|approach|space)-v1\.webp/g) || []).length, 30);
+  assert.equal((script.match(/seal-stage-[1-5]-(?:swim|haul|sleep|sniff|approach|space)-v1-aligned-v1\.webp/g) || []).length, 30);
   assert.match(script, /asset: "sleep"/);
   assert.match(script, /asset: "sniff"/);
   assert.match(script, /asset: "approach"/);

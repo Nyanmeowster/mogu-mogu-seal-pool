@@ -1,70 +1,70 @@
-import sealStage1Idle from "./assets/seal-stage-1.webp";
-import sealStage1Eat from "./assets/seal-stage-1-eat.webp";
-import sealStage1Chew from "./assets/seal-stage-1-eat-closed-v2.webp";
-import sealStage1Pet from "./assets/seal-stage-1-pet.webp";
-import sealStage1Walk from "./assets/seal-stage-1-walk.webp";
-import sealStage1Ring from "./assets/seal-stage-1-doflamingo-ring.webp";
-import sealStage1Swim from "./assets/seal-stage-1-swim-v1.webp";
-import sealStage1Haul from "./assets/seal-stage-1-haul-v1.webp";
-import sealStage1Sleep from "./assets/seal-stage-1-sleep-v1.webp";
-import sealStage1Sniff from "./assets/seal-stage-1-sniff-v1.webp";
-import sealStage1Approach from "./assets/seal-stage-1-approach-v1.webp";
-import sealStage1Space from "./assets/seal-stage-1-space-v1.webp";
-import sealStage2Idle from "./assets/seal-stage-2.webp";
-import sealStage2Eat from "./assets/seal-stage-2-eat.webp";
-import sealStage2Chew from "./assets/seal-stage-2-eat-closed-v2.webp";
-import sealStage2Pet from "./assets/seal-stage-2-pet.webp";
-import sealStage2Walk from "./assets/seal-stage-2-walk.webp";
-import sealStage2Ring from "./assets/seal-stage-2-doflamingo-ring.webp";
-import sealStage2Swim from "./assets/seal-stage-2-swim-v1.webp";
-import sealStage2Haul from "./assets/seal-stage-2-haul-v1.webp";
-import sealStage2Sleep from "./assets/seal-stage-2-sleep-v1.webp";
-import sealStage2Sniff from "./assets/seal-stage-2-sniff-v1.webp";
-import sealStage2Approach from "./assets/seal-stage-2-approach-v1.webp";
-import sealStage2Space from "./assets/seal-stage-2-space-v1.webp";
-import sealStage3Idle from "./assets/seal-stage-3.webp";
-import sealStage3Eat from "./assets/seal-stage-3-eat.webp";
-import sealStage3Chew from "./assets/seal-stage-3-eat-closed-v2.webp";
-import sealStage3Pet from "./assets/seal-stage-3-pet.webp";
-import sealStage3Walk from "./assets/seal-stage-3-walk.webp";
-import sealStage3Ring from "./assets/seal-stage-3-doflamingo-ring.webp";
-import sealStage3Swim from "./assets/seal-stage-3-swim-v1.webp";
-import sealStage3Haul from "./assets/seal-stage-3-haul-v1.webp";
-import sealStage3Sleep from "./assets/seal-stage-3-sleep-v1.webp";
-import sealStage3Sniff from "./assets/seal-stage-3-sniff-v1.webp";
-import sealStage3Approach from "./assets/seal-stage-3-approach-v1.webp";
-import sealStage3Space from "./assets/seal-stage-3-space-v1.webp";
-import sealStage4Idle from "./assets/seal-stage-4.webp";
-import sealStage4Eat from "./assets/seal-stage-4-eat.webp";
-import sealStage4Chew from "./assets/seal-stage-4-eat-closed-v2.webp";
-import sealStage4Pet from "./assets/seal-stage-4-pet.webp";
-import sealStage4Walk from "./assets/seal-stage-4-walk.webp";
-import sealStage4Ring from "./assets/seal-stage-4-doflamingo-ring.webp";
-import sealStage4Swim from "./assets/seal-stage-4-swim-v1.webp";
-import sealStage4Haul from "./assets/seal-stage-4-haul-v1.webp";
-import sealStage4Sleep from "./assets/seal-stage-4-sleep-v1.webp";
-import sealStage4Sniff from "./assets/seal-stage-4-sniff-v1.webp";
-import sealStage4Approach from "./assets/seal-stage-4-approach-v1.webp";
-import sealStage4Space from "./assets/seal-stage-4-space-v1.webp";
-import sealStage5Idle from "./assets/seal-stage-5.webp";
-import sealStage5Eat from "./assets/seal-stage-5-eat.webp";
-import sealStage5Chew from "./assets/seal-stage-5-eat-closed-v2.webp";
-import sealStage5Pet from "./assets/seal-stage-5-pet.webp";
-import sealStage5Walk from "./assets/seal-stage-5-walk.webp";
-import sealStage5Ring from "./assets/seal-stage-5-doflamingo-ring.webp";
-import sealStage5Swim from "./assets/seal-stage-5-swim-v1.webp";
-import sealStage5Haul from "./assets/seal-stage-5-haul-v1.webp";
-import sealStage5Sleep from "./assets/seal-stage-5-sleep-v1.webp";
-import sealStage5Sniff from "./assets/seal-stage-5-sniff-v1.webp";
-import sealStage5Approach from "./assets/seal-stage-5-approach-v1.webp";
-import sealStage5Space from "./assets/seal-stage-5-space-v1.webp";
+import sealStage1Idle from "./assets/seal-stage-1-aligned-v1.webp";
+import sealStage1Eat from "./assets/seal-stage-1-eat-aligned-v1.webp";
+import sealStage1Chew from "./assets/seal-stage-1-eat-closed-v2-aligned-v1.webp";
+import sealStage1Pet from "./assets/seal-stage-1-pet-aligned-v1.webp";
+import sealStage1Walk from "./assets/seal-stage-1-walk-aligned-v1.webp";
+import sealStage1Ring from "./assets/seal-stage-1-doflamingo-ring-aligned-v1.webp";
+import sealStage1Swim from "./assets/seal-stage-1-swim-v1-aligned-v1.webp";
+import sealStage1Haul from "./assets/seal-stage-1-haul-v1-aligned-v1.webp";
+import sealStage1Sleep from "./assets/seal-stage-1-sleep-v1-aligned-v1.webp";
+import sealStage1Sniff from "./assets/seal-stage-1-sniff-v1-aligned-v1.webp";
+import sealStage1Approach from "./assets/seal-stage-1-approach-v1-aligned-v1.webp";
+import sealStage1Space from "./assets/seal-stage-1-space-v1-aligned-v1.webp";
+import sealStage2Idle from "./assets/seal-stage-2-aligned-v1.webp";
+import sealStage2Eat from "./assets/seal-stage-2-eat-aligned-v1.webp";
+import sealStage2Chew from "./assets/seal-stage-2-eat-closed-v2-aligned-v1.webp";
+import sealStage2Pet from "./assets/seal-stage-2-pet-aligned-v1.webp";
+import sealStage2Walk from "./assets/seal-stage-2-walk-aligned-v1.webp";
+import sealStage2Ring from "./assets/seal-stage-2-doflamingo-ring-aligned-v1.webp";
+import sealStage2Swim from "./assets/seal-stage-2-swim-v1-aligned-v1.webp";
+import sealStage2Haul from "./assets/seal-stage-2-haul-v1-aligned-v1.webp";
+import sealStage2Sleep from "./assets/seal-stage-2-sleep-v1-aligned-v1.webp";
+import sealStage2Sniff from "./assets/seal-stage-2-sniff-v1-aligned-v1.webp";
+import sealStage2Approach from "./assets/seal-stage-2-approach-v1-aligned-v1.webp";
+import sealStage2Space from "./assets/seal-stage-2-space-v1-aligned-v1.webp";
+import sealStage3Idle from "./assets/seal-stage-3-aligned-v1.webp";
+import sealStage3Eat from "./assets/seal-stage-3-eat-aligned-v1.webp";
+import sealStage3Chew from "./assets/seal-stage-3-eat-closed-v2-aligned-v1.webp";
+import sealStage3Pet from "./assets/seal-stage-3-pet-aligned-v1.webp";
+import sealStage3Walk from "./assets/seal-stage-3-walk-aligned-v1.webp";
+import sealStage3Ring from "./assets/seal-stage-3-doflamingo-ring-aligned-v1.webp";
+import sealStage3Swim from "./assets/seal-stage-3-swim-v1-aligned-v1.webp";
+import sealStage3Haul from "./assets/seal-stage-3-haul-v1-aligned-v1.webp";
+import sealStage3Sleep from "./assets/seal-stage-3-sleep-v1-aligned-v1.webp";
+import sealStage3Sniff from "./assets/seal-stage-3-sniff-v1-aligned-v1.webp";
+import sealStage3Approach from "./assets/seal-stage-3-approach-v1-aligned-v1.webp";
+import sealStage3Space from "./assets/seal-stage-3-space-v1-aligned-v1.webp";
+import sealStage4Idle from "./assets/seal-stage-4-aligned-v1.webp";
+import sealStage4Eat from "./assets/seal-stage-4-eat-aligned-v1.webp";
+import sealStage4Chew from "./assets/seal-stage-4-eat-closed-v2-aligned-v1.webp";
+import sealStage4Pet from "./assets/seal-stage-4-pet-aligned-v1.webp";
+import sealStage4Walk from "./assets/seal-stage-4-walk-aligned-v1.webp";
+import sealStage4Ring from "./assets/seal-stage-4-doflamingo-ring-aligned-v1.webp";
+import sealStage4Swim from "./assets/seal-stage-4-swim-v1-aligned-v1.webp";
+import sealStage4Haul from "./assets/seal-stage-4-haul-v1-aligned-v1.webp";
+import sealStage4Sleep from "./assets/seal-stage-4-sleep-v1-aligned-v1.webp";
+import sealStage4Sniff from "./assets/seal-stage-4-sniff-v1-aligned-v1.webp";
+import sealStage4Approach from "./assets/seal-stage-4-approach-v1-aligned-v1.webp";
+import sealStage4Space from "./assets/seal-stage-4-space-v1-aligned-v1.webp";
+import sealStage5Idle from "./assets/seal-stage-5-aligned-v1.webp";
+import sealStage5Eat from "./assets/seal-stage-5-eat-aligned-v1.webp";
+import sealStage5Chew from "./assets/seal-stage-5-eat-closed-v2-aligned-v1.webp";
+import sealStage5Pet from "./assets/seal-stage-5-pet-aligned-v1.webp";
+import sealStage5Walk from "./assets/seal-stage-5-walk-aligned-v1.webp";
+import sealStage5Ring from "./assets/seal-stage-5-doflamingo-ring-aligned-v1.webp";
+import sealStage5Swim from "./assets/seal-stage-5-swim-v1-aligned-v1.webp";
+import sealStage5Haul from "./assets/seal-stage-5-haul-v1-aligned-v1.webp";
+import sealStage5Sleep from "./assets/seal-stage-5-sleep-v1-aligned-v1.webp";
+import sealStage5Sniff from "./assets/seal-stage-5-sniff-v1-aligned-v1.webp";
+import sealStage5Approach from "./assets/seal-stage-5-approach-v1-aligned-v1.webp";
+import sealStage5Space from "./assets/seal-stage-5-space-v1-aligned-v1.webp";
 import poolBackground from "./assets/pool-background-cover-v1.jpg";
 import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
 
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "37";
+const ASSET_VERSION = "38";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -247,6 +247,7 @@ const fresh = () => {
     interactionCounts: {},
     lastInteraction: null,
     dailyMoment: { date: "", id: "", choice: "" },
+    onboardingStep: 0,
     name: "Mogu",
     birthday: "",
     profileComplete: false,
@@ -295,6 +296,7 @@ function normalizePet(raw) {
     interactionCounts: raw?.interactionCounts && typeof raw.interactionCounts === "object" ? { ...raw.interactionCounts } : {},
     lastInteraction: raw?.lastInteraction && typeof raw.lastInteraction === "object" ? { ...raw.lastInteraction } : null,
     dailyMoment: raw?.dailyMoment && typeof raw.dailyMoment === "object" ? { ...raw.dailyMoment } : { date: "", id: "", choice: "" },
+    onboardingStep: Object.hasOwn(raw || {}, "onboardingStep") ? Math.min(4, Math.max(0, Math.floor(numberOr(raw.onboardingStep, 0)))) : raw?.profileComplete ? 4 : 0,
     name: typeof raw?.name === "string" && raw.name.trim() ? raw.name.trim().replace(/[<>&"]/g, "").slice(0, 12) || base.name : base.name,
     birthday: typeof raw?.birthday === "string" ? raw.birthday.slice(0, 10) : "",
     profileComplete: Boolean(raw?.profileComplete),
@@ -2506,7 +2508,7 @@ function renderDrawer(force = false) {
   }
   if (mode === "pet") {
     const moment = DAILY_MOMENTS.find((item) => item.id === pet.dailyMoment?.id);
-    const momentCard = moment && !pet.dailyMoment.choice ? `<section class="daily-moment"><small>今天的 ${escapeAttribute(pet.name)}</small><strong>${moment.prompt}</strong><div>${moment.choices.map((choice) => `<button data-moment="${choice.id}" type="button"><span aria-hidden="true">${choice.icon}</span>${choice.label}</button>`).join("")}</div></section>` : "";
+    const momentCard = moment && !pet.dailyMoment.choice && pet.onboardingStep >= 4 ? `<section class="daily-moment"><small>今天的 ${escapeAttribute(pet.name)}</small><strong>${moment.prompt}</strong><div>${moment.choices.map((choice) => `<button data-moment="${choice.id}" type="button"><span aria-hidden="true">${choice.icon}</span>${choice.label}</button>`).join("")}</div></section>` : "";
     const remembered = favoriteInteraction();
     drawer.innerHTML = `${momentCard}<div class="drawer-title companion-title"><div><small>和 ${escapeAttribute(pet.name)} 相處</small><h2>牠會回應你的陪伴</h2>${remembered ? `<p class="remembered-line">牠記得你常常會「${remembered}」</p>` : ""}</div><button class="profile-edit" data-edit-profile type="button">改名字</button></div><p class="companion-hint">也可以直接點海豹，或在牠身上輕輕來回撫摸。</p><div class="companion-grid"><button data-companion="call"><b aria-hidden="true">👋</b><span>呼喚牠</span><small>看看牠會不會靠近</small></button><button data-companion="splash"><b aria-hidden="true">💦</b><span>一起玩水</span><small>陪牠游一小圈</small></button><button data-companion="quiet"><b aria-hidden="true">🌙</b><span>安靜陪伴</span><small>在旁邊休息一下</small></button><button data-companion="wave"><b aria-hidden="true">🤍</b><span>打招呼</span><small>讓牠熟悉你的聲音</small></button></div><button class="vibration-setting" data-setting="vibration" type="button">📳 互動震動：${pet.vibrationOn ? "開" : "關"}</button>`;
   }
@@ -2609,9 +2611,46 @@ function render(persist = true, forceDrawer = false) {
   });
   $("dead-overlay").hidden = !pet.dead;
   renderDrawer(forceDrawer);
+  renderOnboarding();
+  syncInteractionState();
   syncThreeModeVisuals();
   updateSoundButton();
   if (persist) safeSave();
+}
+
+function renderOnboarding() {
+  const tip = $("onboarding-tip");
+  const guides = {
+    1: { mode: "pet", copy: `1／3　先陪 ${pet.name} 玩一下，點海豹或選一種陪伴方式` },
+    2: { mode: "feed", copy: "2／3　選一份食物，看看牠怎麼咀嚼" },
+    3: { mode: "care", copy: "3／3　完成一次日常照護，讓牠保持舒服" },
+  };
+  const guide = guides[pet.onboardingStep];
+  tip.hidden = !guide;
+  if (guide) $("onboarding-copy").textContent = guide.copy;
+  document.querySelectorAll(".bottom-nav button").forEach((button) => {
+    button.classList.toggle("is-guide-target", Boolean(guide && button.dataset.mode === guide.mode));
+  });
+}
+
+function startOnboarding() {
+  if (pet.onboardingStep !== 0) return;
+  pet.onboardingStep = 1;
+  mode = "pet";
+  drawerKey = "";
+  render(true, true);
+  $("speech").textContent = `${pet.name} 正看著你，試著和牠打招呼吧`;
+  react("pet", "👋", "guide", "approach", "notice-player");
+}
+
+function advanceOnboarding(completedStep) {
+  if (pet.onboardingStep !== completedStep) return;
+  pet.onboardingStep = Math.min(4, completedStep + 1);
+  if (pet.onboardingStep === 2) mode = "feed";
+  if (pet.onboardingStep === 3) mode = "care";
+  drawerKey = "";
+  render(true, true);
+  if (pet.onboardingStep === 4) showNotice(`完成了！你已經知道怎麼照顧 ${pet.name}`, "success");
 }
 
 function showNotice(message, tone = "normal") {
@@ -2627,9 +2666,21 @@ function showNotice(message, tone = "normal") {
 
 function setBusy(busy) {
   interactionLock = busy;
-  $("seal").setAttribute("aria-busy", String(busy));
-  document.querySelectorAll("[data-food]").forEach((button) => {
-    button.disabled = busy;
+  syncInteractionState();
+}
+
+function syncInteractionState() {
+  $("seal").setAttribute("aria-busy", String(interactionLock));
+  $("drawer").setAttribute("aria-busy", String(interactionLock));
+  document.querySelector(".pet-app")?.classList.toggle("is-interacting", interactionLock);
+  document.querySelectorAll("#drawer button, .bottom-nav button").forEach((button) => {
+    if (interactionLock && !button.disabled) {
+      button.disabled = true;
+      button.dataset.busyDisabled = "true";
+    } else if (!interactionLock && button.dataset.busyDisabled === "true") {
+      button.disabled = false;
+      delete button.dataset.busyDisabled;
+    }
   });
 }
 
@@ -2855,7 +2906,7 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   }, duration);
 }
 
-function playInteractionSequence({ icon, zone, asset, motion, onMain, mainDuration = 1180 }) {
+function playInteractionSequence({ icon, zone, asset, motion, onMain, onComplete, mainDuration = 1180 }) {
   if (interactionLock || pet.dead) return;
   clearTimeout(sequenceTimer);
   clearTimeout(settleTimer);
@@ -2868,7 +2919,10 @@ function playInteractionSequence({ icon, zone, asset, motion, onMain, mainDurati
     settleTimer = setTimeout(() => {
       $("speech").textContent = pet.energy < 35 ? `${pet.name} 安心地停在你身邊休息` : `${pet.name} 回到水裡，仍不時回頭看你`;
       react("pet", "♡", "settle", pet.energy < 35 ? "sleep" : "swim", "settle-away");
-      setTimeout(() => setBusy(false), 1350);
+      setTimeout(() => {
+        setBusy(false);
+        onComplete?.();
+      }, 1350);
     }, mainDuration);
   }, 720);
 }
@@ -2945,7 +2999,10 @@ function feed(food, sourceButton) {
     react("eat", food.icon, food.sound, "eat", `feed-${food.sound}`);
     sound("eat", food.sound);
     vibrate([10, 35, 9]);
-    setTimeout(() => setBusy(false), 1500);
+    setTimeout(() => {
+      setBusy(false);
+      advanceOnboarding(2);
+    }, 1500);
   }, delay);
 }
 
@@ -2964,7 +3021,7 @@ function performCompanion(actionId) {
   };
   const action = actions[actionId];
   if (!action) return;
-  playInteractionSequence({ icon: action.icon, zone: actionId, asset: action.asset, motion: action.motion, mainDuration: 4300, onMain: () => {
+  playInteractionSequence({ icon: action.icon, zone: actionId, asset: action.asset, motion: action.motion, mainDuration: 4300, onComplete: () => advanceOnboarding(1), onMain: () => {
     pet.affection = clamp(pet.affection + action.affection);
     pet.energy = clamp(pet.energy + action.energy);
     pet.interactionFatigue = clamp(pet.interactionFatigue + 6);
@@ -2983,7 +3040,7 @@ function resolveDailyMoment(choiceId) {
   const moment = DAILY_MOMENTS.find((item) => item.id === pet.dailyMoment?.id);
   const choice = moment?.choices.find((item) => item.id === choiceId);
   if (!choice) return;
-  playInteractionSequence({ icon: choice.icon, zone: choice.id, asset: choice.asset, motion: choice.motion, mainDuration: choice.motion === "haul" ? 7200 : 4300, onMain: () => {
+  playInteractionSequence({ icon: choice.icon, zone: choice.id, asset: choice.asset, motion: choice.motion, mainDuration: choice.motion === "haul" ? 7200 : 4300, onComplete: () => advanceOnboarding(1), onMain: () => {
     pet.dailyMoment.choice = choice.id;
     pet.affection = clamp(pet.affection + choice.affection);
     pet.energy = clamp(pet.energy + choice.energy);
@@ -3022,6 +3079,7 @@ function performCare(actionId) {
   if (pet.dead || interactionLock) return;
   const action = CARE_ACTIONS.find((item) => item.id === actionId);
   if (!action || careCooldown(action)) return;
+  setBusy(true);
   const activeEvent = pet.currentHealthEvent ? HEALTH_EVENTS[pet.currentHealthEvent] : null;
   pet.careLog = { ...pet.careLog, [action.id]: Date.now() };
   let message = "";
@@ -3075,9 +3133,15 @@ function performCare(actionId) {
   render(true, true);
   const careVisual = careVisuals[action.id];
   react("pet", reaction, action.id, careVisual.asset, careVisual.motion);
+  setTimeout(() => {
+    setBusy(false);
+    advanceOnboarding(3);
+  }, action.id === "haul" ? 7200 : 1200);
 }
 
 function addPetTrail(x, y) {
+  const existingTrails = document.querySelectorAll(".pet-trail");
+  if (existingTrails.length >= 8) existingTrails[0].remove();
   const trail = document.createElement("span");
   trail.className = "pet-trail";
   trail.textContent = Math.random() > 0.25 ? "♥" : "✦";
@@ -3101,6 +3165,7 @@ function petSeal(zone = "belly") {
   const safeZone = threeZoneRewards[zone] ? zone : "belly";
   const reward = threeZoneRewards[safeZone];
   lastPetAt = now;
+  setBusy(true);
   pet.affection = clamp(pet.affection + reward.affection);
   pet.interactionFatigue = clamp(pet.interactionFatigue + 18);
   rememberInteraction("pet", reward.line);
@@ -3136,6 +3201,10 @@ function petSeal(zone = "belly") {
   sound(safeZone === "fin" ? "water" : "pet", safeZone);
   vibrate(10);
   safeSave();
+  setTimeout(() => {
+    setBusy(false);
+    advanceOnboarding(1);
+  }, 1180);
 }
 
 function greetSeal() {
@@ -3174,11 +3243,15 @@ function buy(item) {
 }
 
 function switchMode(nextMode) {
+  if (interactionLock) return;
   mode = mode === nextMode ? "home" : nextMode;
   threeState.lastInteractionStamp = performance.now();
   drawerKey = "";
   sound("select");
   render(true, true);
+  if (mode !== "home" && matchMedia("(max-width: 640px)").matches) {
+    requestAnimationFrame(() => $("drawer").scrollIntoView({ behavior: "smooth", block: "nearest" }));
+  }
 }
 
 let pointerTracking = false;
@@ -3190,13 +3263,14 @@ let gesturePetTriggered = false;
 let pointerZone = "";
 let suppressClick = false;
 let ringDrag = null;
+let activePetPointerId = null;
 
 function ringTouchesSeal(ring) {
   const ringRect = ring.getBoundingClientRect();
   const sealRect = $("seal").getBoundingClientRect();
-  const overlapX = Math.max(0, Math.min(ringRect.right, sealRect.right) - Math.max(ringRect.left, sealRect.left));
-  const overlapY = Math.max(0, Math.min(ringRect.bottom, sealRect.bottom) - Math.max(ringRect.top, sealRect.top));
-  return overlapX * overlapY > Math.min(ringRect.width * ringRect.height, sealRect.width * sealRect.height) * 0.12;
+  const centerX = ringRect.left + ringRect.width / 2;
+  const centerY = ringRect.top + ringRect.height / 2;
+  return centerX >= sealRect.left + sealRect.width * 0.18 && centerX <= sealRect.right - sealRect.width * 0.18 && centerY >= sealRect.top + sealRect.height * 0.18 && centerY <= sealRect.bottom - sealRect.height * 0.12;
 }
 
 function returnRingToPool(ring) {
@@ -3208,7 +3282,7 @@ function returnRingToPool(ring) {
 
 $("decorations").addEventListener("pointerdown", (event) => {
   const ring = event.target.closest('[data-pool-toy="ring"]');
-  if (!ring || pet.dead || interactionLock) return;
+  if (!event.isPrimary || ringDrag || !ring || pet.dead || interactionLock) return;
   ensureAudio(true);
   const poolRect = $("pool").getBoundingClientRect();
   const ringRect = ring.getBoundingClientRect();
@@ -3260,15 +3334,26 @@ function finishRingDrag(event) {
   returnRingToPool(ring);
 }
 
+function cancelRingDrag(event) {
+  if (!ringDrag || event.pointerId !== ringDrag.pointerId) return;
+  const ring = ringDrag.ring;
+  ringDrag = null;
+  ring.classList.remove("is-over-seal");
+  returnRingToPool(ring);
+}
+
 $("decorations").addEventListener("pointerup", finishRingDrag);
-$("decorations").addEventListener("pointercancel", finishRingDrag);
+$("decorations").addEventListener("pointercancel", cancelRingDrag);
+$("decorations").addEventListener("lostpointercapture", cancelRingDrag);
 
 $("seal").addEventListener("pointerdown", (event) => {
-  if (mode !== "pet" || pet.dead || interactionLock) return;
+  if (!event.isPrimary || activePetPointerId !== null || mode !== "pet" || pet.dead || interactionLock) return;
+  activePetPointerId = event.pointerId;
   const now = Date.now();
   rapidTouches = [...rapidTouches.filter((stamp) => now - stamp < 1200), now];
   if (rapidTouches.length >= 4) {
     rapidTouches = [];
+    activePetPointerId = null;
     pet.interactionFatigue = clamp(pet.interactionFatigue + 12);
     showNotice(`${pet.name} 被嚇到了，先轉身保持一點距離`, "warning");
     $("speech").textContent = "慢一點，我需要一點空間";
@@ -3312,7 +3397,7 @@ $("seal").addEventListener("pointerleave", () => {
 });
 
 $("seal").addEventListener("pointermove", (event) => {
-  if (!pointerTracking) return;
+  if (!pointerTracking || event.pointerId !== activePetPointerId) return;
   const distance = Math.hypot(event.clientX - pointerLastX, event.clientY - pointerLastY);
   pointerTravel += distance;
   trailDistance += distance;
@@ -3335,16 +3420,19 @@ $("seal").addEventListener("pointermove", (event) => {
   }
 });
 
-function endPetPointer() {
+function endPetPointer(event, cancelled = false) {
+  if (activePetPointerId !== null && event.pointerId !== activePetPointerId) return;
+  activePetPointerId = null;
   pointerTracking = false;
   $("seal-roamer").classList.remove("held", "noticing-player");
-  if (!gesturePetTriggered && mode === "pet" && !interactionLock && !pet.dead && !suppressClick) {
+  if (!cancelled && !gesturePetTriggered && mode === "pet" && !interactionLock && !pet.dead && !suppressClick) {
     petSeal(pointerZone);
   }
 }
 
 $("seal").addEventListener("pointerup", endPetPointer);
-$("seal").addEventListener("pointercancel", endPetPointer);
+$("seal").addEventListener("pointercancel", (event) => endPetPointer(event, true));
+$("seal").addEventListener("lostpointercapture", (event) => endPetPointer(event, true));
 $("seal").onclick = () => {
   if (suppressClick) {
     suppressClick = false;
@@ -3364,7 +3452,14 @@ $("profile-form").addEventListener("submit", (event) => {
   saveIdentity($("profile-name").value, $("profile-birthday").value);
   $("profile-overlay").hidden = true;
   showNotice(`歡迎 ${pet.name} 來到泳池！`, "success");
+  startOnboarding();
 });
+$("onboarding-skip").onclick = () => {
+  pet.onboardingStep = 4;
+  drawerKey = "";
+  showNotice("可以自由探索了，海豹會用反應告訴你牠的心情");
+  render(true, true);
+};
 $("adopt").onclick = () => {
   if (PREVIEW_DEAD) {
     location.href = `${location.pathname}?build=13`;
