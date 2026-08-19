@@ -1015,6 +1015,16 @@ button:focus-visible {
 .pet-seal[data-motion="auto-explore"] { animation: autonomous-explore 4.2s ease-in-out; }
 .pet-seal[data-motion="auto-approach"] { animation: autonomous-approach 3.9s ease-in-out; }
 .pet-seal[data-motion="auto-rest"] { animation: rock-rest-breathe 6.1s ease-in-out; }
+.pet-seal[data-motion="auto-sleep"] { animation: rock-rest-breathe 4.1s ease-in-out; }
+.pet-seal[data-motion="notice-player"] { animation: notice-player .7s ease-out both; }
+.pet-seal[data-motion="settle-away"] { animation: settle-away 1.3s ease-in-out both; }
+.seal-roamer.noticing-player:not(.reacting) .pet-seal { animation: curious-look 1.7s ease-in-out infinite; }
+
+.pool-scene[data-emotion="happy"] .speech { border-color: rgba(255, 190, 205, .72); }
+.pool-scene[data-emotion="expecting"] .speech { animation: speech-expecting 1.8s ease-in-out infinite; }
+.pool-scene[data-emotion="sleepy"] .pet-seal:not(.eat):not(.pet) { filter: saturate(.88) brightness(.98); }
+.pool-scene[data-emotion="shy"] .speech { opacity: .9; }
+.pool-scene[data-emotion="overwhelmed"] .speech { border-color: rgba(235, 164, 101, .7); }
 
 .reaction-icon[data-zone="autonomous"] {
   opacity: 0.78;
@@ -1987,6 +1997,29 @@ button:focus-visible {
   0%, 100% { transform: translateY(0) scale(1); }
   35% { transform: translateY(-10px) scale(1.035); }
   65% { transform: translateY(-5px) scale(1.02) rotate(1deg); }
+}
+
+@keyframes notice-player {
+  0% { transform: translateX(10px) rotate(1deg) scale(.98); }
+  45% { transform: translateX(2px) translateY(-4px) rotate(-1deg) scale(1.02); }
+  100% { transform: translateX(-5px) scale(1); }
+}
+
+@keyframes settle-away {
+  0% { transform: translateX(-4px) scale(1.02); }
+  45% { transform: translateX(10px) translateY(-3px) rotate(1deg); }
+  100% { transform: translateX(20px) scale(.98); }
+}
+
+@keyframes curious-look {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  48% { transform: translateY(-4px) rotate(-1.4deg); }
+  62% { transform: translateY(-3px) rotate(1deg); }
+}
+
+@keyframes speech-expecting {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 @keyframes autonomous-thought {

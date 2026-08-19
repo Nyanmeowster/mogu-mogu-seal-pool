@@ -165,6 +165,30 @@ test("每天只有一個簡短情境選擇", () => {
   assert.match(styles, /\.daily-moment/);
 });
 
+test("陪伴動作會先注意玩家、互動，再自然離開", () => {
+  assert.match(script, /function playInteractionSequence/);
+  assert.match(script, /"notice-player"/);
+  assert.match(script, /"settle-away"/);
+  assert.match(styles, /@keyframes notice-player/);
+  assert.match(styles, /@keyframes settle-away/);
+});
+
+test("停留會被注視，快速亂點會讓海豹退開", () => {
+  assert.match(script, /addEventListener\("pointerenter"/);
+  assert.match(script, /rapidTouches\.length >= 4/);
+  assert.match(script, /被嚇到了，先轉身保持一點距離/);
+  assert.match(script, /"auto-space"/);
+  assert.match(styles, /\.seal-roamer\.noticing-player/);
+});
+
+test("心情透過畫面反應而非新增數值欄", () => {
+  assert.match(script, /function visibleEmotion\(\)/);
+  assert.match(script, /dataset\.emotion = visibleEmotion\(\)/);
+  assert.match(styles, /data-emotion="happy"/);
+  assert.match(styles, /data-emotion="expecting"/);
+  assert.match(styles, /data-emotion="overwhelmed"/);
+});
+
 test("照護會記錄長期後果並尊重海豹停止互動的訊號", () => {
   assert.match(script, /recentFoods/);
   assert.match(script, /lastRestAt/);

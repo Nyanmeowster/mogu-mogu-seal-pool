@@ -64,7 +64,7 @@ import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "36";
+const ASSET_VERSION = "37";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -348,6 +348,10 @@ let drawerKey = "";
 let decorKey = "";
 let hiddenAt = 0;
 let noticeTimer;
+let sequenceTimer;
+let settleTimer;
+let attentionTimer;
+let rapidTouches = [];
 let audio;
 let masterGain;
 let ambientGain;
@@ -656,6 +660,15 @@ function mood() {
   if (pet.affection > 80 && pet.satiety > 75) return "最喜歡和你待在一起！";
   if (pet.satiety > 90) return "飽飽的，好幸福～";
   return "今天的呼吸、食慾和活動都很正常";
+}
+
+function visibleEmotion() {
+  if (pet.interactionFatigue >= 75) return "overwhelmed";
+  if (pet.energy < 30) return "sleepy";
+  if (pet.satiety < 30) return "expecting";
+  if (pet.affection >= 75) return "happy";
+  if (pet.affection < 30) return "shy";
+  return "calm";
 }
 
 function dayPhase(stamp = Date.now()) {
@@ -2359,6 +2372,7 @@ function renderLifeStrip() {
   $("personality-icon").textContent = profile.icon;
   $("personality-label").textContent = profile.name;
   $("pool").dataset.phase = phase.id;
+  $("pool").dataset.emotion = visibleEmotion();
 }
 
 function observationSummary() {
@@ -2828,7 +2842,7 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   $("reaction-icon").hidden = false;
   createParticles(kind, icon);
   clearTimeout(reactionTimer);
-  const duration = motion === "haul" ? 7200 : motion.startsWith("auto-") ? (motion === "auto-rest" ? 6200 : 4300) : kind === "eat" ? 1480 : 1180;
+  const duration = motion === "notice-player" ? 720 : motion === "settle-away" ? 1350 : motion === "haul" ? 7200 : motion.startsWith("auto-") ? (motion === "auto-rest" ? 6200 : 4300) : kind === "eat" ? 1480 : 1180;
   reactionTimer = setTimeout(() => {
     $("reaction-icon").hidden = true;
     $("reaction-icon").dataset.zone = "";
@@ -2839,6 +2853,24 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
     if (motion === "haul") setBusy(false);
     actionActive = "";
   }, duration);
+}
+
+function playInteractionSequence({ icon, zone, asset, motion, onMain, mainDuration = 1180 }) {
+  if (interactionLock || pet.dead) return;
+  clearTimeout(sequenceTimer);
+  clearTimeout(settleTimer);
+  setBusy(true);
+  $("speech").textContent = `${pet.name} 注意到你，正慢慢靠近…`;
+  react("pet", "•", "attention", "approach", "notice-player");
+  sequenceTimer = setTimeout(() => {
+    onMain?.();
+    react("pet", icon, zone, asset, motion);
+    settleTimer = setTimeout(() => {
+      $("speech").textContent = pet.energy < 35 ? `${pet.name} 安心地停在你身邊休息` : `${pet.name} 回到水裡，仍不時回頭看你`;
+      react("pet", "♡", "settle", pet.energy < 35 ? "sleep" : "swim", "settle-away");
+      setTimeout(() => setBusy(false), 1350);
+    }, mainDuration);
+  }, 720);
 }
 
 function animateFood(icon, sourceButton) {
@@ -2932,17 +2964,18 @@ function performCompanion(actionId) {
   };
   const action = actions[actionId];
   if (!action) return;
-  pet.affection = clamp(pet.affection + action.affection);
-  pet.energy = clamp(pet.energy + action.energy);
-  pet.interactionFatigue = clamp(pet.interactionFatigue + 6);
-  rememberInteraction(actionId, action.message);
-  updateDaily("play");
-  addActivity("play", action.message, action.icon);
-  showNotice(action.message, "success");
-  sound(action.sound, actionId);
-  vibrate(actionId === "splash" ? [8, 28, 8] : 10);
-  render(true, true);
-  react("pet", action.icon, actionId, action.asset, action.motion);
+  playInteractionSequence({ icon: action.icon, zone: actionId, asset: action.asset, motion: action.motion, mainDuration: 4300, onMain: () => {
+    pet.affection = clamp(pet.affection + action.affection);
+    pet.energy = clamp(pet.energy + action.energy);
+    pet.interactionFatigue = clamp(pet.interactionFatigue + 6);
+    rememberInteraction(actionId, action.message);
+    updateDaily("play");
+    addActivity("play", action.message, action.icon);
+    showNotice(action.message, "success");
+    sound(action.sound, actionId);
+    vibrate(actionId === "splash" ? [8, 28, 8] : 10);
+    render(true, true);
+  } });
 }
 
 function resolveDailyMoment(choiceId) {
@@ -2950,17 +2983,18 @@ function resolveDailyMoment(choiceId) {
   const moment = DAILY_MOMENTS.find((item) => item.id === pet.dailyMoment?.id);
   const choice = moment?.choices.find((item) => item.id === choiceId);
   if (!choice) return;
-  pet.dailyMoment.choice = choice.id;
-  pet.affection = clamp(pet.affection + choice.affection);
-  pet.energy = clamp(pet.energy + choice.energy);
-  rememberInteraction("moment", choice.reply);
-  updateDaily("play");
-  addActivity("play", choice.reply, choice.icon);
-  showNotice(choice.reply, "success");
-  sound(choice.asset === "swim" ? "water" : "pet", choice.id);
-  vibrate(10);
-  render(true, true);
-  react("pet", choice.icon, choice.id, choice.asset, choice.motion);
+  playInteractionSequence({ icon: choice.icon, zone: choice.id, asset: choice.asset, motion: choice.motion, mainDuration: choice.motion === "haul" ? 7200 : 4300, onMain: () => {
+    pet.dailyMoment.choice = choice.id;
+    pet.affection = clamp(pet.affection + choice.affection);
+    pet.energy = clamp(pet.energy + choice.energy);
+    rememberInteraction("moment", choice.reply);
+    updateDaily("play");
+    addActivity("play", choice.reply, choice.icon);
+    showNotice(choice.reply, "success");
+    sound(choice.asset === "swim" ? "water" : "pet", choice.id);
+    vibrate(10);
+    render(true, true);
+  } });
 }
 
 function restockFood(foodId) {
@@ -3231,6 +3265,18 @@ $("decorations").addEventListener("pointercancel", finishRingDrag);
 
 $("seal").addEventListener("pointerdown", (event) => {
   if (mode !== "pet" || pet.dead || interactionLock) return;
+  const now = Date.now();
+  rapidTouches = [...rapidTouches.filter((stamp) => now - stamp < 1200), now];
+  if (rapidTouches.length >= 4) {
+    rapidTouches = [];
+    pet.interactionFatigue = clamp(pet.interactionFatigue + 12);
+    showNotice(`${pet.name} 被嚇到了，先轉身保持一點距離`, "warning");
+    $("speech").textContent = "慢一點，我需要一點空間";
+    react("pet", "🤍", "space", "space", "auto-space");
+    vibrate([7, 32, 7]);
+    safeSave();
+    return;
+  }
   ensureAudio(true);
   pointerTracking = true;
   pointerTravel = 0;
@@ -3248,6 +3294,21 @@ $("seal").addEventListener("pointerdown", (event) => {
   }
   $("seal-roamer").classList.add("held");
   $("seal").setPointerCapture?.(event.pointerId);
+});
+
+$("seal").addEventListener("pointerenter", () => {
+  if (pet.dead || interactionLock || actionActive) return;
+  clearTimeout(attentionTimer);
+  attentionTimer = setTimeout(() => {
+    if (interactionLock || actionActive) return;
+    $("seal-roamer").classList.add("noticing-player");
+    $("speech").textContent = pet.affection >= 60 ? `${pet.name} 抬起頭，期待你靠近` : `${pet.name} 小心地看向你`;
+  }, 380);
+});
+
+$("seal").addEventListener("pointerleave", () => {
+  clearTimeout(attentionTimer);
+  if (!pointerTracking) $("seal-roamer").classList.remove("noticing-player");
 });
 
 $("seal").addEventListener("pointermove", (event) => {
@@ -3276,7 +3337,7 @@ $("seal").addEventListener("pointermove", (event) => {
 
 function endPetPointer() {
   pointerTracking = false;
-  $("seal-roamer").classList.remove("held");
+  $("seal-roamer").classList.remove("held", "noticing-player");
   if (!gesturePetTriggered && mode === "pet" && !interactionLock && !pet.dead && !suppressClick) {
     petSeal(pointerZone);
   }
