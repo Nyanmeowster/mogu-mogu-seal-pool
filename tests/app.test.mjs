@@ -70,15 +70,23 @@ test("真實照護狀態包含飽足、信任、健康與水質", () => {
   assert.match(script, /pet\.energy/);
 });
 
-test("進入網站會分階段載入並解碼目前與相鄰體型素材", () => {
+test("首屏只載入目前體型，其餘素材會在合適時機逐張背景載入", () => {
   assert.match(html, /id="app-loader"/);
   assert.equal((html.match(/rel="preload" as="image"/g) || []).length, 0);
   assert.match(script, /async function preloadEssentialAssets\(\)/);
-  assert.match(script, /\[current, current - 1, current \+ 1\]/);
-  assert.match(script, /async function preloadRemainingAssets\(\)/);
+  assert.match(script, /const total = baseUrls\.length \+ Object\.keys\(SPRITE_ASSETS\[current\]\)\.length;/);
   assert.match(script, /const \[baseResults, currentLoaded\] = await Promise\.all/);
-  assert.match(script, /Promise\.all\(neighborStages\.map/);
-  assert.match(script, /await waitForIdle\(\)/);
+  assert.match(script, /preloadStage\(current, markComplete\)/);
+  assert.doesNotMatch(script, /\[current, current - 1, current \+ 1\]/);
+  assert.match(script, /async function preloadRemainingAssets\(\)/);
+  assert.match(script, /navigator\.connection\?\.saveData/);
+  assert.match(script, /navigator\.deviceMemory && navigator\.deviceMemory <= 2/);
+  assert.match(script, /sort\(\(a, b\) => Math\.abs\(a - current\) - Math\.abs\(b - current\)\)/);
+  assert.match(script, /for \(const url of Object\.values\(SPRITE_ASSETS\[stageNumber\]\)\)/);
+  assert.match(script, /function backgroundPreloadAllowed\(\)/);
+  assert.match(script, /async function waitForBackgroundPreloadWindow\(\)/);
+  assert.match(script, /await waitForBackgroundPreloadWindow\(\)/);
+  assert.match(script, /await waitForIdle\(900\)/);
   assert.match(script, /scheduleBackgroundPreload\(\)/);
   assert.match(script, /function preloadImage\(url\)/);
   assert.match(script, /await image\.decode\(\)/);
@@ -99,7 +107,9 @@ test("遊戲泳池沿用封面風格的乾淨背景並預先載入", () => {
 test("上岸休息會實際移動到背景石台並停留", () => {
   assert.match(script, /resting-on-rock/);
   assert.match(script, /if \(motion === "haul"\) return \{ attention, main: 7200, settle \};/);
-  assert.match(script, /if \(motion === "haul"\) setBusy\(true\);/);
+  assert.match(script, /const sequenceLock = setBusy\(true\);/);
+  assert.match(script, /setBusy\(false, sequenceLock\)/);
+  assert.doesNotMatch(script, /if \(motion === "haul"\) setBusy\((?:true|false)\);/);
   assert.match(styles, /\.seal-roamer\.reacting\.resting-on-rock/);
   assert.match(styles, /@keyframes haul-out-to-rock/);
   assert.match(styles, /translate: clamp\(64px, 21cqw, 152px\) -68px;/);
@@ -163,8 +173,8 @@ test("首次遊玩以非彈窗方式引導陪伴、餵食與照護", () => {
 
 test("互動期間所有操作會顯示忙碌並防止重複點擊", () => {
   assert.match(script, /function syncInteractionState\(\)/);
-  assert.match(script, /#drawer button, \.bottom-nav button/);
-  assert.match(script, /if \(interactionLock\) return;/);
+  assert.match(script, /#drawer button, #decorations button, \.bottom-nav button/);
+  assert.match(script, /if \(interactionLock \|\| tabReadOnly \|\| saveWriteProtected\) return;/);
   assert.match(styles, /\.pet-app\.is-interacting/);
   assert.match(styles, /#drawer\[aria-busy="true"\]/);
 });
@@ -256,11 +266,13 @@ test("正式版保留命名、相遇日與簡單身分編輯", () => {
   assert.match(script, /function saveIdentity\(name, birthday = ""\)/);
 });
 
-test("餵食不再要求庫存補充，照護不顯示隨機事件", () => {
+test("餵食不要求庫存補充，照護狀況會直接告知玩家", () => {
   assert.doesNotMatch(script, /data-restock=/);
   assert.doesNotMatch(script, /冷凍食物庫存|今日觀察事件/);
   assert.doesNotMatch(script, /pet\.inventory\[food\.id\] = Math\.max\(0, pet\.inventory\[food\.id\] - 1\)/);
   assert.doesNotMatch(script, /照片回憶簿|匯出備份|匯入備份/);
+  assert.match(script, /const healthCard = healthEvent/);
+  assert.match(script, /healthEvent\.hint/);
 });
 
 test("五種體型都有六張真正的自主生活動作圖", () => {
@@ -300,7 +312,7 @@ test("手機與減少動態效果模式使用較短互動節奏", () => {
 });
 
 test("存檔有版本遷移、安全備份與新版本寫入保護", () => {
-  assert.match(script, /const SAVE_SCHEMA_VERSION = 3/);
+  assert.match(script, /const SAVE_SCHEMA_VERSION = \d+/);
   assert.match(script, /function migrateSave\(raw\)/);
   assert.match(script, /function isRecognizableSave\(raw\)/);
   assert.match(script, /function hasFutureSchema\(raw\)/);

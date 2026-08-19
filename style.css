@@ -1295,6 +1295,13 @@ button:focus-visible {
   animation: ring-play-pop 0.58s ease-in-out;
 }
 
+.decor-ring.is-cooling-down,
+.decor-ring:disabled {
+  cursor: wait;
+  opacity: 0.68;
+  filter: saturate(0.72) drop-shadow(0 5px 3px rgba(0, 70, 90, 0.12));
+}
+
 .decor-ball {
   right: 5%;
   bottom: 78px;
@@ -1568,6 +1575,7 @@ button:focus-visible {
 .pet-app.is-interacting .notice::after { margin-left: 5px; content: "•••"; letter-spacing: 2px; animation: busy-dots 1s steps(3, end) infinite; }
 #drawer[aria-busy="true"] { cursor: wait; }
 #drawer button:disabled,
+#decorations button:disabled,
 .bottom-nav button:disabled { cursor: wait; opacity: .58; }
 
 .journal-head {

@@ -65,7 +65,7 @@ const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
 const SAVE_BACKUP_KEY = "mogu-pet-v1-backup";
-const SAVE_SCHEMA_VERSION = 3;
+const SAVE_SCHEMA_VERSION = 4;
 const ASSET_VERSION = "38";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
@@ -151,12 +151,6 @@ const DAILY_GOALS = [
   { id: "care", label: "完成 2 次專業照護", target: 2, icon: "🩺" },
   { id: "play", label: "陪伴或遊戲 2 次", target: 2, icon: "♥" },
 ];
-const WEATHER_TYPES = [
-  { id: "sunny", icon: "☀️", label: "晴朗", energy: 0.25, water: -0.15 },
-  { id: "cloudy", icon: "☁️", label: "多雲", energy: 0.08, water: 0 },
-  { id: "drizzle", icon: "🌦️", label: "短暫細雨", energy: -0.05, water: 0.08 },
-  { id: "breeze", icon: "🍃", label: "涼爽微風", energy: 0.18, water: 0.04 },
-];
 const HEALTH_EVENTS = {
   appetite: { icon: "🐟", title: "食慾降低", detail: "牠反覆嗅聞食物卻沒有立刻靠近。", action: "check", hint: "先完成健康檢查，確認活動力與呼吸。" },
   eyes: { icon: "👁️", title: "眼睛需要觀察", detail: "眼角看起來比平常濕潤。", action: "check", hint: "記錄眼睛狀況並安排健康檢查。" },
@@ -206,20 +200,6 @@ function localDayKey(stamp = Date.now()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function seasonProfile(stamp = Date.now()) {
-  const month = new Date(stamp).getMonth() + 1;
-  if ([3, 4, 5].includes(month)) return { id: "spring", icon: "🌱", label: "春季換毛期" };
-  if ([6, 7, 8].includes(month)) return { id: "summer", icon: "🌿", label: "夏季避暑期" };
-  if ([9, 10, 11].includes(month)) return { id: "autumn", icon: "🍂", label: "秋季活躍期" };
-  return { id: "winter", icon: "❄️", label: "冬季保暖期" };
-}
-
-function weatherToday(stamp = Date.now()) {
-  const key = localDayKey(stamp);
-  const score = [...key].reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 3), 0);
-  return WEATHER_TYPES[score % WEATHER_TYPES.length];
-}
-
 function normalizeDaily(value) {
   const date = localDayKey();
   if (!value || value.date !== date) return { date, feed: 0, care: 0, play: 0, foods: [], rewarded: false };
@@ -245,6 +225,7 @@ const fresh = () => {
     lastFedAt: now,
     lastSeenAt: now,
     lastStatAt: now,
+    lastCoinAt: now,
     offlineRemainderMs: 0,
     updatedAt: now,
     owned: [],
@@ -297,7 +278,10 @@ function normalizePet(raw) {
     lastFedAt: numberOr(raw?.lastFedAt, base.lastFedAt),
     lastSeenAt: numberOr(raw?.lastSeenAt, base.lastSeenAt),
     lastStatAt: numberOr(raw?.lastStatAt, raw?.lastSeenAt || base.lastStatAt),
-    offlineRemainderMs: Math.max(0, numberOr(raw?.offlineRemainderMs, 0)),
+    lastCoinAt: Number.isFinite(Number(raw?.lastCoinAt)) && Number(raw.lastCoinAt) > 0
+      ? Number(raw.lastCoinAt)
+      : numberOr(raw?.lastSeenAt, base.lastCoinAt),
+    offlineRemainderMs: Math.max(0, numberOr(raw?.offlineRemainderMs, 0)) % HOUR,
     updatedAt: numberOr(raw?.updatedAt, 0),
     owned: listOrEmpty(raw?.owned),
     active: listOrEmpty(raw?.active),
@@ -351,6 +335,9 @@ let storageWarningShown = false;
 let recoveredSave = false;
 let saveWriteProtected = false;
 let futureSaveWarningShown = false;
+let tabReadOnly = false;
+let tabLockQueued = false;
+const TAB_LOCK_NAME = `${SAVE_KEY}-primary-writer`;
 
 function decodeSavedPet(value) {
   if (!value) return null;
@@ -366,19 +353,41 @@ function isRecognizableSave(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
   const hasFiniteNumber = (key) => raw[key] !== null && raw[key] !== "" && Number.isFinite(Number(raw[key]));
   return hasFiniteNumber("satiety")
-    || hasFiniteNumber("lastSeenAt")
-    || typeof raw.name === "string" && Boolean(raw.name.trim())
-    || Array.isArray(raw.owned)
-    || typeof raw.profileComplete === "boolean";
+    && Number(raw.satiety) >= 0
+    && Number(raw.satiety) <= 100
+    && hasFiniteNumber("lastSeenAt")
+    && Number(raw.lastSeenAt) > 0;
+}
+
+function isCompleteSave(raw) {
+  if (!isRecognizableSave(raw)) return false;
+  const finite = (key) => raw[key] !== null && raw[key] !== "" && Number.isFinite(Number(raw[key]));
+  const version = Number(raw.schemaVersion ?? 1);
+  const validOfflineCheckpoint = version < 4
+    || finite("lastCoinAt")
+      && Number(raw.lastCoinAt) > 0
+      && finite("offlineRemainderMs")
+      && Number(raw.offlineRemainderMs) >= 0
+      && Number(raw.offlineRemainderMs) < HOUR;
+  return finite("affection")
+    && finite("coins")
+    && finite("lastFedAt")
+    && Number(raw.lastFedAt) > 0
+    && Array.isArray(raw.owned)
+    && Array.isArray(raw.active)
+    && validOfflineCheckpoint;
 }
 
 function hasFutureSchema(raw) {
   const version = Number(raw?.schemaVersion ?? 1);
-  return isRecognizableSave(raw) && Number.isInteger(version) && version > SAVE_SCHEMA_VERSION;
+  return Boolean(raw && typeof raw === "object" && !Array.isArray(raw))
+    && Number.isInteger(version)
+    && version > SAVE_SCHEMA_VERSION;
 }
 
 function protectFutureSave() {
   saveWriteProtected = true;
+  if (typeof syncInteractionState === "function") syncInteractionState();
   if (!futureSaveWarningShown && document.body?.classList.contains("app-ready")) {
     futureSaveWarningShown = true;
     showNotice("偵測到較新版本的存檔，已停止覆寫以保護資料", "warning");
@@ -386,7 +395,7 @@ function protectFutureSave() {
 }
 
 function migrateSave(raw) {
-  if (!isRecognizableSave(raw)) return null;
+  if (!isCompleteSave(raw)) return null;
   let version = Number(raw.schemaVersion ?? 1);
   if (!Number.isInteger(version) || version < 1 || version > SAVE_SCHEMA_VERSION) return null;
   const migrated = { ...raw };
@@ -402,6 +411,13 @@ function migrateSave(raw) {
       ? { ...migrated.lastResponseIndexes }
       : {};
     migrated.schemaVersion = 3;
+    version = 3;
+  }
+  if (version === 3) {
+    migrated.lastCoinAt = Number.isFinite(Number(migrated.lastCoinAt))
+      ? Number(migrated.lastCoinAt)
+      : Number(migrated.lastSeenAt) || Date.now();
+    migrated.schemaVersion = 4;
   }
   return migrated;
 }
@@ -423,13 +439,89 @@ function safeRead() {
   const rawCurrent = decodeSavedPet(currentValue);
   if (hasFutureSchema(rawCurrent)) {
     saveWriteProtected = true;
-    return rawCurrent;
+    if (isCompleteSave(rawCurrent)) return rawCurrent;
+    const backup = parseSavedPet(backupValue);
+    if (backup) recoveredSave = true;
+    return backup;
   }
   const current = migrateSave(rawCurrent);
   if (current) return current;
   const backup = parseSavedPet(backupValue);
   if (backup) recoveredSave = true;
   return backup;
+}
+
+function warnStorageUnavailable() {
+  if (storageWarningShown || !document.body?.classList.contains("app-ready")) return;
+  storageWarningShown = true;
+  showNotice("這個瀏覽器無法保存進度；關閉頁面後本次照護會消失", "warning");
+}
+
+function queuePrimaryTabTakeover() {
+  if (tabLockQueued || !navigator.locks?.request) return;
+  tabLockQueued = true;
+  navigator.locks.request(TAB_LOCK_NAME, { mode: "exclusive" }, async (lock) => {
+    if (!lock) return;
+    try {
+      const latest = parseSavedPet(localStorage.getItem(SAVE_KEY));
+      if (latest) {
+        const incoming = normalizePet(latest);
+        await preloadStage(stageForSatiety(incoming.satiety));
+        pet = incoming;
+        currentStage = 0;
+        drawerKey = "";
+        decorKey = "";
+      }
+    } catch {
+      // Keep the already normalized in-memory state if storage cannot be read.
+    }
+    tabReadOnly = false;
+    interactionLock = false;
+    let earned = 0;
+    if (!saveWriteProtected) {
+      const now = Date.now();
+      applyElapsedStats(now);
+      earned = collectOfflineCoins(now);
+    }
+    render(!saveWriteProtected, true);
+    if (saveWriteProtected) {
+      showNotice("已取得分頁控制，但較新版本存檔仍保持唯讀", "warning");
+    } else if (earned) {
+      showNotice(`現在可以繼續照顧，休息期間獲得 ${earned} 枚海豹幣`, "success");
+    } else {
+      showNotice("另一個分頁已關閉，現在可以在這裡繼續照顧", "success");
+    }
+    await new Promise(() => {});
+  }).catch(() => {
+    tabReadOnly = false;
+    syncInteractionState();
+  });
+}
+
+function establishTabOwnership() {
+  if (!storageAvailable || !navigator.locks?.request) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    navigator.locks.request(TAB_LOCK_NAME, { mode: "exclusive", ifAvailable: true }, async (lock) => {
+      if (!lock) {
+        tabReadOnly = true;
+        try {
+          const latest = parseSavedPet(localStorage.getItem(SAVE_KEY));
+          if (latest) pet = normalizePet(latest);
+        } catch {
+          // The storage warning path will explain that progress cannot persist.
+        }
+        resolve(false);
+        queuePrimaryTabTakeover();
+        return;
+      }
+      tabReadOnly = false;
+      resolve(true);
+      await new Promise(() => {});
+    }).catch(() => {
+      tabReadOnly = false;
+      resolve(true);
+    });
+  });
 }
 
 let pet = normalizePet(safeRead());
@@ -444,16 +536,22 @@ let interactionLock = false;
 let lastPetAt = 0;
 let drawerKey = "";
 let decorKey = "";
-let hiddenAt = 0;
 let noticeTimer;
 let sequenceTimer;
 let settleTimer;
 let attentionTimer;
 let rapidTouches = [];
+let visualStageLock = 0;
+let visualStageGeneration = 0;
+let interactionGeneration = 0;
+let directPetLockToken = 0;
+let ringInteractionAvailableAt = 0;
 let audio;
 let masterGain;
 let ambientGain;
 let ambientSource;
+let ambientLfo;
+let audioVisibilityGeneration = 0;
 let soundUnlocked = false;
 const preloaded = new Set();
 const spriteCache = new Map();
@@ -634,15 +732,12 @@ function applyElapsedStats(now = Date.now()) {
   const elapsed = Math.max(0, now - pet.lastStatAt);
   if (!elapsed) return;
   const hours = elapsed / HOUR;
-  const weather = weatherToday(now);
-  const season = seasonProfile(now);
   pet.satiety = clamp(pet.satiety - hours * STAT_LOSS_PER_HOUR);
   pet.affection = clamp(pet.affection - hours * TRUST_LOSS_PER_HOUR);
-  const seasonalWaterLoss = season.id === "summer" ? 0.45 : season.id === "winter" ? -0.18 : 0;
-  pet.waterQuality = clamp(pet.waterQuality - hours * (WATER_LOSS_PER_HOUR + seasonalWaterLoss + weather.water));
+  pet.waterQuality = clamp(pet.waterQuality - hours * WATER_LOSS_PER_HOUR);
   pet.interactionFatigue = clamp(pet.interactionFatigue - hours * 18);
   const stableHabitat = pet.satiety >= 25 && pet.waterQuality >= 40;
-  pet.energy = clamp(pet.energy + hours * (stableHabitat ? 2.5 + weather.energy : -3));
+  pet.energy = clamp(pet.energy + hours * (stableHabitat ? 2.5 : -3));
   const dietVariety = new Set(pet.recentFoods.slice(-4)).size;
   const overdueRest = pet.lastRestAt && now - pet.lastRestAt > 18 * HOUR;
   const overdueClean = pet.lastCleanAt && now - pet.lastCleanAt > 24 * HOUR;
@@ -658,26 +753,33 @@ function applyElapsedStats(now = Date.now()) {
   pet.dead = pet.health <= 0 || now - pet.lastFedAt >= FIVE_DAYS;
 }
 
-function collectOfflineCoins(elapsedMs) {
-  const total = Math.max(0, elapsedMs) + pet.offlineRemainderMs;
+function collectOfflineCoins(now = Date.now()) {
+  const savedCheckpoint = Number(pet.lastCoinAt) > 0 ? Number(pet.lastCoinAt) : Number(pet.lastSeenAt) || now;
+  const lastCoinAt = Math.min(now, Math.max(0, savedCheckpoint));
+  const remainder = Math.max(0, Number(pet.offlineRemainderMs) || 0) % HOUR;
+  const total = Math.max(0, now - lastCoinAt) + remainder;
   const earned = Math.floor(total / HOUR);
   pet.offlineRemainderMs = total % HOUR;
+  pet.lastCoinAt = now;
   pet.coins += earned;
   return earned;
 }
 
 const nowAtLoad = Date.now();
 const elapsedAway = Math.max(0, nowAtLoad - pet.lastSeenAt);
-const starterGift = pet.starterCoinsGranted !== 1;
-applyElapsedStats(nowAtLoad);
-const offlineCoins = collectOfflineCoins(elapsedAway);
-if (starterGift) {
-  pet.coins = Math.max(1000, pet.coins);
-  pet.starterCoinsGranted = 1;
+const starterGift = !saveWriteProtected && pet.starterCoinsGranted !== 1;
+let offlineCoins = 0;
+if (!saveWriteProtected) {
+  applyElapsedStats(nowAtLoad);
+  offlineCoins = collectOfflineCoins(nowAtLoad);
+  if (starterGift) {
+    pet.coins = Math.max(1000, pet.coins);
+    pet.starterCoinsGranted = 1;
+  }
+  pet.lastSeenAt = nowAtLoad;
+  pet.lastStatAt = nowAtLoad;
+  pet.dead = pet.dead || nowAtLoad - pet.lastFedAt >= FIVE_DAYS;
 }
-pet.lastSeenAt = nowAtLoad;
-pet.lastStatAt = nowAtLoad;
-pet.dead = pet.dead || nowAtLoad - pet.lastFedAt >= FIVE_DAYS;
 if (PREVIEW_DEAD) {
   pet.satiety = 0;
   pet.affection = 0;
@@ -686,16 +788,22 @@ if (PREVIEW_DEAD) {
   pet.health = 0;
   pet.dead = true;
 }
-if (!pet.activityLog.length && !PREVIEW_DEAD) {
+if (!pet.activityLog.length && !PREVIEW_DEAD && !saveWriteProtected) {
   addActivity("milestone", "開始一起生活的第一天", "🏡");
 }
 
 function safeSave() {
   if (PREVIEW_DEAD) return;
-  pet.lastSeenAt = Date.now();
-  pet.updatedAt = Date.now();
+  if (!storageAvailable) {
+    warnStorageUnavailable();
+    return;
+  }
+  if (saveWriteProtected || tabReadOnly) return;
+  const saveTime = Date.now();
+  pet.lastSeenAt = saveTime;
+  if (!document.hidden) pet.lastCoinAt = saveTime;
+  pet.updatedAt = Math.max(saveTime, Number(pet.updatedAt) + 1 || 0);
   pet.schemaVersion = SAVE_SCHEMA_VERSION;
-  if (!storageAvailable || saveWriteProtected) return;
   try {
     const nextValue = JSON.stringify(pet);
     const currentValue = localStorage.getItem(SAVE_KEY);
@@ -707,10 +815,7 @@ function safeSave() {
     localStorage.setItem(SAVE_KEY, nextValue);
   } catch {
     storageAvailable = false;
-    if (!storageWarningShown) {
-      storageWarningShown = true;
-      showNotice("這個瀏覽器暫時無法保存進度", "warning");
-    }
+    warnStorageUnavailable();
   }
 }
 
@@ -818,7 +923,7 @@ function chooseAutonomousBehavior() {
 }
 
 function runAutonomousBehavior() {
-  if (document.hidden || actionActive || interactionLock || mode !== "home" || pet.dead) return;
+  if (document.hidden || actionActive || interactionLock || tabReadOnly || saveWriteProtected || mode !== "home" || pet.dead) return;
   const behavior = chooseAutonomousBehavior();
   autonomousMood = behavior.id;
   autonomousUntil = Date.now() + behavior.duration;
@@ -865,15 +970,21 @@ function preloadImage(url) {
 async function preloadStage(stageNumber, onAssetLoaded = null) {
   if (stageNumber < 1 || stageNumber > 5) return false;
   if (preloaded.has(stageNumber)) return true;
-  const results = await Promise.all(
-    Object.values(SPRITE_ASSETS[stageNumber]).map(async (url) => {
+  const results = await preloadStageActions(stageNumber, Object.keys(SPRITE_ASSETS[stageNumber]), onAssetLoaded);
+  if (results.every(Boolean)) preloaded.add(stageNumber);
+  return results.every(Boolean);
+}
+
+async function preloadStageActions(stageNumber, actions, onAssetLoaded = null) {
+  if (stageNumber < 1 || stageNumber > 5) return [];
+  return Promise.all(
+    actions.map(async (action) => {
+      const url = SPRITE_ASSETS[stageNumber][action];
       const loaded = await preloadImage(`${url}?v=${ASSET_VERSION}`);
       onAssetLoaded?.();
       return loaded;
     }),
   );
-  if (results.every(Boolean)) preloaded.add(stageNumber);
-  return results.every(Boolean);
 }
 
 function updateLoadingProgress(completed, total) {
@@ -888,13 +999,11 @@ function updateLoadingProgress(completed, total) {
 
 async function preloadEssentialAssets() {
   const current = stage();
-  const essentialStages = [current, current - 1, current + 1].filter((value) => value >= 1 && value <= 5);
-  const neighborStages = essentialStages.filter((stageNumber) => stageNumber !== current);
   const baseUrls = [
     `${poolBackground}?v=${ASSET_VERSION}`,
     `${doflamingoRing}?v=${ASSET_VERSION}`,
   ];
-  const total = baseUrls.length + essentialStages.reduce((sum, stageNumber) => sum + Object.keys(SPRITE_ASSETS[stageNumber]).length, 0);
+  const total = baseUrls.length + Object.keys(SPRITE_ASSETS[current]).length;
   let completed = 0;
   let allLoaded = true;
   const markComplete = () => {
@@ -914,8 +1023,6 @@ async function preloadEssentialAssets() {
     preloadStage(current, markComplete),
   ]);
   allLoaded = baseResults.every(Boolean) && currentLoaded;
-  const neighborResults = await Promise.all(neighborStages.map((stageNumber) => preloadStage(stageNumber, markComplete)));
-  allLoaded = neighborResults.every(Boolean) && allLoaded;
   if (document.fonts?.ready) await document.fonts.ready;
   updateLoadingProgress(total, total);
   return allLoaded;
@@ -928,12 +1035,37 @@ function waitForIdle(timeout = 1400) {
   });
 }
 
+function backgroundPreloadAllowed() {
+  return !document.hidden && !interactionLock && !actionActive && !ringDrag;
+}
+
+async function waitForBackgroundPreloadWindow() {
+  while (true) {
+    while (!backgroundPreloadAllowed()) {
+      await new Promise((resolve) => setTimeout(resolve, 650));
+    }
+    await waitForIdle(900);
+    if (backgroundPreloadAllowed()) return;
+  }
+}
+
 async function preloadRemainingAssets() {
-  const remaining = [1, 2, 3, 4, 5].filter((stageNumber) => !preloaded.has(stageNumber));
+  if (navigator.connection?.saveData || navigator.deviceMemory && navigator.deviceMemory <= 2) return [];
+  const current = stage();
+  const remaining = [1, 2, 3, 4, 5]
+    .filter((stageNumber) => !preloaded.has(stageNumber))
+    .sort((a, b) => Math.abs(a - current) - Math.abs(b - current));
   const results = [];
   for (const stageNumber of remaining) {
-    await waitForIdle();
-    results.push(await preloadStage(stageNumber));
+    let allLoaded = true;
+    for (const url of Object.values(SPRITE_ASSETS[stageNumber])) {
+      await waitForBackgroundPreloadWindow();
+      if (navigator.connection?.saveData) return results;
+      const loaded = await preloadImage(`${url}?v=${ASSET_VERSION}`);
+      allLoaded = loaded && allLoaded;
+    }
+    if (allLoaded) preloaded.add(stageNumber);
+    results.push(allLoaded);
   }
   return results;
 }
@@ -2625,20 +2757,21 @@ async function importSave(event) {
 }
 
 function renderDecorations() {
-  const nextKey = pet.active.join("|");
+  const ringCoolingDown = Date.now() < ringInteractionAvailableAt;
+  const nextKey = `${pet.active.join("|")}:${ringCoolingDown}`;
   if (nextKey === decorKey) return;
   decorKey = nextKey;
   $("decorations").innerHTML = DECOR.filter((item) => pet.active.includes(item.id))
     .map((item, index) =>
       item.id === "ring"
-        ? `<button class="pool-decor ${item.className}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" aria-label="拖曳 Doflamingo 羽毛泳圈和海豹玩"><img src="${doflamingoRing}?v=${ASSET_VERSION}" alt=""></button>`
+        ? `<button class="pool-decor ${item.className}${ringCoolingDown ? " is-cooling-down" : ""}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" ${ringCoolingDown ? "disabled" : ""} aria-label="${ringCoolingDown ? "海豹正在休息，稍後再玩泳圈" : "拖曳泳圈給海豹，或按 Enter 一起玩"}"><img src="${doflamingoRing}?v=${ASSET_VERSION}" alt=""></button>`
         : `<span class="pool-decor ${item.className}" style="--decor-delay:-${index * 0.63}s" aria-hidden="true">${item.icon}</span>`,
     )
     .join("");
 }
 
 function renderSeal() {
-  const nextStage = stage();
+  const nextStage = visualStageLock || stage();
   const roamer = $("seal-roamer");
   if (currentStage && currentStage !== nextStage) {
     addActivity("milestone", `體態進入「${STAGE_LABELS[nextStage]}」階段`, "📷");
@@ -2694,8 +2827,12 @@ function renderDrawer(force = false) {
   }
   if (mode === "care") {
     const now = Date.now();
+    const healthEvent = pet.currentHealthEvent ? HEALTH_EVENTS[pet.currentHealthEvent] : null;
+    const healthCard = healthEvent
+      ? `<section class="health-event" role="status"><span aria-hidden="true">${healthEvent.icon}</span><div><small>今天需要留意</small><h3>${healthEvent.title}</h3><p>${healthEvent.detail}</p><strong>${healthEvent.hint}</strong></div></section>`
+      : "";
     drawer.innerHTML =
-      '<div class="drawer-title"><div><small>日常照護</small><h2>讓牠舒服又健康</h2></div><span>體力 ' +
+      healthCard + '<div class="drawer-title"><div><small>日常照護</small><h2>讓牠舒服又健康</h2></div><span>體力 ' +
       `${Math.round(pet.energy)}% · 真實海豹需要固定上岸休息</span></div><div class="care-grid">` +
       CARE_ACTIONS.map((action) => {
         const remaining = careCooldown(action, now);
@@ -2759,8 +2896,10 @@ function syncThreeModeVisuals() {
 }
 
 function render(persist = true, forceDrawer = false) {
-  ensureCurrentDay();
-  checkAchievements(true);
+  if (!tabReadOnly && !saveWriteProtected) {
+    ensureCurrentDay();
+    checkAchievements(true);
+  }
   if (
     !FORCE_SPRITE_FALLBACK &&
     shouldUseRealtime3D() &&
@@ -2836,20 +2975,38 @@ function showNotice(message, tone = "normal") {
   noticeTimer = setTimeout(() => notice.classList.remove("notice-pop"), 1900);
 }
 
-function setBusy(busy) {
-  interactionLock = busy;
+function setBusy(busy, token = 0) {
+  if (busy) {
+    interactionGeneration += 1;
+    interactionLock = true;
+    syncInteractionState();
+    return interactionGeneration;
+  }
+  if (token && token !== interactionGeneration) return false;
+  interactionLock = false;
   syncInteractionState();
+  return true;
 }
 
 function syncInteractionState() {
+  const readOnly = tabReadOnly || saveWriteProtected;
+  const controlsBlocked = interactionLock || readOnly;
   $("seal").setAttribute("aria-busy", String(interactionLock));
+  $("seal").setAttribute("aria-disabled", String(controlsBlocked));
+  $("seal").disabled = readOnly;
   $("drawer").setAttribute("aria-busy", String(interactionLock));
   document.querySelector(".pet-app")?.classList.toggle("is-interacting", interactionLock);
-  document.querySelectorAll("#drawer button, .bottom-nav button").forEach((button) => {
-    if (interactionLock && !button.disabled) {
+  document.querySelector(".pet-app")?.classList.toggle("is-read-only", readOnly);
+  ["sound-toggle", "onboarding-skip", "adopt"].forEach((id) => {
+    const button = $(id);
+    if (button) button.disabled = readOnly;
+  });
+  document.querySelectorAll("#drawer button, #decorations button, .bottom-nav button").forEach((button) => {
+    if (ringDrag?.ring === button) return;
+    if (controlsBlocked && !button.disabled) {
       button.disabled = true;
       button.dataset.busyDisabled = "true";
-    } else if (!interactionLock && button.dataset.busyDisabled === "true") {
+    } else if (!controlsBlocked && button.dataset.busyDisabled === "true") {
       button.disabled = false;
       delete button.dataset.busyDisabled;
     }
@@ -2857,7 +3014,7 @@ function syncInteractionState() {
 }
 
 function ensureAudio(startAmbient = false) {
-  if (!pet.soundOn) return null;
+  if (!pet.soundOn || document.hidden) return null;
   const Context = window.AudioContext || window.webkitAudioContext;
   if (!Context) return null;
   if (!audio) {
@@ -2897,14 +3054,46 @@ function startWaterAmbience() {
   filter.frequency.value = 850;
   ambientGain = audio.createGain();
   ambientGain.gain.value = 0.018;
-  const lfo = audio.createOscillator();
+  ambientLfo = audio.createOscillator();
   const lfoGain = audio.createGain();
-  lfo.frequency.value = 0.11;
+  ambientLfo.frequency.value = 0.11;
   lfoGain.gain.value = 0.006;
-  lfo.connect(lfoGain).connect(ambientGain.gain);
+  ambientLfo.connect(lfoGain).connect(ambientGain.gain);
   ambientSource.connect(filter).connect(ambientGain).connect(masterGain);
   ambientSource.start();
-  lfo.start();
+  ambientLfo.start();
+}
+
+function stopWaterAmbience() {
+  try {
+    ambientSource?.stop();
+    ambientLfo?.stop();
+  } catch {
+    // Audio nodes may already have stopped during browser teardown.
+  }
+  ambientSource?.disconnect();
+  ambientLfo?.disconnect();
+  ambientSource = null;
+  ambientLfo = null;
+  ambientGain = null;
+}
+
+function suspendAudio() {
+  if (!audio) return;
+  const generation = ++audioVisibilityGeneration;
+  if (audio.state !== "running") return;
+  audio.suspend().then(() => {
+    if (generation !== audioVisibilityGeneration && !document.hidden && pet.soundOn) resumeAudio();
+  }).catch(() => {});
+}
+
+function resumeAudio() {
+  if (!audio || !soundUnlocked || !pet.soundOn || document.hidden) return;
+  const generation = ++audioVisibilityGeneration;
+  const resumed = audio.state === "suspended" ? audio.resume() : Promise.resolve();
+  resumed.then(() => {
+    if (generation === audioVisibilityGeneration && !document.hidden && pet.soundOn) startWaterAmbience();
+  }).catch(() => {});
 }
 
 function tone(frequency, start, duration, volume, type = "sine", endFrequency = frequency) {
@@ -3015,9 +3204,11 @@ function updateSoundButton() {
 }
 
 function toggleSound() {
+  if (tabReadOnly || saveWriteProtected) return;
   pet.soundOn = !pet.soundOn;
   if (pet.soundOn) {
     ensureAudio(true);
+    resumeAudio();
     if (masterGain && audio) {
       masterGain.gain.cancelScheduledValues(audio.currentTime);
       masterGain.gain.setTargetAtTime(0.64, audio.currentTime, 0.04);
@@ -3029,6 +3220,12 @@ function toggleSound() {
       masterGain.gain.cancelScheduledValues(audio.currentTime);
       masterGain.gain.setTargetAtTime(0.0001, audio.currentTime, 0.035);
     }
+    setTimeout(() => {
+      if (!pet.soundOn || document.hidden) {
+        stopWaterAmbience();
+        suspendAudio();
+      }
+    }, 80);
     showNotice("音效已關閉");
   }
   render(false);
@@ -3142,7 +3339,6 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   void seal.offsetWidth;
   seal.classList.add(kind);
   roamer.classList.toggle("resting-on-rock", motion === "haul" || motion === "auto-rest");
-  if (motion === "haul") setBusy(true);
   $("reaction-icon").dataset.kind = kind;
   $("reaction-icon").dataset.zone = zone || "";
   $("reaction-icon").hidden = false;
@@ -3166,7 +3362,6 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
     delete seal.dataset.motion;
     roamer.classList.remove("reacting");
     roamer.classList.remove("resting-on-rock");
-    if (motion === "haul") setBusy(false);
     seal.style.removeProperty("animation-duration");
     actionActive = "";
   }, duration);
@@ -3176,7 +3371,7 @@ function playInteractionSequence({ icon, zone, asset, motion, onMain, onComplete
   if (interactionLock || pet.dead) return;
   clearTimeout(sequenceTimer);
   clearTimeout(settleTimer);
-  setBusy(true);
+  const sequenceLock = setBusy(true);
   const timing = sequenceTiming(motion, mainDuration);
   $("speech").textContent = `${pet.name} ${pickVariant("sequence-attention", ATTENTION_LINES)}…`;
   react("pet", "•", "attention", "approach", "notice-player");
@@ -3200,8 +3395,7 @@ function playInteractionSequence({ icon, zone, asset, motion, onMain, onComplete
       react("pet", "♡", "settle", settle.asset, "settle-away");
       sound(settle.sound);
       settleTimer = setTimeout(() => {
-        setBusy(false);
-        onComplete?.();
+        if (setBusy(false, sequenceLock)) onComplete?.();
       }, timing.settle);
     }, timing.main);
   }, timing.attention);
@@ -3231,7 +3425,7 @@ function animateFood(icon, sourceButton) {
 }
 
 function feed(food, sourceButton) {
-  if (pet.dead || interactionLock) return;
+  if (pet.dead || interactionLock || tabReadOnly || saveWriteProtected) return;
   if (pet.satiety >= 96) {
     showNotice("牠已經吃飽了，先觀察消化與活動狀況", "warning");
     addActivity("health", "吃飽後停止餵食，避免過量", "🩺");
@@ -3239,8 +3433,14 @@ function feed(food, sourceButton) {
     return;
   }
   const satietyGain = 10;
-  safeSave();
-  setBusy(true);
+  const feedingStage = currentStage || stage();
+  const targetStage = stageForSatiety(clamp(pet.satiety + satietyGain));
+  const feedVisualGeneration = ++visualStageGeneration;
+  visualStageLock = feedingStage;
+  const targetStageReady = targetStage === feedingStage
+    ? Promise.resolve(true)
+    : preloadStageActions(targetStage, ["idle"]).then((results) => results.every(Boolean));
+  const feedLock = setBusy(true);
   animateFood(food.icon, sourceButton);
   if (threeState.ready) {
     const sourceRect = sourceButton.getBoundingClientRect();
@@ -3272,7 +3472,6 @@ function feed(food, sourceButton) {
     pet.dead = false;
     showNotice(`${food.name}：${pickVariant(`feed-${food.id}`, FEED_LINES)}　＋${satietyGain}%`, "success");
     render(true, true);
-    setBusy(true);
     if (threeState.ready) {
       threeState.wetness = THREE.MathUtils.lerp(threeState.wetness, 0.27, 0.2);
     }
@@ -3280,14 +3479,20 @@ function feed(food, sourceButton) {
     sound("eat", food.sound);
     vibrate([10, 35, 9]);
     setTimeout(() => {
-      setBusy(false);
-      advanceOnboarding(2);
+      const revealUpdatedStage = () => {
+        if (feedVisualGeneration !== visualStageGeneration) return;
+        visualStageLock = 0;
+        render(true, true);
+      };
+      if (targetStage === feedingStage || preloaded.has(targetStage)) revealUpdatedStage();
+      else targetStageReady.then(revealUpdatedStage);
+      if (setBusy(false, feedLock)) advanceOnboarding(2);
     }, prefersReducedMotion() ? 120 : COARSE_POINTER ? 1250 : 1500);
   }, delay);
 }
 
 function performCompanion(actionId) {
-  if (pet.dead || interactionLock) return;
+  if (pet.dead || interactionLock || tabReadOnly || saveWriteProtected) return;
   if (pet.interactionFatigue >= 82) {
     showNotice(`${pet.name} 現在想安靜一下，晚點再陪牠`, "warning");
     react("pet", "🤍", "space", "space", "auto-space");
@@ -3357,10 +3562,10 @@ function careCooldown(action, now = Date.now()) {
 }
 
 function performCare(actionId) {
-  if (pet.dead || interactionLock) return;
+  if (pet.dead || interactionLock || tabReadOnly || saveWriteProtected) return;
   const action = CARE_ACTIONS.find((item) => item.id === actionId);
   if (!action || careCooldown(action)) return;
-  setBusy(true);
+  const careLock = setBusy(true);
   const activeEvent = pet.currentHealthEvent ? HEALTH_EVENTS[pet.currentHealthEvent] : null;
   pet.careLog = { ...pet.careLog, [action.id]: Date.now() };
   let message = "";
@@ -3416,8 +3621,7 @@ function performCare(actionId) {
   const careVisual = careVisuals[action.id];
   react("pet", reaction, action.id, careVisual.asset, careVisual.motion);
   setTimeout(() => {
-    setBusy(false);
-    advanceOnboarding(3);
+    if (setBusy(false, careLock)) advanceOnboarding(3);
   }, reactionDuration("pet", careVisual.motion));
 }
 
@@ -3436,7 +3640,7 @@ function addPetTrail(x, y) {
 
 function petSeal(zone = "belly") {
   const now = Date.now();
-  if (pet.dead || mode !== "pet" || interactionLock || now - lastPetAt < 700) return;
+  if (pet.dead || mode !== "pet" || interactionLock || tabReadOnly || saveWriteProtected || now - lastPetAt < 700) return;
   if (pet.interactionFatigue >= 82) {
     showNotice("牠轉開身體了，現在想保有自己的空間", "warning");
     addActivity("health", "尊重海豹停止互動的訊號", "🤍");
@@ -3448,7 +3652,8 @@ function petSeal(zone = "belly") {
   const reward = threeZoneRewards[safeZone];
   const responseLine = pickVariant(`pet-${safeZone}`, PET_LINES[safeZone] || [reward.line]);
   lastPetAt = now;
-  setBusy(true);
+  const petLock = setBusy(true);
+  directPetLockToken = petLock;
   pet.affection = clamp(pet.affection + reward.affection);
   pet.interactionFatigue = clamp(pet.interactionFatigue + 18);
   rememberInteraction("pet", responseLine);
@@ -3485,13 +3690,15 @@ function petSeal(zone = "belly") {
   vibrate(10);
   safeSave();
   setTimeout(() => {
-    setBusy(false);
-    advanceOnboarding(1);
+    if (setBusy(false, petLock)) {
+      if (directPetLockToken === petLock) directPetLockToken = 0;
+      advanceOnboarding(1);
+    }
   }, reactionDuration("pet", petVisual.motion));
 }
 
 function greetSeal() {
-  if (pet.dead || interactionLock || actionActive) return;
+  if (pet.dead || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
   const line = pickVariant("greet", IDLE_LINES);
   updateDaily("play");
   addActivity("play", "小海豹主動回應你的招呼", "♪");
@@ -3502,7 +3709,7 @@ function greetSeal() {
 }
 
 function buy(item) {
-  if (interactionLock) return;
+  if (interactionLock || tabReadOnly || saveWriteProtected) return;
   if (pet.owned.includes(item.id)) {
     pet.active = pet.active.includes(item.id)
       ? pet.active.filter((id) => id !== item.id)
@@ -3526,7 +3733,7 @@ function buy(item) {
 }
 
 function switchMode(nextMode) {
-  if (interactionLock) return;
+  if (interactionLock || tabReadOnly || saveWriteProtected) return;
   mode = mode === nextMode ? "home" : nextMode;
   threeState.lastInteractionStamp = performance.now();
   drawerKey = "";
@@ -3565,7 +3772,15 @@ function returnRingToPool(ring) {
 
 $("decorations").addEventListener("pointerdown", (event) => {
   const ring = event.target.closest('[data-pool-toy="ring"]');
-  if (!event.isPrimary || ringDrag || !ring || pet.dead || interactionLock) return;
+  if (!event.isPrimary || ringDrag || !ring || pet.dead || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
+  if (Date.now() < ringInteractionAvailableAt) {
+    showNotice("讓牠先休息一下，等等再玩泳圈", "warning");
+    return;
+  }
+  if (pet.interactionFatigue >= 82) {
+    showNotice(`${pet.name} 現在想安靜一下，晚點再玩泳圈`, "warning");
+    return;
+  }
   ensureAudio(true);
   const poolRect = $("pool").getBoundingClientRect();
   const ringRect = ring.getBoundingClientRect();
@@ -3578,10 +3793,12 @@ $("decorations").addEventListener("pointerdown", (event) => {
     maxX: poolRect.right - ringRect.right,
     minY: poolRect.top - ringRect.top,
     maxY: poolRect.bottom - ringRect.bottom,
+    lockToken: 0,
   };
   ring.classList.remove("is-returning");
   ring.classList.add("is-dragging");
   ring.setPointerCapture?.(event.pointerId);
+  ringDrag.lockToken = setBusy(true);
   event.preventDefault();
 });
 
@@ -3594,56 +3811,100 @@ $("decorations").addEventListener("pointermove", (event) => {
   event.preventDefault();
 });
 
+function playWithRing(ring, lockToken = 0) {
+  if (!ring || pet.dead || actionActive || tabReadOnly || saveWriteProtected || Date.now() < ringInteractionAvailableAt) {
+    if (lockToken) setBusy(false, lockToken);
+    return;
+  }
+  if (pet.interactionFatigue >= 82) {
+    if (lockToken) setBusy(false, lockToken);
+    showNotice(`${pet.name} 現在想安靜一下，晚點再玩泳圈`, "warning");
+    return;
+  }
+  const ringLock = lockToken || setBusy(true);
+  ringInteractionAvailableAt = Date.now() + 4000;
+  pet.affection = clamp(pet.affection + 5);
+  pet.interactionFatigue = clamp(pet.interactionFatigue + 9);
+  pet.lifetime.ring += 1;
+  updateDaily("play");
+  checkAchievements();
+  addActivity("play", "抱住 Doflamingo 羽毛泳圈玩水", "🦩");
+  ring.classList.add("is-playing", "is-cooling-down");
+  ring.disabled = true;
+  decorKey = `${pet.active.join("|")}:true`;
+  showNotice("海豹抱住 Doflamingo 羽毛泳圈玩水！信任度＋5", "success");
+  render();
+  react("pet", "🦩", "ring", "ring", "ring-play");
+  sound("water", "fin");
+  vibrate([12, 35, 12]);
+  safeSave();
+  setTimeout(() => setBusy(false, ringLock), reactionDuration("pet", "ring-play"));
+  setTimeout(() => {
+    decorKey = "";
+    renderDecorations();
+    syncInteractionState();
+  }, 4050);
+}
+
 function finishRingDrag(event) {
   if (!ringDrag || event.pointerId !== ringDrag.pointerId) return;
-  const ring = ringDrag.ring;
+  const drag = ringDrag;
+  const ring = drag.ring;
   const touchedSeal = ringTouchesSeal(ring);
   ring.classList.remove("is-over-seal");
   ringDrag = null;
-  if (touchedSeal) {
-    pet.affection = clamp(pet.affection + 5);
-    pet.lifetime.ring += 1;
-    updateDaily("play");
-    checkAchievements();
-    addActivity("play", "抱住 Doflamingo 羽毛泳圈玩水", "🦩");
-    ring.classList.add("is-playing");
-    showNotice("海豹抱住 Doflamingo 羽毛泳圈玩水！信任度＋5", "success");
-    render();
-    react("pet", "🦩", "ring", "ring", "ring-play");
-    sound("water", "fin");
-    vibrate([12, 35, 12]);
-    safeSave();
-  }
+  if (touchedSeal) playWithRing(ring, drag.lockToken);
+  else setBusy(false, drag.lockToken);
   returnRingToPool(ring);
 }
 
 function cancelRingDrag(event) {
   if (!ringDrag || event.pointerId !== ringDrag.pointerId) return;
-  const ring = ringDrag.ring;
+  const drag = ringDrag;
+  const ring = drag.ring;
   ringDrag = null;
   ring.classList.remove("is-over-seal");
+  setBusy(false, drag.lockToken);
   returnRingToPool(ring);
 }
 
 $("decorations").addEventListener("pointerup", finishRingDrag);
 $("decorations").addEventListener("pointercancel", cancelRingDrag);
 $("decorations").addEventListener("lostpointercapture", cancelRingDrag);
+$("decorations").addEventListener("click", (event) => {
+  const ring = event.target.closest('[data-pool-toy="ring"]');
+  if (!ring || event.detail !== 0 || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
+  playWithRing(ring);
+});
 
 $("seal").addEventListener("pointerdown", (event) => {
-  if (!event.isPrimary || activePetPointerId !== null || mode !== "pet" || pet.dead || interactionLock) return;
+  if (!event.isPrimary || activePetPointerId !== null || mode !== "pet" || pet.dead || tabReadOnly || saveWriteProtected) return;
+  const canTrackRapidTouch = !interactionLock || directPetLockToken === interactionGeneration;
+  if (!canTrackRapidTouch) return;
   activePetPointerId = event.pointerId;
   const now = Date.now();
   rapidTouches = [...rapidTouches.filter((stamp) => now - stamp < 1200), now];
   const rapidTouchLimit = COARSE_POINTER ? 5 : 4;
   if (rapidTouches.length >= rapidTouchLimit) {
     rapidTouches = [];
-    activePetPointerId = null;
+    pointerTracking = false;
+    gesturePetTriggered = true;
+    suppressClick = true;
     pet.interactionFatigue = clamp(pet.interactionFatigue + 12);
     showNotice(`${pet.name} 被嚇到了，先轉身保持一點距離`, "warning");
     $("speech").textContent = "慢一點，我需要一點空間";
+    const boundaryLock = setBusy(true);
+    directPetLockToken = boundaryLock;
     react("pet", "🤍", "space", "space", "auto-space");
     vibrate([7, 32, 7]);
     safeSave();
+    $("seal").setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+    setTimeout(() => {
+      if (setBusy(false, boundaryLock) && directPetLockToken === boundaryLock) {
+        directPetLockToken = 0;
+      }
+    }, reactionDuration("pet", "auto-space"));
     return;
   }
   ensureAudio(true);
@@ -3735,18 +3996,25 @@ document.querySelectorAll(".bottom-nav button").forEach((button) => {
 $("sound-toggle").onclick = toggleSound;
 $("profile-form").addEventListener("submit", (event) => {
   event.preventDefault();
+  if (tabReadOnly || saveWriteProtected) return;
   saveIdentity($("profile-name").value, $("profile-birthday").value);
   $("profile-overlay").hidden = true;
   showNotice(`歡迎 ${pet.name} 來到泳池！`, "success");
   startOnboarding();
+  if (!storageAvailable) {
+    storageWarningShown = false;
+    setTimeout(warnStorageUnavailable, 650);
+  }
 });
 $("onboarding-skip").onclick = () => {
+  if (tabReadOnly || saveWriteProtected) return;
   pet.onboardingStep = 4;
   drawerKey = "";
   showNotice("可以自由探索了，海豹會用反應告訴你牠的心情");
   render(true, true);
 };
 $("adopt").onclick = () => {
+  if (tabReadOnly || saveWriteProtected) return;
   if (PREVIEW_DEAD) {
     location.href = `${location.pathname}?build=13`;
     return;
@@ -3782,34 +4050,42 @@ window.addEventListener(
 );
 
 document.addEventListener("visibilitychange", () => {
+  const readOnly = tabReadOnly || saveWriteProtected;
   if (document.hidden) {
-    applyElapsedStats();
-    hiddenAt = Date.now();
+    suspendAudio();
     $("pool").classList.add("is-paused");
     if (threeState.running) {
       stopThree();
     }
-    safeSave();
+    if (!readOnly) {
+      applyElapsedStats();
+      pet.lastCoinAt = Date.now();
+      safeSave();
+    }
     return;
   }
-  const now = Date.now();
-  applyElapsedStats(now);
-  const earned = collectOfflineCoins(hiddenAt ? now - hiddenAt : 0);
-  hiddenAt = 0;
   $("pool").classList.remove("is-paused");
   if (threeState.ready && !threeState.running) {
     startThree();
   }
+  resumeAudio();
+  if (readOnly) {
+    render(false);
+    return;
+  }
+  const now = Date.now();
+  applyElapsedStats(now);
+  const earned = collectOfflineCoins(now);
   if (earned) showNotice(`休息期間獲得 ${earned} 枚海豹幣！`, "success");
   render();
 });
 
 window.addEventListener("pageshow", () => {
-  applyElapsedStats();
+  if (!tabReadOnly && !saveWriteProtected) applyElapsedStats();
   if (threeState.ready && !threeState.running) {
     startThree();
   }
-  render();
+  render(!tabReadOnly && !saveWriteProtected);
 });
 
 window.addEventListener("storage", async (event) => {
@@ -3824,13 +4100,18 @@ window.addEventListener("storage", async (event) => {
     if (!migrated) return;
     const incoming = normalizePet(migrated);
     if (incoming.updatedAt <= pet.updatedAt) return;
-    await preloadStage(stageForSatiety(incoming.satiety));
+    await preloadStageActions(stageForSatiety(incoming.satiety), ["idle"]);
     if (incoming.updatedAt <= pet.updatedAt) return;
     pet = incoming;
     currentStage = 0;
     drawerKey = "";
     decorKey = "";
     render(false, true);
+    if (pet.soundOn) resumeAudio();
+    else {
+      stopWaterAmbience();
+      suspendAudio();
+    }
     showNotice("已同步另一個分頁的照顧進度");
   } catch {
     // Ignore malformed data from another tab.
@@ -3842,12 +4123,13 @@ window.addEventListener("resize", () => {
 });
 
 window.addEventListener("beforeunload", () => {
+  if (tabReadOnly || saveWriteProtected) return;
   applyElapsedStats();
   safeSave();
 });
 
 setInterval(() => {
-  if (document.hidden) return;
+  if (document.hidden || tabReadOnly || saveWriteProtected) return;
   applyElapsedStats();
   renderStats();
   if (!actionActive) $("speech").textContent = mood();
@@ -3877,6 +4159,7 @@ async function bootApp() {
   const startedAt = performance.now();
   $("profile-birthday").max = localDayKey();
   interactionLock = true;
+  await establishTabOwnership();
   const allLoaded = await preloadEssentialAssets();
   const minimumDisplayTime = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 450;
   const remaining = minimumDisplayTime - (performance.now() - startedAt);
@@ -3890,16 +4173,20 @@ async function bootApp() {
     if (loader) loader.hidden = true;
   }, 320);
   scheduleBackgroundPreload();
-  if (saveWriteProtected) {
+  if (!storageAvailable && pet.profileComplete) {
+    setTimeout(warnStorageUnavailable, 900);
+  } else if (tabReadOnly) {
+    setTimeout(() => showNotice("另一個分頁正在照顧海豹；這個分頁暫時只供查看", "warning"), 300);
+  } else if (saveWriteProtected) {
     setTimeout(() => showNotice("這份存檔來自較新版本，目前以唯讀方式開啟", "warning"), 300);
   } else if (recoveredSave) {
     setTimeout(() => showNotice("已從上一份安全備份恢復照護進度", "success"), 300);
   }
-  if (!pet.profileComplete && !PREVIEW_DEAD) {
+  if (!pet.profileComplete && !PREVIEW_DEAD && !tabReadOnly && !saveWriteProtected) {
     $("profile-name").value = pet.name;
     $("profile-birthday").value = pet.birthday;
     $("profile-overlay").hidden = false;
-  } else if (!pet.dead) {
+  } else if (!pet.dead && !tabReadOnly && !saveWriteProtected) {
     const favorite = favoriteInteraction();
     let welcome = `${pet.name} 看見你，抬起頭打了個招呼`;
     if (elapsedAway >= 24 * HOUR) welcome = `${pet.name} 等你很久了，一看到你就游了過來`;
@@ -3913,7 +4200,7 @@ async function bootApp() {
       react("pet", "🤍", "welcome", "approach", "auto-approach");
     }, recoveredSave || saveWriteProtected ? 2200 : 360);
   }
-  setTimeout(runAutonomousBehavior, 5200);
+  if (!tabReadOnly && !saveWriteProtected) setTimeout(runAutonomousBehavior, 5200);
 }
 
 bootApp();
