@@ -64,7 +64,7 @@ import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
-const ASSET_VERSION = "35";
+const ASSET_VERSION = "36";
 const STAT_LOSS_PER_HOUR = 4;
 const TRUST_LOSS_PER_HOUR = 1.2;
 const WATER_LOSS_PER_HOUR = 2;
@@ -155,6 +155,20 @@ const ACHIEVEMENTS = [
   { id: "week", icon: "📅", title: "七日陪伴", detail: "累積七個不同日期的紀錄", reward: 15 },
   { id: "best-friend", icon: "🏅", title: "親密夥伴", detail: "信任與健康同時達到 90%", reward: 20 },
 ];
+const DAILY_MOMENTS = [
+  { id: "near", prompt: "今天牠一直在池邊看著你。", choices: [
+    { id: "greet", label: "走近打招呼", icon: "👋", asset: "approach", motion: "auto-approach", affection: 4, energy: 0, reply: "牠認出你的腳步聲，開心地靠近了" },
+    { id: "wait", label: "坐著等牠", icon: "🤍", asset: "sleep", motion: "auto-sleep", affection: 5, energy: 3, reply: "你沒有催促，牠自己慢慢靠到你身邊" },
+  ] },
+  { id: "water", prompt: "今天牠精神很好，輕輕拍著水面。", choices: [
+    { id: "play", label: "一起玩水", icon: "💦", asset: "swim", motion: "auto-swim", affection: 5, energy: -3, reply: "牠追著水花游了一圈，回頭等你再玩" },
+    { id: "watch", label: "安靜看牠游", icon: "🌊", asset: "swim", motion: "auto-swim", affection: 3, energy: 1, reply: "牠自在地游著，偶爾回頭確認你還在" },
+  ] },
+  { id: "tired", prompt: "今天牠游得比較慢，似乎想休息。", choices: [
+    { id: "rock", label: "陪牠上岸", icon: "🪨", asset: "haul", motion: "haul", affection: 4, energy: 7, reply: "牠在石頭上找到舒服的位置，放心睡著了" },
+    { id: "quiet", label: "留一點空間", icon: "🌙", asset: "space", motion: "auto-space", affection: 5, energy: 5, reply: "你尊重牠的狀態，牠放鬆地閉上眼睛" },
+  ] },
+];
 const SIZE_STOPS = [20, 40, 70, 90];
 const SPRITE_ASSETS = [
   null,
@@ -230,6 +244,9 @@ const fresh = () => {
     lastRestAt: 0,
     lastCleanAt: 0,
     interactionFatigue: 0,
+    interactionCounts: {},
+    lastInteraction: null,
+    dailyMoment: { date: "", id: "", choice: "" },
     name: "Mogu",
     birthday: "",
     profileComplete: false,
@@ -275,6 +292,9 @@ function normalizePet(raw) {
     lastRestAt: numberOr(raw?.lastRestAt, 0),
     lastCleanAt: numberOr(raw?.lastCleanAt, 0),
     interactionFatigue: clamp(numberOr(raw?.interactionFatigue, 0)),
+    interactionCounts: raw?.interactionCounts && typeof raw.interactionCounts === "object" ? { ...raw.interactionCounts } : {},
+    lastInteraction: raw?.lastInteraction && typeof raw.lastInteraction === "object" ? { ...raw.lastInteraction } : null,
+    dailyMoment: raw?.dailyMoment && typeof raw.dailyMoment === "object" ? { ...raw.dailyMoment } : { date: "", id: "", choice: "" },
     name: typeof raw?.name === "string" && raw.name.trim() ? raw.name.trim().replace(/[<>&"]/g, "").slice(0, 12) || base.name : base.name,
     birthday: typeof raw?.birthday === "string" ? raw.birthday.slice(0, 10) : "",
     profileComplete: Boolean(raw?.profileComplete),
@@ -344,7 +364,23 @@ function ensureCurrentDay() {
   const today = localDayKey();
   if (pet.daily?.date !== today) pet.daily = normalizeDaily(null);
   if (!pet.lifetime.days.includes(today)) pet.lifetime.days = [...pet.lifetime.days, today].slice(-60);
+  if (pet.dailyMoment?.date !== today) {
+    const score = [...today].reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+    pet.dailyMoment = { date: today, id: DAILY_MOMENTS[score % DAILY_MOMENTS.length].id, choice: "" };
+  }
   maybeCreateHealthEvent(today);
+}
+
+function rememberInteraction(id, label) {
+  pet.interactionCounts[id] = Math.max(0, Number(pet.interactionCounts[id]) || 0) + 1;
+  pet.lastInteraction = { id, label, at: Date.now() };
+}
+
+function favoriteInteraction() {
+  const entries = Object.entries(pet.interactionCounts || {}).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return "";
+  const labels = { call: "呼喚牠", splash: "一起玩水", quiet: "安靜陪伴", wave: "打招呼", pet: "輕輕摸摸", feed: "餵牠吃東西", moment: "回應牠的心情" };
+  return labels[entries[0][0]] || "陪在牠身邊";
 }
 
 function maybeCreateHealthEvent(today = localDayKey()) {
@@ -2455,7 +2491,10 @@ function renderDrawer(force = false) {
     return;
   }
   if (mode === "pet") {
-    drawer.innerHTML = `<div class="drawer-title companion-title"><div><small>和 ${escapeAttribute(pet.name)} 相處</small><h2>牠會回應你的陪伴</h2></div><button class="profile-edit" data-edit-profile type="button">改名字</button></div><p class="companion-hint">也可以直接點海豹，或在牠身上輕輕來回撫摸。</p><div class="companion-grid"><button data-companion="call"><b aria-hidden="true">👋</b><span>呼喚牠</span><small>看看牠會不會靠近</small></button><button data-companion="splash"><b aria-hidden="true">💦</b><span>一起玩水</span><small>陪牠游一小圈</small></button><button data-companion="quiet"><b aria-hidden="true">🌙</b><span>安靜陪伴</span><small>在旁邊休息一下</small></button><button data-companion="wave"><b aria-hidden="true">🤍</b><span>打招呼</span><small>讓牠熟悉你的聲音</small></button></div><button class="vibration-setting" data-setting="vibration" type="button">📳 互動震動：${pet.vibrationOn ? "開" : "關"}</button>`;
+    const moment = DAILY_MOMENTS.find((item) => item.id === pet.dailyMoment?.id);
+    const momentCard = moment && !pet.dailyMoment.choice ? `<section class="daily-moment"><small>今天的 ${escapeAttribute(pet.name)}</small><strong>${moment.prompt}</strong><div>${moment.choices.map((choice) => `<button data-moment="${choice.id}" type="button"><span aria-hidden="true">${choice.icon}</span>${choice.label}</button>`).join("")}</div></section>` : "";
+    const remembered = favoriteInteraction();
+    drawer.innerHTML = `${momentCard}<div class="drawer-title companion-title"><div><small>和 ${escapeAttribute(pet.name)} 相處</small><h2>牠會回應你的陪伴</h2>${remembered ? `<p class="remembered-line">牠記得你常常會「${remembered}」</p>` : ""}</div><button class="profile-edit" data-edit-profile type="button">改名字</button></div><p class="companion-hint">也可以直接點海豹，或在牠身上輕輕來回撫摸。</p><div class="companion-grid"><button data-companion="call"><b aria-hidden="true">👋</b><span>呼喚牠</span><small>看看牠會不會靠近</small></button><button data-companion="splash"><b aria-hidden="true">💦</b><span>一起玩水</span><small>陪牠游一小圈</small></button><button data-companion="quiet"><b aria-hidden="true">🌙</b><span>安靜陪伴</span><small>在旁邊休息一下</small></button><button data-companion="wave"><b aria-hidden="true">🤍</b><span>打招呼</span><small>讓牠熟悉你的聲音</small></button></div><button class="vibration-setting" data-setting="vibration" type="button">📳 互動震動：${pet.vibrationOn ? "開" : "關"}</button>`;
   }
   if (mode === "feed") {
     drawer.innerHTML =
@@ -2492,6 +2531,9 @@ function renderDrawer(force = false) {
   });
   drawer.querySelectorAll("[data-companion]").forEach((button) => {
     button.onclick = () => performCompanion(button.dataset.companion);
+  });
+  drawer.querySelectorAll("[data-moment]").forEach((button) => {
+    button.onclick = () => resolveDailyMoment(button.dataset.moment);
   });
   drawer.querySelectorAll("[data-decor]").forEach((button) => {
     button.onclick = () => buy(DECOR[Number(button.dataset.decor)]);
@@ -2855,6 +2897,7 @@ function feed(food, sourceButton) {
     pet.health = clamp(pet.health + (food.health || 0));
     pet.energy = clamp(pet.energy + (food.energy || 0));
     pet.lastFedAt = Date.now();
+    rememberInteraction("feed", `餵${food.name}`);
     pet.recentFoods = [...pet.recentFoods, food.name].slice(-6);
     updateDaily("feed", food.name);
     const variety = new Set(pet.recentFoods.slice(-4)).size;
@@ -2892,6 +2935,7 @@ function performCompanion(actionId) {
   pet.affection = clamp(pet.affection + action.affection);
   pet.energy = clamp(pet.energy + action.energy);
   pet.interactionFatigue = clamp(pet.interactionFatigue + 6);
+  rememberInteraction(actionId, action.message);
   updateDaily("play");
   addActivity("play", action.message, action.icon);
   showNotice(action.message, "success");
@@ -2899,6 +2943,24 @@ function performCompanion(actionId) {
   vibrate(actionId === "splash" ? [8, 28, 8] : 10);
   render(true, true);
   react("pet", action.icon, actionId, action.asset, action.motion);
+}
+
+function resolveDailyMoment(choiceId) {
+  if (pet.dead || interactionLock || pet.dailyMoment?.choice) return;
+  const moment = DAILY_MOMENTS.find((item) => item.id === pet.dailyMoment?.id);
+  const choice = moment?.choices.find((item) => item.id === choiceId);
+  if (!choice) return;
+  pet.dailyMoment.choice = choice.id;
+  pet.affection = clamp(pet.affection + choice.affection);
+  pet.energy = clamp(pet.energy + choice.energy);
+  rememberInteraction("moment", choice.reply);
+  updateDaily("play");
+  addActivity("play", choice.reply, choice.icon);
+  showNotice(choice.reply, "success");
+  sound(choice.asset === "swim" ? "water" : "pet", choice.id);
+  vibrate(10);
+  render(true, true);
+  react("pet", choice.icon, choice.id, choice.asset, choice.motion);
 }
 
 function restockFood(foodId) {
@@ -3007,6 +3069,7 @@ function petSeal(zone = "belly") {
   lastPetAt = now;
   pet.affection = clamp(pet.affection + reward.affection);
   pet.interactionFatigue = clamp(pet.interactionFatigue + 18);
+  rememberInteraction("pet", reward.line);
   updateDaily("play");
   if (threeState.ready) {
     const actionPose = reward.mode || THREE_POSE_STATES.PET;
@@ -3379,6 +3442,19 @@ async function bootApp() {
     $("profile-name").value = pet.name;
     $("profile-birthday").value = pet.birthday;
     $("profile-overlay").hidden = false;
+  } else if (!pet.dead) {
+    const favorite = favoriteInteraction();
+    let welcome = `${pet.name} 看見你，抬起頭打了個招呼`;
+    if (elapsedAway >= 24 * HOUR) welcome = `${pet.name} 等你很久了，一看到你就游了過來`;
+    else if (elapsedAway >= 2 * HOUR) welcome = `${pet.name} 認出你的腳步聲，主動靠近池邊`;
+    else if (pet.satiety < 30) welcome = `${pet.name} 看見你，先期待地望向食物區`;
+    else if (pet.energy < 30) welcome = `${pet.name} 睜開眼睛確認是你，又安心趴了回去`;
+    else if (favorite) welcome = `${pet.name} 記得你喜歡「${favorite}」，正等著你的回應`;
+    setTimeout(() => {
+      showNotice(welcome, "success");
+      $("speech").textContent = welcome;
+      react("pet", "🤍", "welcome", "approach", "auto-approach");
+    }, 360);
   }
   setTimeout(runAutonomousBehavior, 5200);
 }

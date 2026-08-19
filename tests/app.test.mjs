@@ -149,6 +149,22 @@ test("陪伴頁提供四種直接互動並切換不同動作", () => {
   assert.match(styles, /\.companion-grid/);
 });
 
+test("海豹會記住互動偏好並在回訪時主動迎接", () => {
+  assert.match(script, /interactionCounts: \{\}/);
+  assert.match(script, /function rememberInteraction\(id, label\)/);
+  assert.match(script, /function favoriteInteraction\(\)/);
+  assert.match(script, /elapsedAway >= 24 \* HOUR/);
+  assert.match(script, /記得你喜歡/);
+});
+
+test("每天只有一個簡短情境選擇", () => {
+  assert.match(script, /const DAILY_MOMENTS = \[/);
+  assert.match(script, /dailyMoment: \{ date:/);
+  assert.match(script, /function resolveDailyMoment\(choiceId\)/);
+  assert.match(script, /data-moment=/);
+  assert.match(styles, /\.daily-moment/);
+});
+
 test("照護會記錄長期後果並尊重海豹停止互動的訊號", () => {
   assert.match(script, /recentFoods/);
   assert.match(script, /lastRestAt/);
