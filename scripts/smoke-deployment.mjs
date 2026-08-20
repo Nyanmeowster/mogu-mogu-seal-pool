@@ -22,6 +22,19 @@ export function findCriticalImagePaths(bundleSource) {
   });
 }
 
+export function hasExpectedImageSignature(extension, bytes) {
+  if (!(bytes instanceof Uint8Array)) return false;
+  if (extension === "jpg" || extension === "jpeg") {
+    return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  if (extension === "webp") {
+    return bytes.length >= 12
+      && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF"
+      && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP";
+  }
+  return false;
+}
+
 export async function checkDeployment(target, options = {}) {
   const baseUrl = new URL(target);
   const requestTimeout = Math.max(1000, Number(options.requestTimeout || 15000));
@@ -58,10 +71,21 @@ export async function checkDeployment(target, options = {}) {
     const assetResponse = await fetchFresh(assetUrl);
     if (!assetResponse.ok) throw new Error(`${asset.label} (${assetUrl.pathname}) returned ${assetResponse.status}`);
     const contentType = assetResponse.headers?.get?.("content-type") || "";
-    if (contentType && !contentType.toLowerCase().startsWith("image/")) {
+    if (contentType.toLowerCase().startsWith("image/")) {
+      await assetResponse.body?.cancel();
+    } else if (contentType.toLowerCase().startsWith("application/octet-stream")) {
+      const bytes = new Uint8Array(await assetResponse.arrayBuffer());
+      if (!hasExpectedImageSignature(asset.extension, bytes)) {
+        throw new Error(`${asset.label} (${assetUrl.pathname}) did not contain a valid ${asset.extension} image`);
+      }
+    } else if (contentType) {
       throw new Error(`${asset.label} (${assetUrl.pathname}) returned ${contentType} instead of an image`);
+    } else {
+      const bytes = new Uint8Array(await assetResponse.arrayBuffer());
+      if (!hasExpectedImageSignature(asset.extension, bytes)) {
+        throw new Error(`${asset.label} (${assetUrl.pathname}) did not contain a valid ${asset.extension} image`);
+      }
     }
-    await assetResponse.body?.cancel();
   }
 
   return { baseUrl: baseUrl.href, checkedImages: criticalImages.length };

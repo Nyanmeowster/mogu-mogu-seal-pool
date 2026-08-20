@@ -5,6 +5,7 @@ import {
   checkDeployment,
   CRITICAL_IMAGE_ASSETS,
   findCriticalImagePaths,
+  hasExpectedImageSignature,
 } from "../scripts/smoke-deployment.mjs";
 
 const pluginSource = await readFile(new URL("../build/sites-vite-plugin.js", import.meta.url), "utf8");
@@ -41,11 +42,22 @@ test("部署 smoke 會實際請求所有 16 張關鍵圖片", async () => {
     if (url.pathname === "/game/") return new Response(html, { status: 200, headers: { "content-type": "text/html" } });
     if (url.pathname === "/game/assets/app.js") return new Response(builtBundle(), { status: 200, headers: { "content-type": "text/javascript" } });
     if (url.pathname === "/game/assets/app.css") return new Response("body{}", { status: 200, headers: { "content-type": "text/css" } });
-    if (url.pathname.startsWith("/game/assets/")) return new Response("image", { status: 200, headers: { "content-type": "image/webp" } });
+    if (url.pathname.startsWith("/game/assets/")) {
+      const bytes = url.pathname.endsWith(".jpg")
+        ? Uint8Array.from([0xff, 0xd8, 0xff, 0x00])
+        : new TextEncoder().encode("RIFF0000WEBP");
+      return new Response(bytes, { status: 200, headers: { "content-type": "application/octet-stream" } });
+    }
     return new Response("missing", { status: 404 });
   };
 
   const result = await checkDeployment("https://example.test/game/", { fetchImpl, cacheKey: "test" });
   assert.equal(result.checkedImages, 16);
   assert.equal(requested.filter((path) => /(?:\.webp|\.jpg)$/.test(path)).length, 16);
+});
+
+test("generic binary MIME 仍會驗證真正的 JPG 與 WebP 檔頭", () => {
+  assert.equal(hasExpectedImageSignature("jpg", Uint8Array.from([0xff, 0xd8, 0xff, 0x00])), true);
+  assert.equal(hasExpectedImageSignature("webp", new TextEncoder().encode("RIFF0000WEBP")), true);
+  assert.equal(hasExpectedImageSignature("webp", new TextEncoder().encode("not an image")), false);
 });
