@@ -294,6 +294,27 @@ test("匯入的未來照護時間會被限制在當下，無效照護鍵會被�
   assert.equal(context.timestamps.careLog.check, undefined);
 });
 
+test("匯入的異常回憶與活動項目會被移除，不會讓回憶卡白屏", () => {
+  const now = 1_750_000_000_000;
+  const context = vm.createContext({});
+  vm.runInContext([
+    extractFunction("positiveTimestampOr"),
+    extractFunction("normalizeTimelineEntries"),
+    `globalThis.timeline = normalizeTimelineEntries([
+      null,
+      "broken",
+      ["also broken"],
+      { id: "memory-1", text: "一起玩泳圈", at: ${now - 1000} },
+      { id: "memory-2", text: "一起休息", at: ${now + 1000} }
+    ], 18, ${now});`,
+  ].join("\n"), context);
+
+  const timeline = structuredClone(context.timeline);
+  assert.equal(timeline.length, 2);
+  assert.deepEqual(timeline.map((entry) => entry.id), ["memory-1", "memory-2"]);
+  assert.equal(timeline[1].at, now);
+});
+
 test("殘缺的未來 schema 會保持寫入保護並顯示有效備份", () => {
   const backup = completeSave({ satiety: 67, updatedAt: 1_750_000_000_700 });
   const { api } = createSaveHarness({ current: { schemaVersion: 99 }, backup });

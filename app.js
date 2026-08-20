@@ -323,6 +323,14 @@ function normalizeCareLog(value, now = Date.now()) {
   }));
 }
 
+function normalizeTimelineEntries(value, limit, now = Date.now()) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((entry) => entry && typeof entry === "object" && !Array.isArray(entry))
+    .slice(-limit)
+    .map((entry) => ({ ...entry, at: positiveTimestampOr(entry.at, now, now) }));
+}
+
 function normalizePet(raw) {
   const now = Date.now();
   const base = fresh();
@@ -363,16 +371,8 @@ function normalizePet(raw) {
     careLog: normalizeCareLog(raw?.careLog, now),
     personality: PERSONALITIES.some((item) => item.id === raw?.personality) ? raw.personality : base.personality,
     recentFoods: Array.isArray(raw?.recentFoods) ? raw.recentFoods.slice(-6) : [],
-    activityLog: Array.isArray(raw?.activityLog) ? raw.activityLog.slice(-40).map((entry) => (
-      entry && typeof entry === "object"
-        ? { ...entry, at: positiveTimestampOr(entry.at, now, now) }
-        : entry
-    )) : [],
-    memories: Array.isArray(raw?.memories) ? raw.memories.slice(-18).map((entry) => (
-      entry && typeof entry === "object"
-        ? { ...entry, at: positiveTimestampOr(entry.at, now, now) }
-        : entry
-    )) : [],
+    activityLog: normalizeTimelineEntries(raw?.activityLog, 40, now),
+    memories: normalizeTimelineEntries(raw?.memories, 18, now),
     daily: normalizeDaily(raw?.daily),
     lastRestAt: positiveTimestampOr(raw?.lastRestAt, careCheckpoint, now),
     lastCleanAt: positiveTimestampOr(raw?.lastCleanAt, careCheckpoint, now),
