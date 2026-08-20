@@ -130,7 +130,9 @@ test("Doflamingo 泳圈會依海豹比例放大並切換專屬玩耍圖", () => 
   assert.match(script, /"ring-play"/);
   assert.match(script, /react\("pet", "🦩", "ring", "ring", "ring-play"\)/);
   assert.match(styles, /width: clamp\(150px, 42cqw, 220px\);/);
-  assert.match(styles, /touch-action: none;/);
+  assert.match(styles, /\.decor-ring\s*\{[\s\S]*?touch-action: pan-y;/);
+  assert.match(script, /moved: false,[\s\S]*?minX: poolRect\.left - ringRect\.left/);
+  assert.match(script, /const shouldPlay = !drag\.moved \|\| ringTouchesSeal\(ring\)/);
   assert.match(styles, /\.decor-ring\.is-over-seal/);
   assert.match(styles, /@keyframes interaction-ring-play/);
 });
@@ -152,6 +154,17 @@ test("海灘球與小鴨都能點擊、拖曳及用鍵盤和海豹玩", () => {
   assert.match(styles, /\.decor-ball\.is-dragging/);
   assert.match(styles, /\.decor-duck\.is-over-seal/);
   assert.match(styles, /@keyframes pool-toy-play-pop/);
+});
+
+test("椰子樹、池燈與貝殼都可點擊或用鍵盤觸發不同反應", () => {
+  assert.match(script, /const POOL_FEATURE_REACTIONS = \{/);
+  assert.match(script, /plant: \{[\s\S]*?asset: "sleep"[\s\S]*?motion: "auto-sleep"/);
+  assert.match(script, /light: \{[\s\S]*?asset: "swim"[\s\S]*?motion: "auto-swim"/);
+  assert.match(script, /shell: \{[\s\S]*?asset: "sniff"[\s\S]*?motion: "auto-explore"/);
+  assert.match(script, /data-pool-feature="\$\{item\.id\}"/);
+  assert.match(script, /function playWithPoolFeature\(feature\)/);
+  assert.match(script, /closest\("\[data-pool-feature\]"\)/);
+  assert.match(styles, /\.pool-feature\s*\{[\s\S]*?pointer-events: auto;/);
 });
 
 test("海豹會依作息、個性與身體狀況自主活動", () => {
@@ -237,6 +250,28 @@ test("照護頁精簡顯示三項今日進度與安全處理的最近紀錄", ()
   assert.match(styles, /\.latest-care-activity/);
 });
 
+test("共同回憶、成就數與專業觀察收在既有陪伴和照護頁", () => {
+  assert.match(script, /function renderCompanionHistoryCard\(\)/);
+  assert.match(script, /data-companion-history/);
+  assert.match(script, /\$\{memoryCount\} 則回憶 · \$\{achievementCount\}／\$\{ACHIEVEMENTS\.length\} 個成就/);
+  assert.match(script, /function renderObservationCard\(\)/);
+  assert.match(script, /observationSummary\(\)/);
+  assert.match(script, /progressCard \+ healthCard \+ observationCard/);
+  assert.match(styles, /\.companion-history-card summary:focus-visible/);
+  assert.match(styles, /\.observation-card/);
+  assert.equal((html.match(/data-mode=/g) || []).length, 4);
+});
+
+test("長時間離開改由代班或獸醫照護且不再重建海豹", () => {
+  assert.match(html, /id="care-pause-copy"/);
+  assert.match(html, /你們累積的一切都不會歸零/);
+  assert.match(script, /carePauseReason: ""/);
+  assert.match(script, /carePauseReason = "substitute"/);
+  assert.match(script, /function recoverFromCarePause\(now = Date\.now\(\)\)/);
+  assert.match(script, /const reason = recoverFromCarePause\(\);/);
+  assert.doesNotMatch(script.slice(script.indexOf('$("adopt").onclick'), script.indexOf("window.addEventListener", script.indexOf('$("adopt").onclick'))), /pet = fresh\(\)|openProfileDialog\(false\)/);
+});
+
 test("海豹會記住互動偏好並在回訪時主動迎接", () => {
   assert.match(script, /interactionCounts: \{\}/);
   assert.match(script, /function rememberInteraction\(id, label\)/);
@@ -246,7 +281,13 @@ test("海豹會記住互動偏好並在回訪時主動迎接", () => {
 });
 
 test("每天只有一個簡短情境選擇", () => {
+  const momentBlock = script.slice(script.indexOf("const DAILY_MOMENTS"), script.indexOf("const SIZE_STOPS"));
   assert.match(script, /const DAILY_MOMENTS = \[/);
+  assert.equal((momentBlock.match(/^  \{ id:/gm) || []).length, 11);
+  assert.match(script, /function dailyMomentCandidates\(\)/);
+  assert.match(script, /moment\.personalities\?\.includes\(pet\.personality\)/);
+  assert.match(script, /pet\.owned\.includes\(moment\.requiresOwned\)/);
+  assert.match(script, /function chooseDailyMoment\(today\)/);
   assert.match(script, /dailyMoment: \{ date:/);
   assert.match(script, /function resolveDailyMoment\(choiceId\)/);
   assert.match(script, /data-moment=/);
@@ -263,7 +304,7 @@ test("陪伴動作會先注意玩家、互動，再自然離開", () => {
 
 test("停留會被注視，快速亂點會讓海豹退開", () => {
   assert.match(script, /addEventListener\("pointerenter"/);
-  assert.match(script, /const rapidTouchLimit = COARSE_POINTER \? 5 : 4/);
+  assert.match(script, /const rapidTouchLimit = coarsePointer \? 5 : 4/);
   assert.match(script, /rapidTouches\.length >= rapidTouchLimit/);
   assert.match(script, /被嚇到了，先轉身保持一點距離/);
   assert.match(script, /"auto-space"/);
@@ -282,8 +323,9 @@ test("照護會記錄長期後果並尊重海豹停止互動的訊號", () => {
   assert.match(script, /recentFoods/);
   assert.match(script, /lastRestAt: now/);
   assert.match(script, /lastCleanAt: now/);
-  assert.match(script, /function positiveTimestampOr\(value, fallback\)/);
-  assert.match(script, /lastRestAt: positiveTimestampOr\(raw\?\.lastRestAt, careCheckpoint\)/);
+  assert.match(script, /function positiveTimestampOr\(value, fallback, maximum = Date\.now\(\)\)/);
+  assert.match(script, /Math\.min\(timestamp, upperBound\)/);
+  assert.match(script, /lastRestAt: positiveTimestampOr\(raw\?\.lastRestAt, careCheckpoint, now\)/);
   assert.match(script, /simulatedAt - restCheckpoint > 18 \* HOUR/);
   assert.match(script, /simulatedAt - cleanCheckpoint > 24 \* HOUR/);
   assert.match(script, /function interactionAffectionGain\(baseGain\)/);
@@ -385,12 +427,23 @@ test("互動句子會避開連續重複並使用對應情境音", () => {
 });
 
 test("手機與減少動態效果模式使用較短互動節奏", () => {
-  assert.match(script, /const COARSE_POINTER = matchMedia/);
+  assert.match(script, /const COARSE_POINTER_QUERY = matchMedia/);
+  assert.match(script, /const REDUCED_MOTION_QUERY = matchMedia/);
+  assert.match(script, /query\.addEventListener\("change", handleMediaPreferenceChange\)/);
   assert.match(script, /function sequenceTiming\(motion, requestedMain\)/);
   assert.match(script, /if \(prefersReducedMotion\(\)\) return \{ attention: 60, main: 120, settle: 100 \}/);
-  assert.match(script, /const trailThreshold = COARSE_POINTER \? 34 : 22/);
-  assert.match(script, /const petThreshold = COARSE_POINTER \? 68 : 58/);
+  assert.match(script, /const trailThreshold = coarsePointer \? 34 : 22/);
+  assert.match(script, /const petThreshold = coarsePointer \? 68 : 58/);
   assert.match(script, /behavior: prefersReducedMotion\(\) \? "auto" : "smooth"/);
+});
+
+test("鍵盤焦點、裝飾重建與手機字級都有清楚回饋", () => {
+  assert.match(styles, /button:focus-visible\s*\{[\s\S]*?outline: 3px solid #fffdf4;[\s\S]*?box-shadow: 0 0 0 6px #174758;/);
+  assert.match(script, /function preserveDecorationKeyboardFocus\(decoration\)/);
+  assert.match(script, /const focusedDecoration = document\.activeElement\?\.closest/);
+  assert.match(script, /requestAnimationFrame\(\(\) => focusElement\(replacement\)\)/);
+  assert.match(styles, /\.pet-app small,[\s\S]*?font-size: 11px;/);
+  assert.match(styles, /\.status-copy,[\s\S]*?font-size: 12px;/);
 });
 
 test("存檔有版本遷移、安全備份與新版本寫入保護", () => {

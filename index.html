@@ -14,7 +14,7 @@
   <meta name="twitter:description" content="有名字、有作息，也會記得你。陪伴小海豹生活、照護、探索並累積共同回憶。">
   <meta name="twitter:image" content="https://nyanmeowster.github.io/mogu-mogu-seal-pool/og-v2.png">
   <title>MOGU MOGU｜我的海豹泳池</title>
-  <link rel="stylesheet" href="/style.css?v=39">
+  <link rel="stylesheet" href="/style.css?v=40">
 </head>
 <body>
   <div id="app-loader" class="app-loader" role="status" aria-live="polite" aria-label="正在準備海豹泳池">
@@ -76,8 +76,8 @@
       <button data-mode="shop" aria-controls="drawer" aria-expanded="false" aria-pressed="false"><span aria-hidden="true">🏠</span><small>小屋</small></button>
     </nav>
   </main>
-  <div id="dead-overlay" class="dead-overlay" role="dialog" aria-modal="true" aria-labelledby="dead-title" tabindex="-1" hidden>
-    <div class="dead-card"><span aria-hidden="true">🚑</span><small>健康狀態亮紅燈</small><h2 id="dead-title">已交由專業獸醫照護</h2><p>規律餵食、上岸休息、乾淨水質與健康檢查都很重要。</p><button id="adopt" type="button">重新開始照護</button></div>
+  <div id="dead-overlay" class="dead-overlay" role="dialog" aria-modal="true" aria-labelledby="dead-title" aria-describedby="care-pause-copy care-preserved-note" tabindex="-1" hidden>
+    <div class="dead-card"><span id="care-pause-icon" aria-hidden="true">🚑</span><small id="care-pause-label">專業照護已接手</small><h2 id="dead-title">小海豹正在安全休養</h2><p id="care-pause-copy">名字、共同回憶、成就與收藏都會保留，準備好後就能接牠回泳池。</p><p id="care-preserved-note" class="care-preserved-note"><span aria-hidden="true">🤍</span> 你們累積的一切都不會歸零</p><button id="adopt" type="button">接牠回泳池</button></div>
   </div>
   <div id="profile-overlay" class="profile-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-title" aria-describedby="profile-description" tabindex="-1" hidden>
     <form id="profile-form" class="profile-card">
@@ -87,6 +87,6 @@
       <div class="profile-actions"><button id="profile-cancel" class="profile-cancel" type="button" hidden>取消</button><button id="profile-submit" type="submit">開始一起生活</button></div>
     </form>
   </div>
-  <script type="module" src="/app.js?v=39"></script>
+  <script type="module" src="/app.js?v=40"></script>
 </body>
 </html>

@@ -84,6 +84,10 @@ class MemoryStorage {
   setItem(key, value) {
     this.values.set(key, String(value));
   }
+
+  removeItem(key) {
+    this.values.delete(key);
+  }
 }
 
 function completeSave(overrides = {}) {
@@ -147,6 +151,7 @@ function createSaveHarness({ current = null, backup = null, pet = completeSave()
     "let saveWriteProtected = false;",
     "let futureSaveWarningShown = false;",
     "let tabReadOnly = false;",
+    "let tabOwnershipMode = 'none';",
     "let pet = globalThis.seedPet;",
     extractFunction("decodeSavedPet"),
     extractFunction("isRecognizableSave"),
@@ -238,6 +243,24 @@ test("schema 4 會用舊體型資料建立持久化體態，且保留舊幣", ()
   assert.equal(restored.coins, 1000);
 });
 
+test("schema 5 的舊版中止狀態會遷移為可恢復的專業照護", () => {
+  const legacy = completeSave({
+    schemaVersion: 5,
+    dead: true,
+    carePauseReason: undefined,
+    name: "阿福",
+    achievements: ["hello"],
+  });
+  const { api } = createSaveHarness({ current: legacy });
+
+  const restored = api.safeRead();
+
+  assert.equal(restored.schemaVersion, currentSchemaVersion);
+  assert.equal(restored.carePauseReason, "clinic");
+  assert.equal(restored.name, "阿福");
+  assert.deepEqual(Array.from(restored.achievements), ["hello"]);
+});
+
 test("舊存檔缺少照護時間時會回填穩定的照護基準", () => {
   const checkpoint = 1_750_000_000_000;
   const context = vm.createContext({});
@@ -251,6 +274,26 @@ test("舊存檔缺少照護時間時會回填穩定的照護基準", () => {
   assert.equal(context.cleanCheckpoint, checkpoint);
 });
 
+test("匯入的未來照護時間會被限制在當下，無效照護鍵會被移除", () => {
+  const now = 1_750_000_000_000;
+  const context = vm.createContext({});
+  vm.runInContext([
+    `const CARE_ACTIONS = [{ id: "haul" }, { id: "clean" }, { id: "enrich" }, { id: "check" }];`,
+    extractFunction("positiveTimestampOr"),
+    extractFunction("normalizeCareLog"),
+    `globalThis.timestamps = {
+      checkpoint: positiveTimestampOr(${now + 10_000}, 123, ${now}),
+      careLog: normalizeCareLog({ haul: ${now + 20_000}, clean: ${now - 1000}, unknown: ${now + 30_000}, check: "bad" }, ${now}),
+    };`,
+  ].join("\n"), context);
+
+  assert.equal(context.timestamps.checkpoint, now);
+  assert.equal(context.timestamps.careLog.haul, now);
+  assert.equal(context.timestamps.careLog.clean, now - 1000);
+  assert.equal(context.timestamps.careLog.unknown, undefined);
+  assert.equal(context.timestamps.careLog.check, undefined);
+});
+
 test("殘缺的未來 schema 會保持寫入保護並顯示有效備份", () => {
   const backup = completeSave({ satiety: 67, updatedAt: 1_750_000_000_700 });
   const { api } = createSaveHarness({ current: { schemaVersion: 99 }, backup });
@@ -260,6 +303,54 @@ test("殘缺的未來 schema 會保持寫入保護並顯示有效備份", () => 
   assert.equal(restored.satiety, 67);
   assert.equal(api.state().recoveredSave, true);
   assert.equal(api.state().saveWriteProtected, true);
+});
+
+function createLeaseHarness(storage, tabId) {
+  const context = vm.createContext({ localStorage: storage });
+  vm.runInContext([
+    `const TAB_LEASE_KEY = "mogu-pet-v1-primary-writer-lease";`,
+    `const TAB_LEASE_DURATION = 15000;`,
+    `const TAB_ID = ${JSON.stringify(tabId)};`,
+    `let storageAvailable = true;`,
+    `let tabOwnershipMode = "lease";`,
+    extractFunction("decodeTabLease"),
+    extractFunction("readTabLease"),
+    extractFunction("acquireTabLease"),
+    extractFunction("renewTabLease"),
+    `globalThis.leaseApi = { acquireTabLease, renewTabLease, available: () => storageAvailable };`,
+  ].join("\n"), context);
+  return context.leaseApi;
+}
+
+test("Web Locks 不可用時，localStorage lease 同一時間只允許一個寫入者", () => {
+  const storage = new MemoryStorage();
+  const first = createLeaseHarness(storage, "tab-a");
+  const second = createLeaseHarness(storage, "tab-b");
+
+  assert.equal(first.acquireTabLease(1000), true);
+  assert.equal(second.acquireTabLease(1000), false);
+  assert.equal(first.renewTabLease(5000), true);
+  assert.equal(second.acquireTabLease(19_999), false);
+  assert.equal(second.acquireTabLease(20_001), true);
+  assert.equal(first.renewTabLease(20_002), false);
+});
+
+test("Web Locks request 拒絕時會保持唯讀，不會失敗即放行", async () => {
+  const context = vm.createContext({
+    navigator: { locks: { request: () => Promise.reject(new Error("denied")) } },
+    Promise,
+  });
+  vm.runInContext([
+    `let storageAvailable = true; let tabOwnershipMode = "none"; let tabReadOnly = false;`,
+    `function acquireTabLease() { throw new Error("lease branch should not run"); }`,
+    `function startTabLeaseHeartbeat() {}`,
+    `function queueLeaseTakeover() {}`,
+    extractFunction("establishTabOwnership"),
+    `globalThis.ownershipApi = { establishTabOwnership, readOnly: () => tabReadOnly };`,
+  ].join("\n"), context);
+
+  assert.equal(await context.ownershipApi.establishTabOwnership(), false);
+  assert.equal(context.ownershipApi.readOnly(), true);
 });
 
 function createClassList() {
@@ -405,6 +496,7 @@ function createFeedHarness() {
   });
   vm.runInContext([
     "const COARSE_POINTER = false;",
+    "let coarsePointer = false;",
     "const FEED_LINES = ['吃完了'];",
     "const THREE_POSE_STATES = { EAT: 'eat' };",
     "const threeState = { ready: false };",
@@ -457,7 +549,10 @@ function createFeedHarness() {
     extractFunction("feed"),
     `globalThis.feedApi = {
       start: () => feed({ id: 'fish', icon: '🐟', name: '鯡魚', sound: 'fish', health: 2 }, {}),
+      kill: () => { pet.dead = true; },
+      invalidate: () => setBusy(true),
       state: () => ({
+        dead: pet.dead,
         satiety: pet.satiety,
         bodyCondition: pet.bodyCondition,
         interactionLock,
@@ -499,10 +594,36 @@ test("餵食跨越體型門檻時，咀嚼完成前維持原圖並持續鎖定�
   assert.deepEqual(harness.completedOnboardingSteps, [2]);
 });
 
+test("餐點延遲期間若海豹死亡，舊回呼不會將它復活或增加狀態", () => {
+  const harness = createFeedHarness();
+  harness.api.start();
+  harness.api.kill();
+  harness.timers.advance(60);
+
+  assert.equal(harness.api.state().dead, true);
+  assert.equal(harness.api.state().satiety, 35);
+  assert.equal(harness.api.state().bodyCondition, 39.5);
+  assert.equal(harness.api.state().interactionLock, false);
+  assert.equal(harness.api.state().visualStageLock, 0);
+  assert.deepEqual(harness.reactionStages, []);
+});
+
+test("較新互動已取得鎖時，舊餐點回呼不會提交或提早解鎖", () => {
+  const harness = createFeedHarness();
+  harness.api.start();
+  harness.api.invalidate();
+  harness.timers.advance(60);
+
+  assert.equal(harness.api.state().satiety, 35);
+  assert.equal(harness.api.state().interactionLock, true);
+  assert.equal(harness.api.state().visualStageLock, 0);
+  assert.deepEqual(harness.reactionStages, []);
+});
+
 function createElapsedStatsHarness(overrides = {}) {
   const start = 1_750_000_000_000;
   const context = vm.createContext({ seedPet: {
-    dead: false, satiety: 35, affection: 20, energy: 72, waterQuality: 86, health: 90,
+    dead: false, carePauseReason: "", satiety: 35, affection: 20, energy: 72, waterQuality: 86, health: 90,
     bodyCondition: 48, interactionFatigue: 0, recentFoods: [], lastRestAt: start,
     lastCleanAt: start, lastFedAt: start, lastStatAt: start, ...overrides,
   } });
@@ -538,7 +659,7 @@ test("一次結算與逐時計算的照護衰減一致", () => {
   assert.equal(stepped.api.pet().dead, false);
 });
 
-test("長時間離線傷害會封頂，但五天未餵規則仍保留", () => {
+test("長時間離線傷害會封頂，五天未餵會安全轉交代班照護", () => {
   const fourDays = createElapsedStatsHarness();
   fourDays.api.applyElapsedStats(fourDays.start + 4 * 24 * 36e5);
   assert.equal(fourDays.api.pet().dead, false);
@@ -546,6 +667,58 @@ test("長時間離線傷害會封頂，但五天未餵規則仍保留", () => {
   const fiveDays = createElapsedStatsHarness();
   fiveDays.api.applyElapsedStats(fiveDays.start + 5 * 24 * 36e5);
   assert.equal(fiveDays.api.pet().dead, true);
+  assert.equal(fiveDays.api.pet().carePauseReason, "substitute");
+});
+
+test("結束代班照護會保留名字、回憶、收藏、成就與長期進度", () => {
+  const start = 1_750_000_000_000;
+  const preserved = {
+    name: "阿福",
+    birthday: "2025-04-03",
+    dead: true,
+    carePauseReason: "substitute",
+    satiety: 12,
+    energy: 18,
+    waterQuality: 22,
+    health: 14,
+    affection: 83,
+    bodyCondition: 67,
+    coins: 91,
+    owned: ["ring", "plant"],
+    active: ["ring"],
+    memories: [{ id: "memory-1", text: "一起玩泳圈" }],
+    achievements: ["hello", "ring-friend"],
+    lifetime: { feeds: 40, care: 21, play: 35, ring: 7, days: ["2026-08-20"] },
+    currentHealthEvent: "tired",
+    diagnosedHealthEvent: "tired",
+  };
+  const activities = [];
+  const context = vm.createContext({ seedPet: structuredClone(preserved), activities });
+  vm.runInContext([
+    "let pet = globalThis.seedPet;",
+    "const addActivity = (...args) => globalThis.activities.push(args);",
+    extractFunction("recoverFromCarePause"),
+    "globalThis.recoveryApi = { recoverFromCarePause, pet: () => pet };",
+  ].join("\n"), context);
+
+  const reason = context.recoveryApi.recoverFromCarePause(start);
+  const restored = context.recoveryApi.pet();
+
+  assert.equal(reason, "substitute");
+  assert.equal(restored.dead, false);
+  assert.equal(restored.carePauseReason, "");
+  for (const key of ["name", "birthday", "affection", "bodyCondition", "coins"]) {
+    assert.deepEqual(restored[key], preserved[key]);
+  }
+  for (const key of ["owned", "active", "memories", "achievements", "lifetime"]) {
+    assert.deepEqual(structuredClone(restored[key]), preserved[key]);
+  }
+  assert.ok(restored.satiety >= 45);
+  assert.ok(restored.energy >= 65);
+  assert.ok(restored.waterQuality >= 75);
+  assert.ok(restored.health >= 70);
+  assert.equal(restored.lastFedAt, start);
+  assert.match(activities[0][1], /代班照護完成/);
 });
 
 test("外觀階段只看長期 bodyCondition，不隨當下飽足度跳動", () => {
