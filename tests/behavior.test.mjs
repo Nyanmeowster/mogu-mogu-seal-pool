@@ -377,6 +377,8 @@ test("Web Locks request 拒絕時會保持唯讀，不會失敗即放行", async
 function createClassList() {
   const values = new Set();
   return {
+    add: (...names) => names.forEach((name) => values.add(name)),
+    remove: (...names) => names.forEach((name) => values.delete(name)),
     contains: (name) => values.has(name),
     toggle(name, force) {
       if (force === undefined ? !values.has(name) : force) values.add(name);
@@ -408,8 +410,7 @@ function createInteractionHarness() {
     "let interactionGeneration = 0;",
     "let tabReadOnly = false;",
     "let saveWriteProtected = false;",
-    "let ringDrag = null;",
-    "let poolToyDrag = null;",
+    "let decorationDrag = null;",
     extractFunction("setBusy"),
     extractFunction("syncInteractionState"),
     "globalThis.interactionApi = { setBusy, state: () => interactionLock };",
@@ -451,6 +452,180 @@ test("較早動作的計時器不能提早解除較新的互動鎖", () => {
   assert.equal(api.state(), true);
   assert.equal(api.setBusy(false, secondAction), true);
   assert.equal(api.state(), false);
+});
+
+function createPoolToyButton(toyId) {
+  const attributes = new Map();
+  return {
+    classList: createClassList(),
+    dataset: { poolToy: toyId, busyDisabled: "true" },
+    disabled: false,
+    style: { translate: "12px 8px" },
+    setAttribute(name, value) {
+      attributes.set(name, String(value));
+    },
+    getAttribute(name) {
+      return attributes.get(name) ?? null;
+    },
+  };
+}
+
+function createPoolToyHarness(toyId, { interactionLock = false, interactionGeneration = 0 } = {}) {
+  const toy = createPoolToyButton(toyId);
+  const speech = { textContent: "" };
+  const logs = {
+    activities: [],
+    busy: [],
+    interactions: [],
+    notices: [],
+    reactions: [],
+    refreshes: [],
+    renders: 0,
+    sounds: [],
+    timers: [],
+    vibrations: [],
+    visuals: [],
+  };
+  const context = vm.createContext({
+    logs,
+    seedInteractionGeneration: interactionGeneration,
+    seedInteractionLock: interactionLock,
+    speech,
+    toy,
+  });
+  vm.runInContext([
+    extractConstant("DECOR"),
+    extractConstant("POOL_TOY_REACTIONS"),
+    "const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));",
+    `let pet = {
+      name: "Mogu",
+      dead: false,
+      affection: 40,
+      energy: 60,
+      interactionFatigue: 10,
+      active: ["ring", "ball", "plant", "light", "shell", "duck"],
+    };`,
+    "let actionActive = '';",
+    "let tabReadOnly = false;",
+    "let saveWriteProtected = false;",
+    "let lastInputWasKeyboard = true;",
+    "let decorationFocusRestore = null;",
+    "let ringInteractionAvailableAt = 0;",
+    "const poolToyInteractionAvailableAt = { ball: 0, plant: 0, light: 0, shell: 0, duck: 0 };",
+    "let decorKey = '';",
+    "let interactionLock = globalThis.seedInteractionLock;",
+    "let interactionGeneration = globalThis.seedInteractionGeneration;",
+    "const $ = (id) => id === 'speech' ? globalThis.speech : null;",
+    `function setBusy(busy, token = 0) {
+      if (busy) {
+        interactionGeneration += 1;
+        interactionLock = true;
+        globalThis.logs.busy.push([true, interactionGeneration]);
+        return interactionGeneration;
+      }
+      if (token && token !== interactionGeneration) return false;
+      interactionLock = false;
+      globalThis.logs.busy.push([false, token]);
+      return true;
+    }`,
+    "function interactionAffectionGain(value) { return value; }",
+    "function interactionRestCue() { return ''; }",
+    "function rememberInteraction(...args) { globalThis.logs.interactions.push(args); }",
+    "function updateDaily() {}",
+    "function addActivity(...args) { globalThis.logs.activities.push(args); }",
+    "function showNotice(...args) { globalThis.logs.notices.push(args); }",
+    "function render() { globalThis.logs.renders += 1; }",
+    "function react(...args) { globalThis.logs.reactions.push(args); }",
+    "function reactionDuration() { return 1800; }",
+    "function createPoolToyInteractionVisual(...args) { globalThis.logs.visuals.push(args); }",
+    "function sound(...args) { globalThis.logs.sounds.push(args); }",
+    "function vibrate(...args) { globalThis.logs.vibrations.push(args); }",
+    "function scheduleDecorationRefresh(delay) { globalThis.logs.refreshes.push(delay); }",
+    "function setTimeout(callback, delay) { globalThis.logs.timers.push(delay); return globalThis.logs.timers.length; }",
+    extractFunction("poolToyCoolingDown"),
+    extractFunction("decorationStateKey"),
+    extractFunction("decorationCanUseLock"),
+    extractFunction("preserveDecorationKeyboardFocus"),
+    extractFunction("returnDecorationToPool"),
+    extractFunction("setDecorationCoolingState"),
+    extractFunction("playWithPoolToy"),
+    `globalThis.poolToyApi = {
+      play: (token = 0) => playWithPoolToy(globalThis.toy, token),
+      unlock: () => { interactionLock = false; },
+      state: () => ({
+        pet,
+        interactionLock,
+        interactionGeneration,
+        availableAt: poolToyInteractionAvailableAt[globalThis.toy.dataset.poolToy],
+        decorationFocusRestore,
+      }),
+    };`,
+  ].join("\n"), context);
+  return { api: context.poolToyApi, logs, speech, toy };
+}
+
+test("五件非泳圈道具都只提交一次狀態、冷卻與對應畫面反應", () => {
+  const cases = [
+    { id: "ball", name: "海灘球", icon: "🏖️", asset: "swim", motion: "toy-ball", affection: 4, energy: -3, fatigue: 8, cooldown: 4500 },
+    { id: "plant", name: "軟質海藻刷", icon: "🌿", asset: "pet", motion: "toy-kelp", affection: 3, energy: -1, fatigue: 4, cooldown: 4100 },
+    { id: "light", name: "星光感應浮球", icon: "✨", asset: "approach", motion: "toy-light", affection: 4, energy: -2, fatigue: 6, cooldown: 4400 },
+    { id: "shell", name: "嗅聞貝盒", icon: "🐚", asset: "sniff", motion: "toy-scent", affection: 3, energy: -1, fatigue: 4, cooldown: 3900 },
+    { id: "duck", name: "涼涼浮冰枕", icon: "🧊", asset: "sleep", motion: "toy-ice", affection: 4, energy: 5, fatigue: -8, cooldown: 4800 },
+  ];
+
+  for (const expected of cases) {
+    const { api, logs, speech, toy } = createPoolToyHarness(expected.id);
+    const before = Date.now();
+
+    assert.equal(api.play(), true, `${expected.name} 應能互動`);
+    const after = Date.now();
+    const state = structuredClone(api.state());
+
+    assert.equal(state.pet.affection, 40 + expected.affection);
+    assert.equal(state.pet.energy, 60 + expected.energy);
+    assert.equal(state.pet.interactionFatigue, 10 + expected.fatigue);
+    assert.ok(state.availableAt >= before + expected.cooldown);
+    assert.ok(state.availableAt <= after + expected.cooldown);
+    assert.equal(logs.interactions.length, 1);
+    assert.equal(logs.activities.length, 1);
+    assert.deepEqual(structuredClone(logs.reactions[0]), ["pet", expected.icon, expected.id, expected.asset, expected.motion]);
+    assert.deepEqual(structuredClone(logs.visuals[0]), [expected.id, expected.icon, 1800]);
+    assert.equal(logs.renders, 1);
+    assert.equal(toy.disabled, true);
+    assert.equal(toy.classList.contains("is-cooling-down"), true);
+    assert.match(toy.getAttribute("aria-label"), new RegExp(`${expected.name}.*冷卻`));
+    assert.match(speech.textContent, /^Mogu/);
+    assert.equal(state.decorationFocusRestore.dataset.poolToy, expected.id);
+
+    api.unlock();
+    const repeatedState = structuredClone(api.state().pet);
+    assert.equal(api.play(), false, `${expected.name} 冷卻中不應重複提交`);
+    assert.deepEqual(structuredClone(api.state().pet), repeatedState);
+    assert.equal(logs.interactions.length, 1);
+    assert.equal(logs.reactions.length, 1);
+  }
+});
+
+test("舊拖曳鎖的道具回呼不會提交狀態或畫面反應", () => {
+  const { api, logs, toy } = createPoolToyHarness("plant", {
+    interactionLock: true,
+    interactionGeneration: 9,
+  });
+  const initialPet = structuredClone(api.state().pet);
+
+  assert.equal(api.play(8), false);
+
+  const state = structuredClone(api.state());
+  assert.deepEqual(state.pet, initialPet);
+  assert.equal(state.availableAt, 0);
+  assert.equal(logs.interactions.length, 0);
+  assert.equal(logs.activities.length, 0);
+  assert.equal(logs.reactions.length, 0);
+  assert.equal(logs.visuals.length, 0);
+  assert.equal(logs.renders, 0);
+  assert.equal(state.interactionLock, true);
+  assert.equal(toy.style.translate, "0px 0px");
+  assert.equal(toy.classList.contains("is-returning"), true);
 });
 
 test("今日進度卡會計算三個目標並跳脫匯入紀錄內容", () => {

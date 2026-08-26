@@ -113,10 +113,10 @@ const EXPRESSION_MORPHS = [
 const DECOR = [
   { id: "ring", icon: "🦩", name: "Doflamingo 羽毛泳圈", price: 4, className: "decor-ring" },
   { id: "ball", icon: "🏖️", name: "海灘球", price: 7, className: "decor-ball" },
-  { id: "plant", icon: "🌴", name: "迷你椰子樹", price: 12, className: "decor-plant" },
-  { id: "light", icon: "✨", name: "星星池燈", price: 18, className: "decor-light" },
-  { id: "shell", icon: "🐚", name: "珍珠貝殼", price: 22, className: "decor-shell" },
-  { id: "duck", icon: "🦆", name: "小鴨浮伴", price: 30, className: "decor-duck" },
+  { id: "plant", icon: "🌿", name: "軟質海藻刷", price: 12, className: "decor-kelp" },
+  { id: "light", icon: "✨", name: "星光感應浮球", price: 18, className: "decor-glow" },
+  { id: "shell", icon: "🐚", name: "嗅聞貝盒", price: 22, className: "decor-scent" },
+  { id: "duck", icon: "🧊", name: "涼涼浮冰枕", price: 30, className: "decor-ice" },
 ];
 
 const FOODS = [
@@ -213,13 +213,13 @@ const DAILY_MOMENTS = [
     { id: "ball-play", label: "把球滾回去", icon: "🏖️", asset: "swim", motion: "auto-swim", affection: 5, energy: -3, reply: "牠追上小球，又得意地把球推回你面前" },
     { id: "ball-wait", label: "等牠主動玩", icon: "🫧", asset: "approach", motion: "auto-approach", affection: 4, energy: 0, reply: "牠想了一會兒，最後自己把球頂向池中央" },
   ] },
-  { id: "duck-day", requiresOwned: "duck", prompt: "小鴨浮伴漂過來，牠好奇地跟在後面。", choices: [
-    { id: "duck-meet", label: "陪牠認識小鴨", icon: "🦆", asset: "sniff", motion: "auto-explore", affection: 5, energy: -1, reply: "牠聞聞小鴨，再用鼻尖很輕地碰了一下" },
-    { id: "duck-space", label: "留給牠探索", icon: "🌊", asset: "space", motion: "auto-space", affection: 4, energy: 1, reply: "牠保持舒服的距離，慢慢跟著小鴨巡游" },
+  { id: "duck-day", requiresOwned: "duck", prompt: "涼涼浮冰枕漂到岩台旁，牠慢慢把下巴靠近。", choices: [
+    { id: "duck-meet", label: "把浮冰枕推近", icon: "🧊", asset: "sleep", motion: "auto-sleep", affection: 5, energy: 5, reply: "牠摸摸浮冰枕，最後安心地把下巴靠了上去" },
+    { id: "duck-space", label: "讓牠自己決定", icon: "🌊", asset: "approach", motion: "auto-approach", affection: 4, energy: 2, reply: "牠繞著浮冰枕看了一圈，才選好最舒服的位置" },
   ] },
-  { id: "decor-day", ownedAny: ["plant", "light", "shell"], prompt: "牠注意到泳池裡的佈置，停下來仔細觀察。", choices: [
-    { id: "decor-look", label: "陪牠一起看看", icon: "🔎", asset: "sniff", motion: "auto-explore", affection: 4, energy: -1, reply: "牠放心靠近新佈置，認真研究了好一會兒" },
-    { id: "decor-rest", label: "讓牠自在適應", icon: "🤍", asset: "sleep", motion: "auto-sleep", affection: 4, energy: 3, reply: "你沒有催促，牠在熟悉的泳池裡慢慢放鬆" },
+  { id: "decor-day", ownedAny: ["plant", "light", "shell"], prompt: "牠注意到泳池裡的感官玩具，停下來等你一起玩。", choices: [
+    { id: "decor-look", label: "挑一件推過去", icon: "🔎", asset: "sniff", motion: "auto-explore", affection: 4, energy: -1, reply: "牠放心靠近玩具，用鬍鬚和鼻尖認真研究了一會兒" },
+    { id: "decor-rest", label: "讓牠自在選擇", icon: "🤍", asset: "approach", motion: "auto-approach", affection: 4, energy: 2, reply: "你沒有催促，牠最後自己挑了一件想玩的東西" },
   ] },
 ];
 const SIZE_STOPS = [20, 40, 70, 90];
@@ -863,7 +863,7 @@ function pickVariant(key, options) {
 function favoriteInteraction() {
   const entries = Object.entries(pet.interactionCounts || {}).sort((a, b) => b[1] - a[1]);
   if (!entries.length) return "";
-  const labels = { call: "呼喚牠", splash: "一起玩水", quiet: "安靜陪伴", wave: "打招呼", ball: "追海灘球", plant: "在椰子樹旁休息", light: "追池燈倒影", shell: "探索珍珠貝殼", duck: "看看小鴨", pet: "輕輕摸摸", feed: "餵牠吃東西", moment: "回應牠的心情" };
+  const labels = { call: "呼喚牠", splash: "一起玩水", quiet: "安靜陪伴", wave: "打招呼", ring: "抱著羽毛泳圈玩水", ball: "追海灘球", plant: "蹭蹭海藻刷", light: "追星光浮球", shell: "探索嗅聞貝盒", duck: "靠著浮冰枕休息", pet: "輕輕摸摸", feed: "餵牠吃東西", moment: "回應牠的心情" };
   return labels[entries[0][0]] || "陪在牠身邊";
 }
 
@@ -1384,7 +1384,7 @@ function waitForIdle(timeout = 1400) {
 }
 
 function backgroundPreloadAllowed() {
-  return !document.hidden && !interactionLock && !actionActive && !ringDrag;
+  return !document.hidden && !interactionLock && !actionActive && !decorationDrag;
 }
 
 async function waitForBackgroundPreloadWindow() {
@@ -3272,32 +3272,27 @@ function decorationStateKey(now = Date.now()) {
 }
 
 function renderDecorations() {
+  if (decorationDrag) return;
   const now = Date.now();
   const nextKey = decorationStateKey(now);
   if (nextKey === decorKey) return;
-  const focusedDecoration = document.activeElement?.closest?.("#decorations [data-pool-toy], #decorations [data-pool-feature]");
+  const focusedDecoration = document.activeElement?.closest?.("#decorations [data-pool-toy]");
   if (decorationFocusRestore && document.activeElement !== document.body && !focusedDecoration) decorationFocusRestore = null;
   const focusCandidate = focusedDecoration || decorationFocusRestore;
-  const focusedKind = focusCandidate?.dataset.poolToy ? "poolToy" : focusCandidate?.dataset.poolFeature ? "poolFeature" : "";
-  const focusedId = focusedKind ? focusCandidate.dataset[focusedKind] : "";
+  const focusedId = focusCandidate?.dataset.poolToy || "";
   decorKey = nextKey;
   $("decorations").innerHTML = DECOR.filter((item) => pet.active.includes(item.id))
     .map((item, index) => {
       const coolingDown = poolToyCoolingDown(item.id, now);
       if (item.id === "ring") {
-        return `<button class="pool-decor ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? "海豹正在休息，稍後再玩泳圈" : "拖曳泳圈給海豹，或按 Enter 一起玩"}"><img src="${doflamingoRing}?v=${ASSET_VERSION}" alt=""></button>`;
+        return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下互動`}"><img src="${doflamingoRing}?v=${ASSET_VERSION}" alt=""></button>`;
       }
-      if (item.id === "ball" || item.id === "duck") {
-        const action = item.id === "ball" ? "追海灘球" : "聞聞小鴨";
-        return `<button class="pool-decor ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="${item.id}" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，稍後再玩` : `點一下或拖到海豹身上，讓牠${action}`}"><span aria-hidden="true">${item.icon}</span></button>`;
-      }
-      const reaction = POOL_FEATURE_REACTIONS[item.id];
-      return `<button class="pool-decor pool-feature ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-feature="${item.id}" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，稍後再互動` : `點一下${item.name}，${reaction.instruction}`}"><span aria-hidden="true">${item.icon}</span></button>`;
+      const reaction = POOL_TOY_REACTIONS[item.id];
+      return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="${item.id}" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下${reaction.instruction}`}"><span aria-hidden="true">${item.icon}</span></button>`;
     })
     .join("");
   if (focusedId) {
-    const attribute = focusedKind === "poolToy" ? "data-pool-toy" : "data-pool-feature";
-    const replacement = $("decorations").querySelector(`[${attribute}="${focusedId}"]:not(:disabled)`);
+    const replacement = $("decorations").querySelector(`[data-pool-toy="${focusedId}"]:not(:disabled)`);
     if (replacement) {
       decorationFocusRestore = null;
       requestAnimationFrame(() => focusElement(replacement));
@@ -3307,7 +3302,7 @@ function renderDecorations() {
 
 function scheduleDecorationRefresh(delay = 0) {
   const refreshWhenIdle = () => {
-    if (ringDrag || poolToyDrag || interactionLock || actionActive) {
+    if (decorationDrag || interactionLock || actionActive) {
       setTimeout(refreshWhenIdle, 150);
       return;
     }
@@ -3444,7 +3439,7 @@ function renderDrawer(force = false) {
   }
   if (mode === "shop") {
     drawer.innerHTML =
-      '<div class="drawer-title"><div><small>泳池小屋</small><h2>佈置舒服的家</h2></div><span>離線每滿 6 小時獲得 1 幣</span></div><div class="shop-grid">' +
+      '<div class="drawer-title"><div><small>泳池小屋</small><h2>挑一件一起玩的道具</h2></div><span>每件都能拖到海豹身邊互動</span></div><div class="shop-grid">' +
       DECOR.map((item, index) => {
         const owned = pet.owned.includes(item.id);
         const active = pet.active.includes(item.id);
@@ -3605,7 +3600,7 @@ function syncInteractionState() {
     if (button) button.disabled = readOnly;
   });
   document.querySelectorAll("#drawer button, #decorations button, .bottom-nav button").forEach((button) => {
-    if (ringDrag?.ring === button || poolToyDrag?.toy === button) return;
+    if (decorationDrag?.toy === button) return;
     if (controlsBlocked && !button.disabled) {
       button.disabled = true;
       button.dataset.busyDisabled = "true";
@@ -3883,6 +3878,8 @@ function reactionDuration(kind, motion = "") {
   if (motion === "haul") return 7200;
   if (motion === "auto-rest") return coarsePointer ? 4600 : 6200;
   if (motion === "auto-sleep") return coarsePointer ? 3200 : 3600;
+  if (motion === "toy-ice") return coarsePointer ? 2400 : 2800;
+  if (motion.startsWith("toy-")) return coarsePointer ? 1500 : 1800;
   if (motion.startsWith("auto-")) return coarsePointer ? 2900 : 3400;
   if (kind === "eat") return coarsePointer ? 1250 : 1480;
   return coarsePointer ? 1000 : 1180;
@@ -4376,36 +4373,30 @@ let trailDistance = 0;
 let gesturePetTriggered = false;
 let pointerZone = "";
 let suppressClick = false;
-let ringDrag = null;
-let poolToyDrag = null;
+let decorationDrag = null;
 let activePetPointerId = null;
 
 function poolToyTouchesSeal(toy) {
   const toyRect = toy.getBoundingClientRect();
   const sealRect = $("seal").getBoundingClientRect();
+  if (toy.dataset.poolToy === "ring") {
+    const overlapX = Math.max(0, Math.min(toyRect.right, sealRect.right) - Math.max(toyRect.left, sealRect.left));
+    const overlapY = Math.max(0, Math.min(toyRect.bottom, sealRect.bottom) - Math.max(toyRect.top, sealRect.top));
+    return overlapX >= 32 && overlapY >= 32;
+  }
   const centerX = toyRect.left + toyRect.width / 2;
   const centerY = toyRect.top + toyRect.height / 2;
   return centerX >= sealRect.left + sealRect.width * 0.18 && centerX <= sealRect.right - sealRect.width * 0.18 && centerY >= sealRect.top + sealRect.height * 0.18 && centerY <= sealRect.bottom - sealRect.height * 0.12;
-}
-
-function ringTouchesSeal(ring) {
-  return poolToyTouchesSeal(ring);
-}
-
-function returnRingToPool(ring) {
-  ring.classList.remove("is-dragging");
-  ring.classList.add("is-returning");
-  ring.style.translate = "0px 0px";
-  setTimeout(() => ring.classList.remove("is-returning", "is-playing"), 620);
 }
 
 const POOL_TOY_REACTIONS = {
   ball: {
     icon: "🏖️",
     asset: "swim",
-    motion: "auto-swim",
-    line: "追著海灘球游了一圈，又把球推回你面前",
-    activity: "追著海灘球游了一圈",
+    motion: "toy-ball",
+    instruction: "讓牠用鼻尖頂球",
+    line: "用鼻尖把海灘球頂開，追上去後又推回你面前",
+    activity: "用鼻尖把海灘球推回來",
     affection: 4,
     energy: -3,
     fatigue: 8,
@@ -4413,43 +4404,27 @@ const POOL_TOY_REACTIONS = {
     sound: "water",
     soundDetail: "fin",
   },
-  duck: {
-    icon: "🦆",
-    asset: "sniff",
-    motion: "auto-explore",
-    line: "慢慢靠近小鴨聞了聞，再用鼻尖輕輕碰一下",
-    activity: "好奇地聞聞小鴨浮伴",
+  plant: {
+    icon: "🌿",
+    asset: "pet",
+    motion: "toy-kelp",
+    instruction: "讓牠蹭蹭柔軟海藻",
+    line: "先用鬍鬚碰了碰海藻刷，接著舒服地把臉頰靠上去",
+    activity: "舒服地蹭蹭軟質海藻刷",
     affection: 3,
     energy: -1,
-    fatigue: 5,
-    cooldown: 3800,
+    fatigue: 4,
+    cooldown: 4100,
     sound: "pet",
     soundDetail: "cheek",
   },
-};
-
-const POOL_FEATURE_REACTIONS = {
-  plant: {
-    icon: "🌴",
-    asset: "sleep",
-    motion: "auto-sleep",
-    instruction: "陪海豹到樹影旁休息",
-    line: "靠到椰子樹影旁，舒服地伸展身體",
-    activity: "在椰子樹影旁放鬆休息",
-    affection: 3,
-    energy: 5,
-    fatigue: -8,
-    cooldown: 4200,
-    sound: "sleep",
-    soundDetail: "quiet",
-  },
   light: {
     icon: "✨",
-    asset: "swim",
-    motion: "auto-swim",
-    instruction: "陪海豹追逐水面倒影",
-    line: "發現星星池燈的倒影，輕快地追著光游了一圈",
-    activity: "追著星星池燈的倒影游泳",
+    asset: "approach",
+    motion: "toy-light",
+    instruction: "讓牠追視閃亮浮球",
+    line: "盯著星光左右轉頭，最後用前鰭拍出一圈光紋",
+    activity: "追視星光感應浮球",
     affection: 4,
     energy: -2,
     fatigue: 6,
@@ -4460,16 +4435,30 @@ const POOL_FEATURE_REACTIONS = {
   shell: {
     icon: "🐚",
     asset: "sniff",
-    motion: "auto-explore",
-    instruction: "讓海豹探索珍珠貝殼",
-    line: "慢慢靠近珍珠貝殼，聞了聞再用鬍鬚輕碰一下",
-    activity: "用鬍鬚探索珍珠貝殼",
+    motion: "toy-scent",
+    instruction: "讓牠尋找貝盒氣味",
+    line: "沿著氣味找到貝盒，用鼻尖推了推，再抬頭看向你",
+    activity: "用鼻尖探索嗅聞貝盒",
     affection: 3,
     energy: -1,
     fatigue: 4,
     cooldown: 3900,
     sound: "pet",
     soundDetail: "cheek",
+  },
+  duck: {
+    icon: "🧊",
+    asset: "sleep",
+    motion: "toy-ice",
+    instruction: "讓牠靠著浮冰休息",
+    line: "摸了摸涼涼浮冰枕，最後把下巴靠上去安靜休息",
+    activity: "把下巴靠在涼涼浮冰枕上",
+    affection: 4,
+    energy: 5,
+    fatigue: -8,
+    cooldown: 4800,
+    sound: "sleep",
+    soundDetail: "quiet",
   },
 };
 
@@ -4478,12 +4467,11 @@ function preserveDecorationKeyboardFocus(decoration) {
   decorationFocusRestore = {
     dataset: {
       poolToy: decoration.dataset.poolToy || "",
-      poolFeature: decoration.dataset.poolFeature || "",
     },
   };
 }
 
-function returnPoolToyToWater(toy) {
+function returnDecorationToPool(toy) {
   toy.classList.remove("is-dragging", "is-over-seal");
   toy.classList.add("is-returning");
   toy.style.translate = "0px 0px";
@@ -4491,46 +4479,20 @@ function returnPoolToyToWater(toy) {
 }
 
 $("decorations").addEventListener("pointerdown", (event) => {
-  const ring = event.target.closest('[data-pool-toy="ring"]');
-  if (!event.isPrimary || ringDrag || poolToyDrag || !ring || pet.dead || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
-  if (Date.now() < ringInteractionAvailableAt) {
-    showNotice("讓牠先休息一下，等等再玩泳圈", "warning");
-    return;
-  }
-  ensureAudio(true);
-  const poolRect = $("pool").getBoundingClientRect();
-  const ringRect = ring.getBoundingClientRect();
-  ringDrag = {
-    ring,
-    pointerId: event.pointerId,
-    startX: event.clientX,
-    startY: event.clientY,
-    moved: false,
-    minX: poolRect.left - ringRect.left,
-    maxX: poolRect.right - ringRect.right,
-    minY: poolRect.top - ringRect.top,
-    maxY: poolRect.bottom - ringRect.bottom,
-    lockToken: 0,
-  };
-  ring.classList.remove("is-returning");
-  ring.classList.add("is-dragging");
-  ring.setPointerCapture?.(event.pointerId);
-  ringDrag.lockToken = setBusy(true);
-});
-
-$("decorations").addEventListener("pointerdown", (event) => {
-  const toy = event.target.closest('[data-pool-toy="ball"], [data-pool-toy="duck"]');
-  if (!event.isPrimary || ringDrag || poolToyDrag || !toy || pet.dead || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
+  const toy = event.target.closest("[data-pool-toy]");
+  const unsupportedMouseButton = event.pointerType === "mouse" && event.button !== 0;
+  if (!event.isPrimary || unsupportedMouseButton || decorationDrag || !toy || pet.dead || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
   const toyId = toy.dataset.poolToy;
   if (poolToyCoolingDown(toyId)) {
-    showNotice("讓牠先喘口氣，等等再玩這個玩具", "warning");
+    showNotice("讓牠先喘口氣，等等再玩這件道具", "warning");
     return;
   }
   ensureAudio(true);
   const poolRect = $("pool").getBoundingClientRect();
   const toyRect = toy.getBoundingClientRect();
-  poolToyDrag = {
+  decorationDrag = {
     toy,
+    toyId,
     pointerId: event.pointerId,
     startX: event.clientX,
     startY: event.clientY,
@@ -4543,39 +4505,72 @@ $("decorations").addEventListener("pointerdown", (event) => {
   };
   toy.classList.remove("is-returning");
   toy.classList.add("is-dragging");
-  toy.setPointerCapture?.(event.pointerId);
-  poolToyDrag.lockToken = setBusy(true);
-  event.preventDefault();
+  try {
+    toy.setPointerCapture?.(event.pointerId);
+  } catch {
+    // Pointer capture is optional; document-level cancellation still releases the lock.
+  }
+  decorationDrag.lockToken = setBusy(true);
 });
 
-$("decorations").addEventListener("pointermove", (event) => {
-  if (!ringDrag || event.pointerId !== ringDrag.pointerId) return;
-  const deltaX = event.clientX - ringDrag.startX;
-  const deltaY = event.clientY - ringDrag.startY;
-  if (Math.hypot(deltaX, deltaY) > 7) ringDrag.moved = true;
-  const x = Math.min(ringDrag.maxX, Math.max(ringDrag.minX, deltaX));
-  const y = Math.min(ringDrag.maxY, Math.max(ringDrag.minY, deltaY));
-  ringDrag.ring.style.translate = `${x}px ${y}px`;
-  ringDrag.ring.classList.toggle("is-over-seal", ringTouchesSeal(ringDrag.ring));
-  event.preventDefault();
+document.addEventListener("pointermove", (event) => {
+  if (!decorationDrag || event.pointerId !== decorationDrag.pointerId) return;
+  const deltaX = event.clientX - decorationDrag.startX;
+  const deltaY = event.clientY - decorationDrag.startY;
+  if (Math.hypot(deltaX, deltaY) > 7) decorationDrag.moved = true;
+  const x = Math.min(decorationDrag.maxX, Math.max(decorationDrag.minX, deltaX));
+  const y = Math.min(decorationDrag.maxY, Math.max(decorationDrag.minY, deltaY));
+  decorationDrag.toy.style.translate = `${x}px ${y}px`;
+  decorationDrag.toy.classList.toggle("is-over-seal", poolToyTouchesSeal(decorationDrag.toy));
+  if (decorationDrag.moved && event.cancelable) event.preventDefault();
 });
 
-$("decorations").addEventListener("pointermove", (event) => {
-  if (!poolToyDrag || event.pointerId !== poolToyDrag.pointerId) return;
-  const deltaX = event.clientX - poolToyDrag.startX;
-  const deltaY = event.clientY - poolToyDrag.startY;
-  if (Math.hypot(deltaX, deltaY) > 7) poolToyDrag.moved = true;
-  const x = Math.min(poolToyDrag.maxX, Math.max(poolToyDrag.minX, deltaX));
-  const y = Math.min(poolToyDrag.maxY, Math.max(poolToyDrag.minY, deltaY));
-  poolToyDrag.toy.style.translate = `${x}px ${y}px`;
-  poolToyDrag.toy.classList.toggle("is-over-seal", poolToyTouchesSeal(poolToyDrag.toy));
-  event.preventDefault();
-});
+function decorationCanUseLock(lockToken = 0) {
+  return lockToken
+    ? interactionLock && lockToken === interactionGeneration
+    : !interactionLock;
+}
+
+function setDecorationCoolingState(toy, toyId) {
+  const item = DECOR.find((entry) => entry.id === toyId);
+  toy.classList.add("is-playing", "is-cooling-down");
+  toy.disabled = true;
+  toy.setAttribute("aria-label", `${item?.name || "這件道具"}正在冷卻，讓海豹休息一下`);
+  delete toy.dataset.busyDisabled;
+}
+
+function createPoolToyInteractionVisual(toyId, icon, duration) {
+  const pool = $("pool");
+  const seal = $("seal");
+  if (!pool || !seal) return;
+  pool.querySelector(".toy-interaction-visual")?.remove();
+  const poolRect = pool.getBoundingClientRect();
+  const sealRect = seal.getBoundingClientRect();
+  const visual = document.createElement("span");
+  visual.className = "toy-interaction-visual";
+  visual.dataset.toy = toyId;
+  visual.textContent = icon;
+  visual.style.left = `${sealRect.left - poolRect.left + sealRect.width * 0.57}px`;
+  visual.style.top = `${sealRect.top - poolRect.top + sealRect.height * 0.57}px`;
+  visual.style.animationDuration = `${duration}ms`;
+  visual.setAttribute("aria-hidden", "true");
+  pool.appendChild(visual);
+  setTimeout(() => visual.remove(), duration + 120);
+}
+
+function releaseDecorationPointerCapture(drag) {
+  try {
+    if (drag.toy.hasPointerCapture?.(drag.pointerId)) drag.toy.releasePointerCapture?.(drag.pointerId);
+  } catch {
+    // The browser may already have released capture during cancellation.
+  }
+}
 
 function playWithRing(ring, lockToken = 0) {
-  if (!ring || pet.dead || actionActive || tabReadOnly || saveWriteProtected || Date.now() < ringInteractionAvailableAt) {
+  if (!ring || !decorationCanUseLock(lockToken) || pet.dead || actionActive || tabReadOnly || saveWriteProtected || Date.now() < ringInteractionAvailableAt) {
     if (lockToken) setBusy(false, lockToken);
-    return;
+    if (ring) returnDecorationToPool(ring);
+    return false;
   }
   const ringLock = lockToken || setBusy(true);
   preserveDecorationKeyboardFocus(ring);
@@ -4584,29 +4579,34 @@ function playWithRing(ring, lockToken = 0) {
   pet.affection = clamp(pet.affection + affectionGain);
   pet.interactionFatigue = clamp(pet.interactionFatigue + 7);
   pet.lifetime.ring += 1;
+  rememberInteraction("ring", "抱住羽毛泳圈玩水");
   updateDaily("play");
   checkAchievements();
   addActivity("play", "抱住 Doflamingo 羽毛泳圈玩水", "🦩");
-  ring.classList.add("is-playing", "is-cooling-down");
-  ring.disabled = true;
-  delete ring.dataset.busyDisabled;
+  setDecorationCoolingState(ring, "ring");
   decorKey = decorationStateKey();
-  showNotice(`海豹抱住 Doflamingo 羽毛泳圈玩水！信任度＋${affectionGain}${interactionRestCue()}`, "success");
+  const message = `${pet.name}抱住 Doflamingo 羽毛泳圈轉了半圈，舒服地把前鰭搭在上面`;
+  showNotice(`${message}！信任度＋${affectionGain}${interactionRestCue()}`, "success");
   render();
+  $("speech").textContent = message;
   react("pet", "🦩", "ring", "ring", "ring-play");
   sound("water", "fin");
   vibrate([12, 35, 12]);
   safeSave();
-  setTimeout(() => setBusy(false, ringLock), reactionDuration("pet", "ring-play"));
+  const duration = reactionDuration("pet", "ring-play");
+  setTimeout(() => returnDecorationToPool(ring), Math.min(520, duration));
+  setTimeout(() => setBusy(false, ringLock), duration);
   scheduleDecorationRefresh(4050);
+  return true;
 }
 
 function playWithPoolToy(toy, lockToken = 0) {
   const toyId = toy?.dataset.poolToy;
   const reaction = POOL_TOY_REACTIONS[toyId];
-  if (!toy || !reaction || pet.dead || actionActive || tabReadOnly || saveWriteProtected || poolToyCoolingDown(toyId)) {
+  if (!toy || !reaction || !decorationCanUseLock(lockToken) || pet.dead || actionActive || tabReadOnly || saveWriteProtected || poolToyCoolingDown(toyId)) {
     if (lockToken) setBusy(false, lockToken);
-    return;
+    if (toy) returnDecorationToPool(toy);
+    return false;
   }
   const toyLock = lockToken || setBusy(true);
   preserveDecorationKeyboardFocus(toy);
@@ -4619,112 +4619,61 @@ function playWithPoolToy(toy, lockToken = 0) {
   rememberInteraction(toyId, reaction.activity);
   updateDaily("play");
   addActivity("play", reaction.activity, reaction.icon);
-  toy.classList.add("is-playing", "is-cooling-down");
-  toy.disabled = true;
-  delete toy.dataset.busyDisabled;
+  setDecorationCoolingState(toy, toyId);
   decorKey = decorationStateKey();
   showNotice(`${message}！信任度＋${affectionGain}${interactionRestCue()}`, "success");
   render(true, true);
   $("speech").textContent = message;
   react("pet", reaction.icon, toyId, reaction.asset, reaction.motion);
+  const duration = reactionDuration("pet", reaction.motion);
+  createPoolToyInteractionVisual(toyId, reaction.icon, duration);
   sound(reaction.sound, reaction.soundDetail);
-  vibrate(toyId === "ball" ? [9, 26, 9] : 10);
-  setTimeout(() => toy.classList.remove("is-playing"), 680);
-  setTimeout(() => setBusy(false, toyLock), reactionDuration("pet", reaction.motion));
+  vibrate(toyId === "ball" || toyId === "light" ? [9, 26, 9] : 10);
+  setTimeout(() => returnDecorationToPool(toy), Math.min(720, Math.max(420, duration * 0.42)));
+  setTimeout(() => setBusy(false, toyLock), duration);
   scheduleDecorationRefresh(reaction.cooldown + 60);
+  return true;
 }
 
-function playWithPoolFeature(feature) {
-  const featureId = feature?.dataset.poolFeature;
-  const reaction = POOL_FEATURE_REACTIONS[featureId];
-  if (!feature || !reaction || pet.dead || interactionLock || actionActive || tabReadOnly || saveWriteProtected || poolToyCoolingDown(featureId)) return;
-  const featureLock = setBusy(true);
-  preserveDecorationKeyboardFocus(feature);
-  poolToyInteractionAvailableAt[featureId] = Date.now() + reaction.cooldown;
-  const affectionGain = interactionAffectionGain(reaction.affection);
-  pet.affection = clamp(pet.affection + affectionGain);
-  pet.energy = clamp(pet.energy + reaction.energy);
-  pet.interactionFatigue = clamp(pet.interactionFatigue + reaction.fatigue);
-  const message = `${pet.name}${reaction.line}`;
-  rememberInteraction(featureId, reaction.activity);
-  updateDaily("play");
-  addActivity("play", reaction.activity, reaction.icon);
-  feature.classList.add("is-playing", "is-cooling-down");
-  feature.disabled = true;
-  delete feature.dataset.busyDisabled;
-  decorKey = decorationStateKey();
-  showNotice(`${message}！信任度＋${affectionGain}${interactionRestCue()}`, "success");
-  render(true, true);
-  $("speech").textContent = message;
-  react("pet", reaction.icon, featureId, reaction.asset, reaction.motion);
-  sound(reaction.sound, reaction.soundDetail);
-  vibrate(featureId === "light" ? [8, 24, 8] : 9);
-  setTimeout(() => feature.classList.remove("is-playing"), 680);
-  setTimeout(() => setBusy(false, featureLock), reactionDuration("pet", reaction.motion));
-  scheduleDecorationRefresh(reaction.cooldown + 60);
+function playWithDecoration(toy, lockToken = 0) {
+  return toy?.dataset.poolToy === "ring"
+    ? playWithRing(toy, lockToken)
+    : playWithPoolToy(toy, lockToken);
 }
 
-function finishRingDrag(event) {
-  if (!ringDrag || event.pointerId !== ringDrag.pointerId) return;
-  const drag = ringDrag;
-  const ring = drag.ring;
-  const shouldPlay = !drag.moved || ringTouchesSeal(ring);
-  ring.classList.remove("is-over-seal");
-  ringDrag = null;
-  if (shouldPlay) playWithRing(ring, drag.lockToken);
-  else setBusy(false, drag.lockToken);
-  returnRingToPool(ring);
+function finishDecorationDrag(event) {
+  if (!decorationDrag || event.pointerId !== decorationDrag.pointerId) return;
+  const drag = decorationDrag;
+  const shouldPlay = !drag.moved || poolToyTouchesSeal(drag.toy);
+  decorationDrag = null;
+  drag.toy.classList.remove("is-over-seal");
+  releaseDecorationPointerCapture(drag);
+  if (shouldPlay) playWithDecoration(drag.toy, drag.lockToken);
+  else {
+    setBusy(false, drag.lockToken);
+    returnDecorationToPool(drag.toy);
+  }
 }
 
-function cancelRingDrag(event) {
-  if (!ringDrag || event.pointerId !== ringDrag.pointerId) return;
-  const drag = ringDrag;
-  const ring = drag.ring;
-  ringDrag = null;
-  ring.classList.remove("is-over-seal");
+function cancelDecorationDrag(event) {
+  if (!decorationDrag || (event?.pointerId != null && event.pointerId !== decorationDrag.pointerId)) return;
+  const drag = decorationDrag;
+  decorationDrag = null;
+  drag.toy.classList.remove("is-over-seal");
+  releaseDecorationPointerCapture(drag);
   setBusy(false, drag.lockToken);
-  returnRingToPool(ring);
+  returnDecorationToPool(drag.toy);
 }
 
-function finishPoolToyDrag(event) {
-  if (!poolToyDrag || event.pointerId !== poolToyDrag.pointerId) return;
-  const drag = poolToyDrag;
-  const toy = drag.toy;
-  const shouldPlay = !drag.moved || poolToyTouchesSeal(toy);
-  poolToyDrag = null;
-  if (shouldPlay) playWithPoolToy(toy, drag.lockToken);
-  else setBusy(false, drag.lockToken);
-  returnPoolToyToWater(toy);
-}
-
-function cancelPoolToyDrag(event) {
-  if (!poolToyDrag || event.pointerId !== poolToyDrag.pointerId) return;
-  const drag = poolToyDrag;
-  poolToyDrag = null;
-  setBusy(false, drag.lockToken);
-  returnPoolToyToWater(drag.toy);
-}
-
-$("decorations").addEventListener("pointerup", finishRingDrag);
-$("decorations").addEventListener("pointercancel", cancelRingDrag);
-$("decorations").addEventListener("lostpointercapture", cancelRingDrag);
-$("decorations").addEventListener("pointerup", finishPoolToyDrag);
-$("decorations").addEventListener("pointercancel", cancelPoolToyDrag);
-$("decorations").addEventListener("lostpointercapture", cancelPoolToyDrag);
+document.addEventListener("pointerup", finishDecorationDrag);
+document.addEventListener("pointercancel", cancelDecorationDrag);
+$("decorations").addEventListener("lostpointercapture", cancelDecorationDrag);
+window.addEventListener("blur", () => cancelDecorationDrag());
+window.addEventListener("pagehide", () => cancelDecorationDrag());
 $("decorations").addEventListener("click", (event) => {
-  const ring = event.target.closest('[data-pool-toy="ring"]');
-  if (!ring || event.detail !== 0 || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
-  playWithRing(ring);
-});
-$("decorations").addEventListener("click", (event) => {
-  const toy = event.target.closest('[data-pool-toy="ball"], [data-pool-toy="duck"]');
+  const toy = event.target.closest("[data-pool-toy]");
   if (!toy || event.detail !== 0 || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
-  playWithPoolToy(toy);
-});
-$("decorations").addEventListener("click", (event) => {
-  const feature = event.target.closest("[data-pool-feature]");
-  if (!feature || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
-  playWithPoolFeature(feature);
+  playWithDecoration(toy);
 });
 
 $("seal").addEventListener("pointerdown", (event) => {
@@ -4916,6 +4865,7 @@ window.addEventListener(
 document.addEventListener("visibilitychange", () => {
   const readOnly = tabReadOnly || saveWriteProtected;
   if (document.hidden) {
+    cancelDecorationDrag();
     suspendAudio();
     $("pool").classList.add("is-paused");
     if (threeState.running) {

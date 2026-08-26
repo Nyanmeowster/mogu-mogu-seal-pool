@@ -1037,6 +1037,12 @@ button:focus-visible {
   animation: interaction-ring-play 1.12s ease-in-out;
 }
 
+.pet-seal[data-motion="toy-ball"] { animation: toy-seal-ball 1.8s ease-in-out; }
+.pet-seal[data-motion="toy-kelp"] { animation: toy-seal-kelp 1.8s ease-in-out; }
+.pet-seal[data-motion="toy-light"] { animation: toy-seal-light 1.8s ease-in-out; }
+.pet-seal[data-motion="toy-scent"] { animation: toy-seal-scent 1.8s ease-in-out; }
+.pet-seal[data-motion="toy-ice"] { animation: toy-seal-ice 2.8s ease-in-out; }
+
 .pet-seal[data-motion="auto-swim"] { animation: autonomous-swim 4.2s ease-in-out; }
 .pet-seal[data-motion="auto-forage"] { animation: autonomous-forage 4.1s ease-in-out; }
 .pet-seal[data-motion="auto-explore"] { animation: autonomous-explore 4.2s ease-in-out; }
@@ -1189,6 +1195,7 @@ button:focus-visible {
   line-height: 1.35;
   text-align: center;
   overflow-wrap: anywhere;
+  pointer-events: none;
   transform: translateX(-50%);
   backdrop-filter: blur(8px);
 }
@@ -1291,6 +1298,7 @@ button:focus-visible {
 }
 
 .decor-ring.is-dragging {
+  z-index: 15;
   cursor: grabbing;
   filter: drop-shadow(0 13px 8px rgba(0, 70, 90, 0.24));
   animation: none;
@@ -1323,86 +1331,75 @@ button:focus-visible {
   animation: float-object 4.7s ease-in-out infinite reverse;
 }
 
-.decor-ball,
-.decor-duck {
+.pool-toy:not(.decor-ring) {
+  z-index: 11;
   padding: 0;
   border: 0;
   background: transparent;
   line-height: 1;
   cursor: grab;
   pointer-events: auto;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
 }
 
-.decor-ball > span,
-.decor-duck > span {
+.pool-toy > span {
   pointer-events: none;
 }
 
-.decor-ball:focus-visible,
-.decor-duck:focus-visible {
+.pool-toy:focus-visible {
   outline: 3px solid #fffdf4;
   outline-offset: 2px;
   box-shadow: 0 0 0 6px #174758;
 }
 
-.decor-ball.is-dragging,
-.decor-duck.is-dragging {
-  z-index: 12;
+.pool-toy:not(.decor-ring).is-dragging {
+  z-index: 15;
   cursor: grabbing;
   filter: drop-shadow(0 10px 7px rgba(0, 70, 90, 0.25));
   animation: none;
   scale: 1.1;
 }
 
-.decor-ball.is-over-seal,
-.decor-duck.is-over-seal {
+.pool-toy:not(.decor-ring).is-over-seal {
   filter: drop-shadow(0 0 10px rgba(255, 239, 137, 0.96));
   scale: 1.14;
 }
 
-.decor-ball.is-returning,
-.decor-duck.is-returning {
+.pool-toy:not(.decor-ring).is-returning {
   transition: translate 0.56s cubic-bezier(0.2, 0.9, 0.3, 1.15), scale 0.25s ease;
 }
 
-.decor-ball.is-playing,
-.decor-duck.is-playing {
+.pool-toy:not(.decor-ring).is-playing {
   animation: pool-toy-play-pop 0.62s ease-in-out;
   animation-delay: 0s;
 }
 
-.decor-ball.is-cooling-down,
-.decor-duck.is-cooling-down,
-.decor-ball:disabled,
-.decor-duck:disabled {
+.pool-toy:not(.decor-ring).is-cooling-down,
+.pool-toy:not(.decor-ring):disabled {
   cursor: wait;
   opacity: 0.7;
   filter: saturate(0.78) drop-shadow(0 4px 3px rgba(0, 70, 90, 0.12));
 }
 
-.decor-plant {
-  z-index: 2;
+.decor-kelp {
   top: 94px;
   left: 2%;
-  width: 84px;
-  height: 84px;
-  font-size: 68px;
+  width: 68px;
+  height: 68px;
+  font-size: 52px;
   transform-origin: 50% 100%;
   animation: plant-sway 6.4s ease-in-out infinite;
 }
 
-.decor-light {
-  z-index: 4;
+.decor-glow {
   top: 123px;
   right: 10%;
   font-size: 46px;
   animation: light-glow 3.8s ease-in-out infinite;
 }
 
-.decor-shell {
-  z-index: 7;
+.decor-scent {
   right: 21%;
   bottom: 49px;
   width: 56px;
@@ -1411,41 +1408,36 @@ button:focus-visible {
   animation: shell-rock 5.2s ease-in-out infinite;
 }
 
-.decor-duck {
-  left: 21%;
-  bottom: 88px;
+.decor-ice {
+  left: 46%;
+  bottom: 112px;
   width: 58px;
   height: 58px;
   font-size: 40px;
   animation: float-object 5.5s ease-in-out infinite;
 }
 
-.pool-feature {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  line-height: 1;
-  cursor: pointer;
-  pointer-events: auto;
-  touch-action: manipulation;
-  user-select: none;
-}
-
-.pool-feature > span {
+.toy-interaction-visual {
+  position: absolute;
+  z-index: 9;
+  display: grid;
+  width: clamp(52px, 14cqw, 76px);
+  height: clamp(52px, 14cqw, 76px);
+  place-items: center;
+  font-size: clamp(38px, 11cqw, 58px);
+  filter: drop-shadow(0 5px 4px rgba(0, 70, 90, 0.2));
   pointer-events: none;
+  translate: -50% -50%;
+  transform-origin: center;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
 }
 
-.pool-feature.is-playing {
-  animation: pool-toy-play-pop 0.62s ease-in-out;
-  animation-delay: 0s;
-}
-
-.pool-feature.is-cooling-down,
-.pool-feature:disabled {
-  cursor: wait;
-  opacity: 0.7;
-  filter: saturate(0.78) drop-shadow(0 4px 3px rgba(0, 70, 90, 0.12));
-}
+.toy-interaction-visual[data-toy="ball"] { animation-name: toy-visual-ball; }
+.toy-interaction-visual[data-toy="plant"] { animation-name: toy-visual-kelp; }
+.toy-interaction-visual[data-toy="light"] { animation-name: toy-visual-light; }
+.toy-interaction-visual[data-toy="shell"] { animation-name: toy-visual-scent; }
+.toy-interaction-visual[data-toy="duck"] { animation-name: toy-visual-ice; }
 
 .action-drawer {
   position: relative;
@@ -2482,6 +2474,78 @@ button:focus-visible {
   78% { transform: translate(4px, -3px) rotate(0.8deg); }
 }
 
+@keyframes toy-seal-ball {
+  0%, 100% { transform: translate(0) rotate(0); }
+  24% { transform: translate(15px, -5px) rotate(2deg); }
+  48% { transform: translate(-12px, -8px) rotate(-2deg); }
+  72% { transform: translate(9px, -3px) rotate(1deg); }
+}
+
+@keyframes toy-seal-kelp {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  30% { transform: translateX(-8px) rotate(-2.2deg) scale(1.01); }
+  58% { transform: translateX(7px) rotate(1.8deg) scale(0.995); }
+  82% { transform: translateX(-3px) rotate(-0.8deg); }
+}
+
+@keyframes toy-seal-light {
+  0%, 100% { transform: translate(0) rotate(0); }
+  22% { transform: translate(-10px, -7px) rotate(-2deg); }
+  48% { transform: translate(12px, -4px) rotate(2.4deg); }
+  74% { transform: translate(-4px, -9px) rotate(-0.8deg); }
+}
+
+@keyframes toy-seal-scent {
+  0%, 100% { transform: translate(0) rotate(0); }
+  28% { transform: translate(-11px, 4px) rotate(-2.5deg); }
+  52% { transform: translate(8px, -2px) rotate(1.8deg); }
+  76% { transform: translate(-3px, 2px) rotate(-0.7deg); }
+}
+
+@keyframes toy-seal-ice {
+  0%, 100% { transform: translateY(0) scale(1); }
+  20% { transform: translateY(-5px) scale(1.006); }
+  45%, 82% { transform: translateY(3px) scale(1.012, 0.988); }
+  64% { transform: translateY(1px) scale(1.008, 0.992); }
+}
+
+@keyframes toy-visual-ball {
+  0% { opacity: 0; transform: translate(-36px, 18px) rotate(-18deg) scale(0.7); }
+  24% { opacity: 1; transform: translate(10px, -12px) rotate(25deg) scale(1.08); }
+  52% { transform: translate(-18px, -4px) rotate(-12deg) scale(0.96); }
+  82% { opacity: 1; transform: translate(24px, 6px) rotate(32deg); }
+  100% { opacity: 0; transform: translate(38px, 14px) rotate(50deg) scale(0.78); }
+}
+
+@keyframes toy-visual-kelp {
+  0% { opacity: 0; transform: translate(18px, 8px) rotate(15deg) scale(0.72); }
+  24%, 76% { opacity: 1; transform: translate(-12px, 0) rotate(-12deg) scale(1.04); }
+  48% { transform: translate(5px, -4px) rotate(10deg) scale(0.98); }
+  100% { opacity: 0; transform: translate(20px, 9px) rotate(18deg) scale(0.76); }
+}
+
+@keyframes toy-visual-light {
+  0% { opacity: 0; transform: translate(-28px, 14px) scale(0.65); }
+  20% { opacity: 1; transform: translate(-12px, -20px) scale(1.12); }
+  48% { transform: translate(24px, -10px) scale(0.9); filter: drop-shadow(0 0 14px rgba(255, 239, 118, 0.95)); }
+  76% { opacity: 1; transform: translate(-4px, 12px) scale(1.08); }
+  100% { opacity: 0; transform: translate(-28px, 14px) scale(0.7); }
+}
+
+@keyframes toy-visual-scent {
+  0% { opacity: 0; transform: translate(24px, 12px) rotate(10deg) scale(0.7); }
+  25%, 70% { opacity: 1; transform: translate(-8px, 2px) rotate(-5deg) scale(1); }
+  48% { transform: translate(6px, -3px) rotate(4deg) scale(1.06); }
+  100% { opacity: 0; transform: translate(22px, 10px) rotate(9deg) scale(0.75); }
+}
+
+@keyframes toy-visual-ice {
+  0% { opacity: 0; transform: translate(18px, 15px) scale(0.72); }
+  22% { opacity: 1; transform: translate(3px, 6px) scale(1.04); }
+  42%, 82% { opacity: 1; transform: translate(-6px, 12px) rotate(-2deg) scale(1); }
+  100% { opacity: 0; transform: translate(14px, 16px) scale(0.76); }
+}
+
 @keyframes pool-toy-play-pop {
   0%, 100% { transform: translateY(0) rotate(0) scale(1); }
   35% { transform: translateY(-10px) rotate(-8deg) scale(1.16); }
@@ -2916,14 +2980,14 @@ button:focus-visible {
     height: clamp(138px, 46cqw, 184px);
   }
 
-  .decor-plant {
+  .decor-kelp {
     top: 82px;
     width: 66px;
     height: 66px;
     font-size: 53px;
   }
 
-  .decor-light {
+  .decor-glow {
     top: 106px;
   }
 
@@ -3144,6 +3208,7 @@ button:focus-visible {
   .water-caustics,
   .bubble-field i,
   .pool-decor,
+  .toy-interaction-visual,
   .big-hand,
   .loader-seal,
   .status-item,

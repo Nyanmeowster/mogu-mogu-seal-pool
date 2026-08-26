@@ -123,7 +123,7 @@ test("Doflamingo 泳圈會依海豹比例放大並切換專屬玩耍圖", () => 
   assert.match(script, /doflamingo-swim-ring-v1\.webp/);
   assert.match(script, /ring: sealStage5Ring/);
   assert.match(script, /<img src="\$\{doflamingoRing\}/);
-  assert.match(script, /function ringTouchesSeal\(ring\)/);
+  assert.match(script, /function poolToyTouchesSeal\(toy\)/);
   assert.match(script, /pointermove/);
   assert.match(script, /const affectionGain = interactionAffectionGain\(5\)/);
   assert.match(script, /pet\.affection = clamp\(pet\.affection \+ affectionGain\)/);
@@ -131,40 +131,79 @@ test("Doflamingo 泳圈會依海豹比例放大並切換專屬玩耍圖", () => 
   assert.match(script, /react\("pet", "🦩", "ring", "ring", "ring-play"\)/);
   assert.match(styles, /width: clamp\(150px, 42cqw, 220px\);/);
   assert.match(styles, /\.decor-ring\s*\{[\s\S]*?touch-action: pan-y;/);
-  assert.match(script, /moved: false,[\s\S]*?minX: poolRect\.left - ringRect\.left/);
-  assert.match(script, /const shouldPlay = !drag\.moved \|\| ringTouchesSeal\(ring\)/);
+  assert.match(script, /moved: false,[\s\S]*?minX: poolRect\.left - toyRect\.left/);
+  assert.match(script, /const shouldPlay = !drag\.moved \|\| poolToyTouchesSeal\(drag\.toy\)/);
   assert.match(styles, /\.decor-ring\.is-over-seal/);
+  assert.match(script, /if \(toy\.dataset\.poolToy === "ring"\)[\s\S]*?overlapX >= 32 && overlapY >= 32/);
+  assert.match(styles, /\.decor-ring\.is-dragging\s*\{[\s\S]*?z-index: 15;/);
   assert.match(styles, /@keyframes interaction-ring-play/);
 });
 
-test("海灘球與小鴨都能點擊、拖曳及用鍵盤和海豹玩", () => {
+test("六件道具都使用同一條點按、拖曳、鍵盤與取消路徑", () => {
   assert.match(script, /const POOL_TOY_REACTIONS = \{/);
-  assert.match(script, /ball: \{[\s\S]*?asset: "swim"[\s\S]*?sound: "water"/);
-  assert.match(script, /duck: \{[\s\S]*?asset: "sniff"[\s\S]*?sound: "pet"/);
+  assert.match(script, /let decorationDrag = null/);
+  assert.doesNotMatch(script, /ringDrag|poolToyDrag|POOL_FEATURE_REACTIONS|data-pool-feature|playWithPoolFeature/);
   assert.match(script, /data-pool-toy="\$\{item\.id\}"/);
+  assert.match(script, /closest\("\[data-pool-toy\]"\)/);
+  assert.match(script, /!event\.isPrimary/);
+  assert.match(script, /const unsupportedMouseButton = event\.pointerType === "mouse" && event\.button !== 0/);
+  assert.match(script, /unsupportedMouseButton \|\| decorationDrag/);
+  assert.match(script, /toy\.setPointerCapture\?\.\(event\.pointerId\)/);
+  assert.match(script, /Math\.hypot\(deltaX, deltaY\) > 7/);
   assert.match(script, /function playWithPoolToy\(toy, lockToken = 0\)/);
-  assert.match(script, /function finishPoolToyDrag\(event\)/);
-  assert.match(script, /!drag\.moved \|\| poolToyTouchesSeal\(toy\)/);
+  assert.match(script, /function finishDecorationDrag\(event\)/);
+  assert.match(script, /function cancelDecorationDrag\(event\)/);
+  assert.match(script, /!drag\.moved \|\| poolToyTouchesSeal\(drag\.toy\)/);
   assert.match(script, /event\.detail !== 0/);
-  assert.match(script, /ringDrag \|\| poolToyDrag/);
+  assert.match(script, /lostpointercapture/);
+  assert.match(script, /window\.addEventListener\("blur", \(\) => cancelDecorationDrag\(\)\)/);
+  assert.match(script, /window\.addEventListener\("pagehide", \(\) => cancelDecorationDrag\(\)\)/);
+  assert.match(script, /function releaseDecorationPointerCapture\(drag\)/);
   assert.match(script, /poolToyInteractionAvailableAt\[toyId\]/);
   assert.match(script, /delete toy\.dataset\.busyDisabled/);
   assert.match(script, /function scheduleDecorationRefresh\(delay = 0\)/);
-  assert.match(script, /if \(ringDrag \|\| poolToyDrag \|\| interactionLock \|\| actionActive\)/);
-  assert.match(styles, /\.decor-ball\.is-dragging/);
-  assert.match(styles, /\.decor-duck\.is-over-seal/);
+  assert.match(script, /if \(decorationDrag \|\| interactionLock \|\| actionActive\)/);
+  assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\s*\{[\s\S]*?pointer-events: auto;[\s\S]*?touch-action: pan-y;/);
+  assert.doesNotMatch(styles, /\.pool-toy[^{}]*\{[^}]*touch-action:\s*none/);
+  assert.match(styles, /\.pool-toy:focus-visible/);
+  assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\.is-dragging/);
+  assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\.is-dragging\s*\{[\s\S]*?z-index: 15;/);
+  assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\.is-over-seal/);
+  assert.match(styles, /\.decor-ice\s*\{[\s\S]*?left: 46%;[\s\S]*?bottom: 112px;/);
+  assert.match(styles, /\.notice\s*\{[\s\S]*?pointer-events: none;/);
   assert.match(styles, /@keyframes pool-toy-play-pop/);
 });
 
-test("椰子樹、池燈與貝殼都可點擊或用鍵盤觸發不同反應", () => {
-  assert.match(script, /const POOL_FEATURE_REACTIONS = \{/);
-  assert.match(script, /plant: \{[\s\S]*?asset: "sleep"[\s\S]*?motion: "auto-sleep"/);
-  assert.match(script, /light: \{[\s\S]*?asset: "swim"[\s\S]*?motion: "auto-swim"/);
-  assert.match(script, /shell: \{[\s\S]*?asset: "sniff"[\s\S]*?motion: "auto-explore"/);
-  assert.match(script, /data-pool-feature="\$\{item\.id\}"/);
-  assert.match(script, /function playWithPoolFeature\(feature\)/);
-  assert.match(script, /closest\("\[data-pool-feature\]"\)/);
-  assert.match(styles, /\.pool-feature\s*\{[\s\S]*?pointer-events: auto;/);
+test("非泳圈道具有五種不同的名稱、圖像、動作與近身視覺", () => {
+  const expectations = [
+    ["ball", "海灘球", "swim", "toy-ball", "toy-visual-ball"],
+    ["plant", "軟質海藻刷", "pet", "toy-kelp", "toy-visual-kelp"],
+    ["light", "星光感應浮球", "approach", "toy-light", "toy-visual-light"],
+    ["shell", "嗅聞貝盒", "sniff", "toy-scent", "toy-visual-scent"],
+    ["duck", "涼涼浮冰枕", "sleep", "toy-ice", "toy-visual-ice"],
+  ];
+  for (const [id, name, asset, motion, visual] of expectations) {
+    assert.match(script, new RegExp(`\\{ id: "${id}"[^\\n]+name: "${name}"`));
+    assert.match(script, new RegExp(`${id}: \\{[\\s\\S]*?asset: "${asset}"[\\s\\S]*?motion: "${motion}"`));
+    assert.match(styles, new RegExp(`\\.pet-seal\\[data-motion="${motion}"\\]`));
+    assert.match(styles, new RegExp(`@keyframes ${visual}`));
+  }
+  assert.match(script, /function createPoolToyInteractionVisual\(toyId, icon, duration\)/);
+  assert.match(script, /visual\.setAttribute\("aria-hidden", "true"\)/);
+  assert.match(styles, /\.toy-interaction-visual\s*\{[\s\S]*?pointer-events: none;/);
+});
+
+test("每件道具的可及名稱、冷卻與鍵盤回饋一致", () => {
+  assert.match(script, /type="button"[^\n]+aria-label="\$\{coolingDown/);
+  assert.match(script, /拖到海豹身邊，或按一下/);
+  assert.match(script, /function setDecorationCoolingState\(toy, toyId\)/);
+  assert.match(script, /toy\.disabled = true/);
+  assert.match(script, /toy\.setAttribute\("aria-label", `\$\{item\?\.name \|\| "這件道具"\}正在冷卻/);
+  assert.match(script, /event\.detail !== 0/);
+  assert.match(script, /function preserveDecorationKeyboardFocus\(decoration\)/);
+  assert.match(script, /requestAnimationFrame\(\(\) => focusElement\(replacement\)\)/);
+  assert.match(script, /<span aria-hidden="true">\$\{item\.icon\}<\/span>/);
+  assert.match(script, /<img src="\$\{doflamingoRing\}[^>]+alt="">/);
 });
 
 test("海豹會依作息、個性與身體狀況自主活動", () => {
@@ -218,8 +257,9 @@ test("手機觸控限制單一指標並安全處理取消事件", () => {
   assert.match(html, /viewport-fit=cover/);
   assert.match(script, /!event\.isPrimary/);
   assert.match(script, /activePetPointerId/);
-  assert.match(script, /function cancelRingDrag\(event\)/);
+  assert.match(script, /function cancelDecorationDrag\(event\)/);
   assert.match(script, /lostpointercapture/);
+  assert.match(script, /pagehide/);
   assert.match(styles, /@media \(max-width: 360px\)/);
 });
 
