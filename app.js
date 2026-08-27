@@ -10,6 +10,11 @@ import sealStage1Sleep from "./assets/seal-stage-1-sleep-v1-aligned-v1.webp";
 import sealStage1Sniff from "./assets/seal-stage-1-sniff-v1-aligned-v1.webp";
 import sealStage1Approach from "./assets/seal-stage-1-approach-v1-aligned-v1.webp";
 import sealStage1Space from "./assets/seal-stage-1-space-v1-aligned-v1.webp";
+import sealStage1Ball from "./assets/seal-stage-1-toy-ball-v2.webp";
+import sealStage1Kelp from "./assets/seal-stage-1-toy-kelp-v2.webp";
+import sealStage1Glow from "./assets/seal-stage-1-toy-glow-v2.webp";
+import sealStage1Scent from "./assets/seal-stage-1-toy-scent-v2.webp";
+import sealStage1Ice from "./assets/seal-stage-1-toy-ice-v2.webp";
 import sealStage2Idle from "./assets/seal-stage-2-aligned-v1.webp";
 import sealStage2Eat from "./assets/seal-stage-2-eat-aligned-v1.webp";
 import sealStage2Chew from "./assets/seal-stage-2-eat-closed-v2-aligned-v1.webp";
@@ -22,6 +27,11 @@ import sealStage2Sleep from "./assets/seal-stage-2-sleep-v1-aligned-v1.webp";
 import sealStage2Sniff from "./assets/seal-stage-2-sniff-v1-aligned-v1.webp";
 import sealStage2Approach from "./assets/seal-stage-2-approach-v1-aligned-v1.webp";
 import sealStage2Space from "./assets/seal-stage-2-space-v1-aligned-v1.webp";
+import sealStage2Ball from "./assets/seal-stage-2-toy-ball-v2.webp";
+import sealStage2Kelp from "./assets/seal-stage-2-toy-kelp-v2.webp";
+import sealStage2Glow from "./assets/seal-stage-2-toy-glow-v2.webp";
+import sealStage2Scent from "./assets/seal-stage-2-toy-scent-v2.webp";
+import sealStage2Ice from "./assets/seal-stage-2-toy-ice-v2.webp";
 import sealStage3Idle from "./assets/seal-stage-3-aligned-v1.webp";
 import sealStage3Eat from "./assets/seal-stage-3-eat-aligned-v1.webp";
 import sealStage3Chew from "./assets/seal-stage-3-eat-closed-v2-aligned-v1.webp";
@@ -34,6 +44,11 @@ import sealStage3Sleep from "./assets/seal-stage-3-sleep-v1-aligned-v1.webp";
 import sealStage3Sniff from "./assets/seal-stage-3-sniff-v1-aligned-v1.webp";
 import sealStage3Approach from "./assets/seal-stage-3-approach-v1-aligned-v1.webp";
 import sealStage3Space from "./assets/seal-stage-3-space-v1-aligned-v1.webp";
+import sealStage3Ball from "./assets/seal-stage-3-toy-ball-v2.webp";
+import sealStage3Kelp from "./assets/seal-stage-3-toy-kelp-v2.webp";
+import sealStage3Glow from "./assets/seal-stage-3-toy-glow-v2.webp";
+import sealStage3Scent from "./assets/seal-stage-3-toy-scent-v2.webp";
+import sealStage3Ice from "./assets/seal-stage-3-toy-ice-v2.webp";
 import sealStage4Idle from "./assets/seal-stage-4-aligned-v1.webp";
 import sealStage4Eat from "./assets/seal-stage-4-eat-aligned-v1.webp";
 import sealStage4Chew from "./assets/seal-stage-4-eat-closed-v2-aligned-v1.webp";
@@ -46,6 +61,11 @@ import sealStage4Sleep from "./assets/seal-stage-4-sleep-v1-aligned-v1.webp";
 import sealStage4Sniff from "./assets/seal-stage-4-sniff-v1-aligned-v1.webp";
 import sealStage4Approach from "./assets/seal-stage-4-approach-v1-aligned-v1.webp";
 import sealStage4Space from "./assets/seal-stage-4-space-v1-aligned-v1.webp";
+import sealStage4Ball from "./assets/seal-stage-4-toy-ball-v2.webp";
+import sealStage4Kelp from "./assets/seal-stage-4-toy-kelp-v2.webp";
+import sealStage4Glow from "./assets/seal-stage-4-toy-glow-v2.webp";
+import sealStage4Scent from "./assets/seal-stage-4-toy-scent-v2.webp";
+import sealStage4Ice from "./assets/seal-stage-4-toy-ice-v2.webp";
 import sealStage5Idle from "./assets/seal-stage-5-aligned-v1.webp";
 import sealStage5Eat from "./assets/seal-stage-5-eat-aligned-v1.webp";
 import sealStage5Chew from "./assets/seal-stage-5-eat-closed-v2-aligned-v1.webp";
@@ -58,15 +78,25 @@ import sealStage5Sleep from "./assets/seal-stage-5-sleep-v1-aligned-v1.webp";
 import sealStage5Sniff from "./assets/seal-stage-5-sniff-v1-aligned-v1.webp";
 import sealStage5Approach from "./assets/seal-stage-5-approach-v1-aligned-v1.webp";
 import sealStage5Space from "./assets/seal-stage-5-space-v1-aligned-v1.webp";
+import sealStage5Ball from "./assets/seal-stage-5-toy-ball-v2.webp";
+import sealStage5Kelp from "./assets/seal-stage-5-toy-kelp-v2.webp";
+import sealStage5Glow from "./assets/seal-stage-5-toy-glow-v2.webp";
+import sealStage5Scent from "./assets/seal-stage-5-toy-scent-v2.webp";
+import sealStage5Ice from "./assets/seal-stage-5-toy-ice-v2.webp";
 import poolBackground from "./assets/pool-background-cover-v1.jpg";
 import doflamingoRing from "./assets/doflamingo-swim-ring-v1.webp";
+import poolToyBall from "./assets/pool-toy-ball-v2.webp";
+import poolToyKelp from "./assets/pool-toy-kelp-v2.webp";
+import poolToyGlow from "./assets/pool-toy-glow-v2.webp";
+import poolToyScent from "./assets/pool-toy-scent-v2.webp";
+import poolToyIce from "./assets/pool-toy-ice-v2.webp";
 
 const HOUR = 36e5;
 const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
 const SAVE_BACKUP_KEY = "mogu-pet-v1-backup";
 const SAVE_SCHEMA_VERSION = 6;
-const ASSET_VERSION = "38";
+const ASSET_VERSION = "45";
 const COIN_INTERVAL = 6 * HOUR;
 const PREVIEW_DEAD = new URLSearchParams(location.search).get("preview") === "dead";
 const QUERY_PARAMS = new URLSearchParams(location.search);
@@ -111,12 +141,12 @@ const EXPRESSION_MORPHS = [
 ];
 
 const DECOR = [
-  { id: "ring", icon: "🦩", name: "Doflamingo 羽毛泳圈", price: 4, className: "decor-ring" },
-  { id: "ball", icon: "🏖️", name: "海灘球", price: 7, className: "decor-ball" },
-  { id: "plant", icon: "🌿", name: "軟質海藻刷", price: 12, className: "decor-kelp" },
-  { id: "light", icon: "✨", name: "星光感應浮球", price: 18, className: "decor-glow" },
-  { id: "shell", icon: "🐚", name: "嗅聞貝盒", price: 22, className: "decor-scent" },
-  { id: "duck", icon: "🧊", name: "涼涼浮冰枕", price: 30, className: "decor-ice" },
+  { id: "ring", icon: "🦩", name: "Doflamingo 羽毛泳圈", price: 4, className: "decor-ring", asset: doflamingoRing },
+  { id: "ball", icon: "🏖️", name: "海灘球", price: 7, className: "decor-ball", asset: poolToyBall },
+  { id: "plant", icon: "🌿", name: "軟質海藻刷", price: 12, className: "decor-kelp", asset: poolToyKelp },
+  { id: "light", icon: "✨", name: "星光感應浮球", price: 18, className: "decor-glow", asset: poolToyGlow },
+  { id: "shell", icon: "🐚", name: "嗅聞貝盒", price: 22, className: "decor-scent", asset: poolToyScent },
+  { id: "duck", icon: "🧊", name: "涼涼浮冰枕", price: 30, className: "decor-ice", asset: poolToyIce },
 ];
 
 const FOODS = [
@@ -207,15 +237,15 @@ const DAILY_MOMENTS = [
   ] },
   { id: "ring-day", requiresOwned: "ring", prompt: "牠繞著羽毛泳圈游了兩圈，像是在邀請你。", choices: [
     { id: "ring-play", label: "把泳圈推近", icon: "🦩", asset: "ring", motion: "ring-play", affection: 5, energy: -3, reply: "牠抱住羽毛泳圈轉了一圈，開心地拍起水花" },
-    { id: "ring-watch", label: "讓牠慢慢靠近", icon: "🤍", asset: "approach", motion: "auto-approach", affection: 4, energy: 1, reply: "牠確認泳圈很安全，才放心把前鰭靠上去" },
+    { id: "ring-watch", label: "讓牠慢慢靠近", icon: "🤍", asset: "ring", motion: "ring-play", affection: 4, energy: 1, reply: "牠確認泳圈很安全，才放心把前鰭靠上去" },
   ] },
   { id: "ball-day", requiresOwned: "ball", prompt: "海灘球漂到牠面前，牠用鼻尖輕輕頂了一下。", choices: [
-    { id: "ball-play", label: "把球滾回去", icon: "🏖️", asset: "swim", motion: "auto-swim", affection: 5, energy: -3, reply: "牠追上小球，又得意地把球推回你面前" },
-    { id: "ball-wait", label: "等牠主動玩", icon: "🫧", asset: "approach", motion: "auto-approach", affection: 4, energy: 0, reply: "牠想了一會兒，最後自己把球頂向池中央" },
+    { id: "ball-play", label: "把球滾回去", icon: "🏖️", asset: "ball", motion: "toy-ball", affection: 5, energy: -3, reply: "牠追上小球，又得意地把球推回你面前" },
+    { id: "ball-wait", label: "等牠主動玩", icon: "🫧", asset: "ball", motion: "toy-ball", affection: 4, energy: 0, reply: "牠想了一會兒，最後自己把球頂向池中央" },
   ] },
   { id: "duck-day", requiresOwned: "duck", prompt: "涼涼浮冰枕漂到岩台旁，牠慢慢把下巴靠近。", choices: [
-    { id: "duck-meet", label: "把浮冰枕推近", icon: "🧊", asset: "sleep", motion: "auto-sleep", affection: 5, energy: 5, reply: "牠摸摸浮冰枕，最後安心地把下巴靠了上去" },
-    { id: "duck-space", label: "讓牠自己決定", icon: "🌊", asset: "approach", motion: "auto-approach", affection: 4, energy: 2, reply: "牠繞著浮冰枕看了一圈，才選好最舒服的位置" },
+    { id: "duck-meet", label: "把浮冰枕推近", icon: "🧊", asset: "ice", motion: "toy-ice", affection: 5, energy: 5, reply: "牠摸摸浮冰枕，最後安心地把下巴靠了上去" },
+    { id: "duck-space", label: "讓牠自己決定", icon: "🌊", asset: "ice", motion: "toy-ice", affection: 4, energy: 2, reply: "牠繞著浮冰枕看了一圈，才選好最舒服的位置" },
   ] },
   { id: "decor-day", ownedAny: ["plant", "light", "shell"], prompt: "牠注意到泳池裡的感官玩具，停下來等你一起玩。", choices: [
     { id: "decor-look", label: "挑一件推過去", icon: "🔎", asset: "sniff", motion: "auto-explore", affection: 4, energy: -1, reply: "牠放心靠近玩具，用鬍鬚和鼻尖認真研究了一會兒" },
@@ -225,15 +255,41 @@ const DAILY_MOMENTS = [
 const SIZE_STOPS = [20, 40, 70, 90];
 const SPRITE_ASSETS = [
   null,
-  { idle: sealStage1Idle, eat: sealStage1Eat, chew: sealStage1Chew, pet: sealStage1Pet, walk: sealStage1Walk, ring: sealStage1Ring, swim: sealStage1Swim, haul: sealStage1Haul, sleep: sealStage1Sleep, sniff: sealStage1Sniff, approach: sealStage1Approach, space: sealStage1Space },
-  { idle: sealStage2Idle, eat: sealStage2Eat, chew: sealStage2Chew, pet: sealStage2Pet, walk: sealStage2Walk, ring: sealStage2Ring, swim: sealStage2Swim, haul: sealStage2Haul, sleep: sealStage2Sleep, sniff: sealStage2Sniff, approach: sealStage2Approach, space: sealStage2Space },
-  { idle: sealStage3Idle, eat: sealStage3Eat, chew: sealStage3Chew, pet: sealStage3Pet, walk: sealStage3Walk, ring: sealStage3Ring, swim: sealStage3Swim, haul: sealStage3Haul, sleep: sealStage3Sleep, sniff: sealStage3Sniff, approach: sealStage3Approach, space: sealStage3Space },
-  { idle: sealStage4Idle, eat: sealStage4Eat, chew: sealStage4Chew, pet: sealStage4Pet, walk: sealStage4Walk, ring: sealStage4Ring, swim: sealStage4Swim, haul: sealStage4Haul, sleep: sealStage4Sleep, sniff: sealStage4Sniff, approach: sealStage4Approach, space: sealStage4Space },
-  { idle: sealStage5Idle, eat: sealStage5Eat, chew: sealStage5Chew, pet: sealStage5Pet, walk: sealStage5Walk, ring: sealStage5Ring, swim: sealStage5Swim, haul: sealStage5Haul, sleep: sealStage5Sleep, sniff: sealStage5Sniff, approach: sealStage5Approach, space: sealStage5Space },
+  {
+    idle: sealStage1Idle, eat: sealStage1Eat, chew: sealStage1Chew, pet: sealStage1Pet, walk: sealStage1Walk,
+    ring: sealStage1Ring, swim: sealStage1Swim, haul: sealStage1Haul, sleep: sealStage1Sleep,
+    sniff: sealStage1Sniff, approach: sealStage1Approach, space: sealStage1Space,
+    ball: sealStage1Ball, kelp: sealStage1Kelp, glow: sealStage1Glow, scent: sealStage1Scent, ice: sealStage1Ice,
+  },
+  {
+    idle: sealStage2Idle, eat: sealStage2Eat, chew: sealStage2Chew, pet: sealStage2Pet, walk: sealStage2Walk,
+    ring: sealStage2Ring, swim: sealStage2Swim, haul: sealStage2Haul, sleep: sealStage2Sleep,
+    sniff: sealStage2Sniff, approach: sealStage2Approach, space: sealStage2Space,
+    ball: sealStage2Ball, kelp: sealStage2Kelp, glow: sealStage2Glow, scent: sealStage2Scent, ice: sealStage2Ice,
+  },
+  {
+    idle: sealStage3Idle, eat: sealStage3Eat, chew: sealStage3Chew, pet: sealStage3Pet, walk: sealStage3Walk,
+    ring: sealStage3Ring, swim: sealStage3Swim, haul: sealStage3Haul, sleep: sealStage3Sleep,
+    sniff: sealStage3Sniff, approach: sealStage3Approach, space: sealStage3Space,
+    ball: sealStage3Ball, kelp: sealStage3Kelp, glow: sealStage3Glow, scent: sealStage3Scent, ice: sealStage3Ice,
+  },
+  {
+    idle: sealStage4Idle, eat: sealStage4Eat, chew: sealStage4Chew, pet: sealStage4Pet, walk: sealStage4Walk,
+    ring: sealStage4Ring, swim: sealStage4Swim, haul: sealStage4Haul, sleep: sealStage4Sleep,
+    sniff: sealStage4Sniff, approach: sealStage4Approach, space: sealStage4Space,
+    ball: sealStage4Ball, kelp: sealStage4Kelp, glow: sealStage4Glow, scent: sealStage4Scent, ice: sealStage4Ice,
+  },
+  {
+    idle: sealStage5Idle, eat: sealStage5Eat, chew: sealStage5Chew, pet: sealStage5Pet, walk: sealStage5Walk,
+    ring: sealStage5Ring, swim: sealStage5Swim, haul: sealStage5Haul, sleep: sealStage5Sleep,
+    sniff: sealStage5Sniff, approach: sealStage5Approach, space: sealStage5Space,
+    ball: sealStage5Ball, kelp: sealStage5Kelp, glow: sealStage5Glow, scent: sealStage5Scent, ice: sealStage5Ice,
+  },
 ];
 const $ = (id) => document.getElementById(id);
 const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 const spriteAsset = (stageNumber, action = "idle") => `${SPRITE_ASSETS[stageNumber][action]}?v=${ASSET_VERSION}`;
+const COMPOSITE_TOY_ASSETS = new Set(["ring", "ball", "kelp", "glow", "scent", "ice"]);
 document.documentElement.style.setProperty("--pool-background", `url("${poolBackground}?v=${ASSET_VERSION}")`);
 
 function localDayKey(stamp = Date.now()) {
@@ -1262,7 +1318,11 @@ function chooseAutonomousBehavior() {
     return { id: "forage", asset: "sniff", icon: "🐟", line: "牠正在水邊嗅聞，尋找熟悉的食物氣味", duration: 4200 };
   }
   if (pet.active.length && (profile.id === "curious" || Math.random() < 0.45)) {
-    return { id: "explore", asset: "sniff", icon: "✨", line: "牠主動靠近泳池玩具研究了一會兒", duration: 4400 };
+    const activeToys = pet.active.filter((id) => id === "ring" || POOL_TOY_REACTIONS[id]);
+    const toyId = activeToys[Math.floor(Math.random() * activeToys.length)];
+    if (toyId === "ring") return { id: "explore", asset: "ring", motion: "ring-play", icon: "🦩", line: "牠主動抱住羽毛泳圈，舒服地漂了一會兒", duration: 4400 };
+    const reaction = POOL_TOY_REACTIONS[toyId];
+    if (reaction) return { id: "explore", asset: reaction.asset, motion: reaction.motion, icon: reaction.icon, line: `牠主動${reaction.activity}`, duration: 4400 };
   }
   if (pet.affection > 55 && (profile.id === "gentle" || Math.random() < 0.5)) {
     return { id: "approach", asset: "approach", icon: "🤍", line: "牠認出你了，主動游過來靠近", duration: 4000 };
@@ -1276,7 +1336,7 @@ function runAutonomousBehavior() {
   autonomousMood = behavior.id;
   autonomousUntil = Date.now() + behavior.duration;
   $("speech").textContent = behavior.line;
-  react("pet", behavior.icon, "autonomous", behavior.asset, `auto-${behavior.id}`);
+  react("pet", behavior.icon, "autonomous", behavior.asset, behavior.motion || `auto-${behavior.id}`);
   if (behavior.id === "swim") sound("water");
   setTimeout(() => {
     if (Date.now() >= autonomousUntil) autonomousMood = "idle";
@@ -1350,6 +1410,11 @@ async function preloadEssentialAssets() {
   const baseUrls = [
     `${poolBackground}?v=${ASSET_VERSION}`,
     `${doflamingoRing}?v=${ASSET_VERSION}`,
+    `${poolToyBall}?v=${ASSET_VERSION}`,
+    `${poolToyKelp}?v=${ASSET_VERSION}`,
+    `${poolToyGlow}?v=${ASSET_VERSION}`,
+    `${poolToyScent}?v=${ASSET_VERSION}`,
+    `${poolToyIce}?v=${ASSET_VERSION}`,
   ];
   const total = baseUrls.length + Object.keys(SPRITE_ASSETS[current]).length;
   let completed = 0;
@@ -3285,10 +3350,10 @@ function renderDecorations() {
     .map((item, index) => {
       const coolingDown = poolToyCoolingDown(item.id, now);
       if (item.id === "ring") {
-        return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下互動`}"><img src="${doflamingoRing}?v=${ASSET_VERSION}" alt=""></button>`;
+        return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下互動`}"><img src="${item.asset}?v=${ASSET_VERSION}" alt=""></button>`;
       }
       const reaction = POOL_TOY_REACTIONS[item.id];
-      return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="${item.id}" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下${reaction.instruction}`}"><span aria-hidden="true">${item.icon}</span></button>`;
+      return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="${item.id}" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下${reaction.instruction}`}"><img src="${item.asset}?v=${ASSET_VERSION}" alt=""></button>`;
     })
     .join("");
   if (focusedId) {
@@ -3443,7 +3508,7 @@ function renderDrawer(force = false) {
       DECOR.map((item, index) => {
         const owned = pet.owned.includes(item.id);
         const active = pet.active.includes(item.id);
-        return `<button data-decor="${index}" class="${active ? "is-active" : owned ? "is-owned" : ""}" aria-label="${item.name}，${owned ? (active ? "目前使用中" : "已擁有") : `${item.price} 枚海豹幣`}"><b aria-hidden="true">${item.icon}</b><span>${item.name}</span><small>${owned ? (active ? "使用中・點擊收起" : "已擁有・點擊擺上") : `🪙 ${item.price}`}</small></button>`;
+        return `<button data-decor="${index}" class="${active ? "is-active" : owned ? "is-owned" : ""}" aria-label="${item.name}，${owned ? (active ? "目前使用中" : "已擁有") : `${item.price} 枚海豹幣`}"><img src="${item.asset}?v=${ASSET_VERSION}" alt=""><span>${item.name}</span><small>${owned ? (active ? "使用中・點擊收起" : "已擁有・點擊擺上") : `🪙 ${item.price}`}</small></button>`;
       }).join("") +
       "</div>";
   }
@@ -3930,6 +3995,7 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
   const roamer = $("seal-roamer");
   const actionAsset = visualAsset || (kind === "eat" ? "eat" : "pet");
   roamer.classList.add("reacting");
+  $("decorations").classList.toggle("is-composite-interaction", COMPOSITE_TOY_ASSETS.has(actionAsset));
   setActionSprite(actionAsset);
   if (kind === "eat") {
     $("seal-jaw-sprite").style.backgroundImage = `url("${spriteAsset(currentStage || stage(), "chew")}")`;
@@ -3963,6 +4029,7 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
     delete seal.dataset.motion;
     roamer.classList.remove("reacting");
     roamer.classList.remove("resting-on-rock");
+    $("decorations").classList.remove("is-composite-interaction");
     seal.style.removeProperty("animation-duration");
     actionActive = "";
   }, duration);
@@ -4138,16 +4205,25 @@ function resolveDailyMoment(choiceId) {
   const moment = DAILY_MOMENTS.find((item) => item.id === pet.dailyMoment?.id);
   const choice = moment?.choices.find((item) => item.id === choiceId);
   if (!choice) return;
-  playInteractionSequence({ icon: choice.icon, zone: choice.id, asset: choice.asset, motion: choice.motion, mainDuration: choice.motion === "haul" ? 7200 : 4300, onComplete: () => advanceOnboarding(1), onMain: () => {
+  let icon = choice.icon;
+  let asset = choice.asset;
+  let motion = choice.motion;
+  if (moment.id === "decor-day") {
+    const toyId = ["plant", "light", "shell"].find((id) => pet.active.includes(id))
+      || ["plant", "light", "shell"].find((id) => pet.owned.includes(id));
+    const reaction = POOL_TOY_REACTIONS[toyId];
+    if (reaction) ({ icon, asset, motion } = reaction);
+  }
+  playInteractionSequence({ icon, zone: choice.id, asset, motion, mainDuration: motion === "haul" ? 7200 : 4300, onComplete: () => advanceOnboarding(1), onMain: () => {
     pet.dailyMoment.choice = choice.id;
     pet.affection = clamp(pet.affection + interactionAffectionGain(choice.affection));
     pet.energy = clamp(pet.energy + choice.energy);
-    pet.interactionFatigue = clamp(pet.interactionFatigue + (choice.asset === "sleep" ? -10 : 5));
+    pet.interactionFatigue = clamp(pet.interactionFatigue + (asset === "sleep" || asset === "ice" ? -10 : 5));
     rememberInteraction("moment", choice.reply);
     updateDaily("play");
-    addActivity("play", choice.reply, choice.icon);
+    addActivity("play", choice.reply, icon);
     showNotice(`${choice.reply}${interactionRestCue()}`, "success");
-    sound(choice.asset === "swim" ? "water" : "pet", choice.id);
+    sound(asset === "swim" || asset === "ball" || asset === "ring" ? "water" : "pet", choice.id);
     vibrate(10);
     render(true, true);
   } });
@@ -4392,7 +4468,7 @@ function poolToyTouchesSeal(toy) {
 const POOL_TOY_REACTIONS = {
   ball: {
     icon: "🏖️",
-    asset: "swim",
+    asset: "ball",
     motion: "toy-ball",
     instruction: "讓牠用鼻尖頂球",
     line: "用鼻尖把海灘球頂開，追上去後又推回你面前",
@@ -4406,7 +4482,7 @@ const POOL_TOY_REACTIONS = {
   },
   plant: {
     icon: "🌿",
-    asset: "pet",
+    asset: "kelp",
     motion: "toy-kelp",
     instruction: "讓牠蹭蹭柔軟海藻",
     line: "先用鬍鬚碰了碰海藻刷，接著舒服地把臉頰靠上去",
@@ -4420,7 +4496,7 @@ const POOL_TOY_REACTIONS = {
   },
   light: {
     icon: "✨",
-    asset: "approach",
+    asset: "glow",
     motion: "toy-light",
     instruction: "讓牠追視閃亮浮球",
     line: "盯著星光左右轉頭，最後用前鰭拍出一圈光紋",
@@ -4434,7 +4510,7 @@ const POOL_TOY_REACTIONS = {
   },
   shell: {
     icon: "🐚",
-    asset: "sniff",
+    asset: "scent",
     motion: "toy-scent",
     instruction: "讓牠尋找貝盒氣味",
     line: "沿著氣味找到貝盒，用鼻尖推了推，再抬頭看向你",
@@ -4448,7 +4524,7 @@ const POOL_TOY_REACTIONS = {
   },
   duck: {
     icon: "🧊",
-    asset: "sleep",
+    asset: "ice",
     motion: "toy-ice",
     instruction: "讓牠靠著浮冰休息",
     line: "摸了摸涼涼浮冰枕，最後把下巴靠上去安靜休息",
@@ -4539,25 +4615,6 @@ function setDecorationCoolingState(toy, toyId) {
   delete toy.dataset.busyDisabled;
 }
 
-function createPoolToyInteractionVisual(toyId, icon, duration) {
-  const pool = $("pool");
-  const seal = $("seal");
-  if (!pool || !seal) return;
-  pool.querySelector(".toy-interaction-visual")?.remove();
-  const poolRect = pool.getBoundingClientRect();
-  const sealRect = seal.getBoundingClientRect();
-  const visual = document.createElement("span");
-  visual.className = "toy-interaction-visual";
-  visual.dataset.toy = toyId;
-  visual.textContent = icon;
-  visual.style.left = `${sealRect.left - poolRect.left + sealRect.width * 0.57}px`;
-  visual.style.top = `${sealRect.top - poolRect.top + sealRect.height * 0.57}px`;
-  visual.style.animationDuration = `${duration}ms`;
-  visual.setAttribute("aria-hidden", "true");
-  pool.appendChild(visual);
-  setTimeout(() => visual.remove(), duration + 120);
-}
-
 function releaseDecorationPointerCapture(drag) {
   try {
     if (drag.toy.hasPointerCapture?.(drag.pointerId)) drag.toy.releasePointerCapture?.(drag.pointerId);
@@ -4589,7 +4646,7 @@ function playWithRing(ring, lockToken = 0) {
   showNotice(`${message}！信任度＋${affectionGain}${interactionRestCue()}`, "success");
   render();
   $("speech").textContent = message;
-  react("pet", "🦩", "ring", "ring", "ring-play");
+  react("pet", "", "ring", "ring", "ring-play");
   sound("water", "fin");
   vibrate([12, 35, 12]);
   safeSave();
@@ -4624,12 +4681,11 @@ function playWithPoolToy(toy, lockToken = 0) {
   showNotice(`${message}！信任度＋${affectionGain}${interactionRestCue()}`, "success");
   render(true, true);
   $("speech").textContent = message;
-  react("pet", reaction.icon, toyId, reaction.asset, reaction.motion);
+  react("pet", "", toyId, reaction.asset, reaction.motion);
   const duration = reactionDuration("pet", reaction.motion);
-  createPoolToyInteractionVisual(toyId, reaction.icon, duration);
   sound(reaction.sound, reaction.soundDetail);
   vibrate(toyId === "ball" || toyId === "light" ? [9, 26, 9] : 10);
-  setTimeout(() => returnDecorationToPool(toy), Math.min(720, Math.max(420, duration * 0.42)));
+  setTimeout(() => returnDecorationToPool(toy), Math.max(0, duration - 620));
   setTimeout(() => setBusy(false, toyLock), duration);
   scheduleDecorationRefresh(reaction.cooldown + 60);
   return true;

@@ -484,7 +484,6 @@ function createPoolToyHarness(toyId, { interactionLock = false, interactionGener
     sounds: [],
     timers: [],
     vibrations: [],
-    visuals: [],
   };
   const context = vm.createContext({
     logs,
@@ -494,6 +493,7 @@ function createPoolToyHarness(toyId, { interactionLock = false, interactionGener
     toy,
   });
   vm.runInContext([
+    "const doflamingoRing = '', poolToyBall = '', poolToyKelp = '', poolToyGlow = '', poolToyScent = '', poolToyIce = '';",
     extractConstant("DECOR"),
     extractConstant("POOL_TOY_REACTIONS"),
     "const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));",
@@ -537,7 +537,6 @@ function createPoolToyHarness(toyId, { interactionLock = false, interactionGener
     "function render() { globalThis.logs.renders += 1; }",
     "function react(...args) { globalThis.logs.reactions.push(args); }",
     "function reactionDuration() { return 1800; }",
-    "function createPoolToyInteractionVisual(...args) { globalThis.logs.visuals.push(args); }",
     "function sound(...args) { globalThis.logs.sounds.push(args); }",
     "function vibrate(...args) { globalThis.logs.vibrations.push(args); }",
     "function scheduleDecorationRefresh(delay) { globalThis.logs.refreshes.push(delay); }",
@@ -566,11 +565,11 @@ function createPoolToyHarness(toyId, { interactionLock = false, interactionGener
 
 test("五件非泳圈道具都只提交一次狀態、冷卻與對應畫面反應", () => {
   const cases = [
-    { id: "ball", name: "海灘球", icon: "🏖️", asset: "swim", motion: "toy-ball", affection: 4, energy: -3, fatigue: 8, cooldown: 4500 },
-    { id: "plant", name: "軟質海藻刷", icon: "🌿", asset: "pet", motion: "toy-kelp", affection: 3, energy: -1, fatigue: 4, cooldown: 4100 },
-    { id: "light", name: "星光感應浮球", icon: "✨", asset: "approach", motion: "toy-light", affection: 4, energy: -2, fatigue: 6, cooldown: 4400 },
-    { id: "shell", name: "嗅聞貝盒", icon: "🐚", asset: "sniff", motion: "toy-scent", affection: 3, energy: -1, fatigue: 4, cooldown: 3900 },
-    { id: "duck", name: "涼涼浮冰枕", icon: "🧊", asset: "sleep", motion: "toy-ice", affection: 4, energy: 5, fatigue: -8, cooldown: 4800 },
+    { id: "ball", name: "海灘球", icon: "🏖️", asset: "ball", motion: "toy-ball", affection: 4, energy: -3, fatigue: 8, cooldown: 4500 },
+    { id: "plant", name: "軟質海藻刷", icon: "🌿", asset: "kelp", motion: "toy-kelp", affection: 3, energy: -1, fatigue: 4, cooldown: 4100 },
+    { id: "light", name: "星光感應浮球", icon: "✨", asset: "glow", motion: "toy-light", affection: 4, energy: -2, fatigue: 6, cooldown: 4400 },
+    { id: "shell", name: "嗅聞貝盒", icon: "🐚", asset: "scent", motion: "toy-scent", affection: 3, energy: -1, fatigue: 4, cooldown: 3900 },
+    { id: "duck", name: "涼涼浮冰枕", icon: "🧊", asset: "ice", motion: "toy-ice", affection: 4, energy: 5, fatigue: -8, cooldown: 4800 },
   ];
 
   for (const expected of cases) {
@@ -588,8 +587,7 @@ test("五件非泳圈道具都只提交一次狀態、冷卻與對應畫面反�
     assert.ok(state.availableAt <= after + expected.cooldown);
     assert.equal(logs.interactions.length, 1);
     assert.equal(logs.activities.length, 1);
-    assert.deepEqual(structuredClone(logs.reactions[0]), ["pet", expected.icon, expected.id, expected.asset, expected.motion]);
-    assert.deepEqual(structuredClone(logs.visuals[0]), [expected.id, expected.icon, 1800]);
+    assert.deepEqual(structuredClone(logs.reactions[0]), ["pet", "", expected.id, expected.asset, expected.motion]);
     assert.equal(logs.renders, 1);
     assert.equal(toy.disabled, true);
     assert.equal(toy.classList.contains("is-cooling-down"), true);
@@ -606,7 +604,7 @@ test("五件非泳圈道具都只提交一次狀態、冷卻與對應畫面反�
   }
 });
 
-test("舊拖曳鎖的道具回呼不會提交狀態或畫面反應", () => {
+test("舊拖曳鎖的道具回呼不會提交狀態或合成互動圖", () => {
   const { api, logs, toy } = createPoolToyHarness("plant", {
     interactionLock: true,
     interactionGeneration: 9,
@@ -621,7 +619,6 @@ test("舊拖曳鎖的道具回呼不會提交狀態或畫面反應", () => {
   assert.equal(logs.interactions.length, 0);
   assert.equal(logs.activities.length, 0);
   assert.equal(logs.reactions.length, 0);
-  assert.equal(logs.visuals.length, 0);
   assert.equal(logs.renders, 0);
   assert.equal(state.interactionLock, true);
   assert.equal(toy.style.translate, "0px 0px");

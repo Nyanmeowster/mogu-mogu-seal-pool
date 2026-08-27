@@ -122,13 +122,14 @@ test("Doflamingo 泳圈會依海豹比例放大並切換專屬玩耍圖", () => 
   assert.match(script, /data-pool-toy="ring"/);
   assert.match(script, /doflamingo-swim-ring-v1\.webp/);
   assert.match(script, /ring: sealStage5Ring/);
-  assert.match(script, /<img src="\$\{doflamingoRing\}/);
+  assert.match(script, /asset: doflamingoRing/);
+  assert.match(script, /<img src="\$\{item\.asset\}/);
   assert.match(script, /function poolToyTouchesSeal\(toy\)/);
   assert.match(script, /pointermove/);
   assert.match(script, /const affectionGain = interactionAffectionGain\(5\)/);
   assert.match(script, /pet\.affection = clamp\(pet\.affection \+ affectionGain\)/);
   assert.match(script, /"ring-play"/);
-  assert.match(script, /react\("pet", "🦩", "ring", "ring", "ring-play"\)/);
+  assert.match(script, /react\("pet", "", "ring", "ring", "ring-play"\)/);
   assert.match(styles, /width: clamp\(150px, 42cqw, 220px\);/);
   assert.match(styles, /\.decor-ring\s*\{[\s\S]*?touch-action: pan-y;/);
   assert.match(script, /moved: false,[\s\S]*?minX: poolRect\.left - toyRect\.left/);
@@ -169,28 +170,34 @@ test("六件道具都使用同一條點按、拖曳、鍵盤與取消路徑", ()
   assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\.is-dragging/);
   assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\.is-dragging\s*\{[\s\S]*?z-index: 15;/);
   assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\.is-over-seal/);
+  assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\.is-playing\s*\{[\s\S]*?opacity: 0 !important;/);
   assert.match(styles, /\.decor-ice\s*\{[\s\S]*?left: 46%;[\s\S]*?bottom: 112px;/);
   assert.match(styles, /\.notice\s*\{[\s\S]*?pointer-events: none;/);
-  assert.match(styles, /@keyframes pool-toy-play-pop/);
 });
 
-test("非泳圈道具有五種不同的名稱、圖像、動作與近身視覺", () => {
+test("每種體型都有五張海豹與道具完整接觸的專屬互動圖", () => {
   const expectations = [
-    ["ball", "海灘球", "swim", "toy-ball", "toy-visual-ball"],
-    ["plant", "軟質海藻刷", "pet", "toy-kelp", "toy-visual-kelp"],
-    ["light", "星光感應浮球", "approach", "toy-light", "toy-visual-light"],
-    ["shell", "嗅聞貝盒", "sniff", "toy-scent", "toy-visual-scent"],
-    ["duck", "涼涼浮冰枕", "sleep", "toy-ice", "toy-visual-ice"],
+    ["ball", "海灘球", "ball", "toy-ball", "Ball"],
+    ["plant", "軟質海藻刷", "kelp", "toy-kelp", "Kelp"],
+    ["light", "星光感應浮球", "glow", "toy-light", "Glow"],
+    ["shell", "嗅聞貝盒", "scent", "toy-scent", "Scent"],
+    ["duck", "涼涼浮冰枕", "ice", "toy-ice", "Ice"],
   ];
-  for (const [id, name, asset, motion, visual] of expectations) {
+  for (const [id, name, asset, motion, importSuffix] of expectations) {
     assert.match(script, new RegExp(`\\{ id: "${id}"[^\\n]+name: "${name}"`));
     assert.match(script, new RegExp(`${id}: \\{[\\s\\S]*?asset: "${asset}"[\\s\\S]*?motion: "${motion}"`));
     assert.match(styles, new RegExp(`\\.pet-seal\\[data-motion="${motion}"\\]`));
-    assert.match(styles, new RegExp(`@keyframes ${visual}`));
+    for (let stage = 1; stage <= 5; stage += 1) {
+      const filename = `seal-stage-${stage}-toy-${asset}-v2.webp`;
+      assert.ok(assets.includes(filename), `${filename} 必須存在`);
+      assert.match(script, new RegExp(`import sealStage${stage}${importSuffix} from "\\./assets/${filename}"`));
+      assert.match(script, new RegExp(`${asset}: sealStage${stage}${importSuffix}`));
+    }
   }
-  assert.match(script, /function createPoolToyInteractionVisual\(toyId, icon, duration\)/);
-  assert.match(script, /visual\.setAttribute\("aria-hidden", "true"\)/);
-  assert.match(styles, /\.toy-interaction-visual\s*\{[\s\S]*?pointer-events: none;/);
+  assert.doesNotMatch(script, /createPoolToyInteractionVisual|toy-interaction-visual/);
+  assert.doesNotMatch(styles, /toy-interaction-visual|toy-visual-/);
+  assert.match(script, /const COMPOSITE_TOY_ASSETS = new Set\(\["ring", "ball", "kelp", "glow", "scent", "ice"\]\)/);
+  assert.match(styles, /#decorations\.is-composite-interaction \.pool-toy\s*\{[\s\S]*?opacity: 0 !important;/);
 });
 
 test("每件道具的可及名稱、冷卻與鍵盤回饋一致", () => {
@@ -202,8 +209,11 @@ test("每件道具的可及名稱、冷卻與鍵盤回饋一致", () => {
   assert.match(script, /event\.detail !== 0/);
   assert.match(script, /function preserveDecorationKeyboardFocus\(decoration\)/);
   assert.match(script, /requestAnimationFrame\(\(\) => focusElement\(replacement\)\)/);
-  assert.match(script, /<span aria-hidden="true">\$\{item\.icon\}<\/span>/);
-  assert.match(script, /<img src="\$\{doflamingoRing\}[^>]+alt="">/);
+  assert.match(script, /<img src="\$\{item\.asset\}[^>]+alt="">/);
+  assert.match(styles, /\.pool-toy > img\s*\{[\s\S]*?object-fit: contain;[\s\S]*?pointer-events: none;/);
+  for (const asset of ["ball", "kelp", "glow", "scent", "ice"]) {
+    assert.ok(assets.includes(`pool-toy-${asset}-v2.webp`));
+  }
 });
 
 test("海豹會依作息、個性與身體狀況自主活動", () => {

@@ -1315,7 +1315,9 @@ button:focus-visible {
 }
 
 .decor-ring.is-playing {
-  animation: ring-play-pop 0.58s ease-in-out;
+  opacity: 0 !important;
+  pointer-events: none;
+  animation: none;
 }
 
 .decor-ring.is-cooling-down,
@@ -1328,6 +1330,8 @@ button:focus-visible {
 .decor-ball {
   right: 5%;
   bottom: 78px;
+  width: clamp(56px, 15cqw, 78px);
+  height: clamp(56px, 15cqw, 78px);
   animation: float-object 4.7s ease-in-out infinite reverse;
 }
 
@@ -1343,7 +1347,17 @@ button:focus-visible {
   user-select: none;
 }
 
-.pool-toy > span {
+.pool-toy > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 4px rgba(0, 70, 90, 0.17));
+}
+
+#decorations.is-composite-interaction .pool-toy {
+  opacity: 0 !important;
   pointer-events: none;
 }
 
@@ -1371,8 +1385,9 @@ button:focus-visible {
 }
 
 .pool-toy:not(.decor-ring).is-playing {
-  animation: pool-toy-play-pop 0.62s ease-in-out;
-  animation-delay: 0s;
+  opacity: 0 !important;
+  pointer-events: none;
+  animation: none;
 }
 
 .pool-toy:not(.decor-ring).is-cooling-down,
@@ -1385,9 +1400,8 @@ button:focus-visible {
 .decor-kelp {
   top: 94px;
   left: 2%;
-  width: 68px;
-  height: 68px;
-  font-size: 52px;
+  width: clamp(52px, 14cqw, 72px);
+  height: clamp(78px, 21cqw, 108px);
   transform-origin: 50% 100%;
   animation: plant-sway 6.4s ease-in-out infinite;
 }
@@ -1395,49 +1409,26 @@ button:focus-visible {
 .decor-glow {
   top: 123px;
   right: 10%;
-  font-size: 46px;
+  width: clamp(56px, 15cqw, 78px);
+  height: clamp(56px, 15cqw, 78px);
   animation: light-glow 3.8s ease-in-out infinite;
 }
 
 .decor-scent {
   right: 21%;
   bottom: 49px;
-  width: 56px;
-  height: 56px;
-  font-size: 38px;
+  width: clamp(62px, 17cqw, 86px);
+  height: clamp(48px, 13cqw, 66px);
   animation: shell-rock 5.2s ease-in-out infinite;
 }
 
 .decor-ice {
   left: 46%;
   bottom: 112px;
-  width: 58px;
-  height: 58px;
-  font-size: 40px;
+  width: clamp(74px, 20cqw, 104px);
+  height: clamp(46px, 13cqw, 66px);
   animation: float-object 5.5s ease-in-out infinite;
 }
-
-.toy-interaction-visual {
-  position: absolute;
-  z-index: 9;
-  display: grid;
-  width: clamp(52px, 14cqw, 76px);
-  height: clamp(52px, 14cqw, 76px);
-  place-items: center;
-  font-size: clamp(38px, 11cqw, 58px);
-  filter: drop-shadow(0 5px 4px rgba(0, 70, 90, 0.2));
-  pointer-events: none;
-  translate: -50% -50%;
-  transform-origin: center;
-  animation-timing-function: ease-in-out;
-  animation-fill-mode: both;
-}
-
-.toy-interaction-visual[data-toy="ball"] { animation-name: toy-visual-ball; }
-.toy-interaction-visual[data-toy="plant"] { animation-name: toy-visual-kelp; }
-.toy-interaction-visual[data-toy="light"] { animation-name: toy-visual-light; }
-.toy-interaction-visual[data-toy="shell"] { animation-name: toy-visual-scent; }
-.toy-interaction-visual[data-toy="duck"] { animation-name: toy-visual-ice; }
 
 .action-drawer {
   position: relative;
@@ -1855,6 +1846,15 @@ button:focus-visible {
 .care-grid b {
   display: block;
   font-size: 31px;
+}
+
+.shop-grid img {
+  display: block;
+  width: 46px;
+  height: 42px;
+  margin: 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 2px rgba(0, 70, 90, 0.14));
 }
 
 .shop-grid span,
@@ -2509,49 +2509,6 @@ button:focus-visible {
   64% { transform: translateY(1px) scale(1.008, 0.992); }
 }
 
-@keyframes toy-visual-ball {
-  0% { opacity: 0; transform: translate(-36px, 18px) rotate(-18deg) scale(0.7); }
-  24% { opacity: 1; transform: translate(10px, -12px) rotate(25deg) scale(1.08); }
-  52% { transform: translate(-18px, -4px) rotate(-12deg) scale(0.96); }
-  82% { opacity: 1; transform: translate(24px, 6px) rotate(32deg); }
-  100% { opacity: 0; transform: translate(38px, 14px) rotate(50deg) scale(0.78); }
-}
-
-@keyframes toy-visual-kelp {
-  0% { opacity: 0; transform: translate(18px, 8px) rotate(15deg) scale(0.72); }
-  24%, 76% { opacity: 1; transform: translate(-12px, 0) rotate(-12deg) scale(1.04); }
-  48% { transform: translate(5px, -4px) rotate(10deg) scale(0.98); }
-  100% { opacity: 0; transform: translate(20px, 9px) rotate(18deg) scale(0.76); }
-}
-
-@keyframes toy-visual-light {
-  0% { opacity: 0; transform: translate(-28px, 14px) scale(0.65); }
-  20% { opacity: 1; transform: translate(-12px, -20px) scale(1.12); }
-  48% { transform: translate(24px, -10px) scale(0.9); filter: drop-shadow(0 0 14px rgba(255, 239, 118, 0.95)); }
-  76% { opacity: 1; transform: translate(-4px, 12px) scale(1.08); }
-  100% { opacity: 0; transform: translate(-28px, 14px) scale(0.7); }
-}
-
-@keyframes toy-visual-scent {
-  0% { opacity: 0; transform: translate(24px, 12px) rotate(10deg) scale(0.7); }
-  25%, 70% { opacity: 1; transform: translate(-8px, 2px) rotate(-5deg) scale(1); }
-  48% { transform: translate(6px, -3px) rotate(4deg) scale(1.06); }
-  100% { opacity: 0; transform: translate(22px, 10px) rotate(9deg) scale(0.75); }
-}
-
-@keyframes toy-visual-ice {
-  0% { opacity: 0; transform: translate(18px, 15px) scale(0.72); }
-  22% { opacity: 1; transform: translate(3px, 6px) scale(1.04); }
-  42%, 82% { opacity: 1; transform: translate(-6px, 12px) rotate(-2deg) scale(1); }
-  100% { opacity: 0; transform: translate(14px, 16px) scale(0.76); }
-}
-
-@keyframes pool-toy-play-pop {
-  0%, 100% { transform: translateY(0) rotate(0) scale(1); }
-  35% { transform: translateY(-10px) rotate(-8deg) scale(1.16); }
-  68% { transform: translateY(2px) rotate(5deg) scale(0.96); }
-}
-
 @keyframes autonomous-swim {
   0%, 100% { transform: translateX(0) rotate(0); }
   24% { transform: translate(-24px, -7px) rotate(-2deg); }
@@ -2616,12 +2573,6 @@ button:focus-visible {
   0% { opacity: 0; transform: translateY(8px) scale(0.6); }
   18%, 70% { opacity: 0.85; transform: translateY(-8px) scale(1); }
   100% { opacity: 0; transform: translateY(-18px) scale(0.8); }
-}
-
-@keyframes ring-play-pop {
-  0%, 100% { scale: 1; }
-  45% { scale: 1.14; rotate: -5deg; }
-  72% { scale: 0.96; rotate: 3deg; }
 }
 
 @keyframes water-transition-ripple {
@@ -3208,7 +3159,6 @@ button:focus-visible {
   .water-caustics,
   .bubble-field i,
   .pool-decor,
-  .toy-interaction-visual,
   .big-hand,
   .loader-seal,
   .status-item,
