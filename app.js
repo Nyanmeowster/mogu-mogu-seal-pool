@@ -96,7 +96,7 @@ const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
 const SAVE_BACKUP_KEY = "mogu-pet-v1-backup";
 const SAVE_SCHEMA_VERSION = 6;
-const ASSET_VERSION = "50";
+const ASSET_VERSION = "51";
 const COIN_INTERVAL = 6 * HOUR;
 const PREVIEW_DEAD = new URLSearchParams(location.search).get("preview") === "dead";
 const QUERY_PARAMS = new URLSearchParams(location.search);
@@ -3395,10 +3395,11 @@ function createAlphaHitRuns(image, gridWidth, gridHeight) {
 
 function paintAlphaHitArea(target, image, hitMap, cellClassName) {
   if (!target?.isConnected || !image?.naturalWidth || !image?.naturalHeight || !hitMap) return;
-  const rect = target.getBoundingClientRect();
-  if (!rect.width || !rect.height) return;
-  const gridWidth = Math.max(64, Math.min(96, Math.round(rect.width / 4)));
-  const gridHeight = Math.max(24, Math.min(112, Math.round(gridWidth * rect.height / rect.width)));
+  const surfaceWidth = hitMap.offsetWidth || target.offsetWidth;
+  const surfaceHeight = hitMap.offsetHeight || target.offsetHeight;
+  if (!surfaceWidth || !surfaceHeight) return;
+  const gridWidth = Math.max(64, Math.min(96, Math.round(surfaceWidth / 4)));
+  const gridHeight = Math.max(24, Math.min(112, Math.round(gridWidth * surfaceHeight / surfaceWidth)));
   const runs = createAlphaHitRuns(image, gridWidth, gridHeight);
   if (!target.isConnected) return;
   const fragment = document.createDocumentFragment();
@@ -3423,6 +3424,10 @@ function installPoolToyHitArea(toy) {
     image.addEventListener("load", () => installPoolToyHitArea(toy), { once: true });
     return;
   }
+  hitMap.style.left = `${image.offsetLeft}px`;
+  hitMap.style.top = `${image.offsetTop}px`;
+  hitMap.style.width = `${image.offsetWidth}px`;
+  hitMap.style.height = `${image.offsetHeight}px`;
   paintAlphaHitArea(toy, image, hitMap, "pool-toy-hit-cell");
 }
 

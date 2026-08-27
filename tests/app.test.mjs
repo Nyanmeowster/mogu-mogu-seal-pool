@@ -169,6 +169,9 @@ test("六件道具都使用同一條點按、拖曳、鍵盤與取消路徑", ()
   assert.match(script, /context\.getImageData\(0, 0, gridWidth, gridHeight\)\.data/);
   assert.match(script, /\+ 3\] >= 32/);
   assert.match(script, /function installPoolToyHitArea\(toy\)/);
+  assert.match(script, /hitMap\.style\.width = `\$\{image\.offsetWidth\}px`/);
+  assert.match(script, /hitMap\.style\.height = `\$\{image\.offsetHeight\}px`/);
+  assert.match(script, /const surfaceWidth = hitMap\.offsetWidth \|\| target\.offsetWidth/);
   assert.match(script, /function initializePoolToyHitAreas\(\)/);
   assert.match(script, /initializePoolToyHitAreas\(\);/);
   assert.match(script, /function updateSealHitArea\(asset\)/);
