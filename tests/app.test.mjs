@@ -190,12 +190,13 @@ test("每種體型都有五張海豹與道具完整接觸的專屬互動圖", ()
     assert.match(script, new RegExp(`${id}: \\{[\\s\\S]*?asset: "${asset}"[\\s\\S]*?motion: "${motion}"`));
     assert.match(styles, new RegExp(`\\.pet-seal\\[data-motion="${motion}"\\]`));
     for (let stage = 1; stage <= 5; stage += 1) {
-      const filename = `seal-stage-${stage}-toy-${asset}-v2.webp`;
+      const filename = `seal-stage-${stage}-toy-${asset}-v3.webp`;
       assert.ok(assets.includes(filename), `${filename} 必須存在`);
       assert.match(script, new RegExp(`import sealStage${stage}${importSuffix} from "\\./assets/${filename}"`));
       assert.match(script, new RegExp(`${asset}: sealStage${stage}${importSuffix}`));
     }
   }
+  assert.doesNotMatch(script, /seal-stage-[1-5]-toy-(?:ball|kelp|glow|scent|ice)-v2\.webp/);
   assert.doesNotMatch(script, /createPoolToyInteractionVisual|toy-interaction-visual/);
   assert.doesNotMatch(styles, /toy-interaction-visual|toy-visual-/);
   assert.match(script, /const COMPOSITE_TOY_ASSETS = new Set\(\["ring", "ball", "kelp", "glow", "scent", "ice"\]\)/);
