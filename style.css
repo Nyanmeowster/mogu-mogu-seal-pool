@@ -812,6 +812,7 @@ button:focus-visible {
   border: 0;
   background: transparent;
   cursor: pointer;
+  pointer-events: none;
   animation: seal-breathe 4.2s ease-in-out infinite;
   transform-origin: 50% 78%;
 }
@@ -850,6 +851,24 @@ button:focus-visible {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.seal-hit-map {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+}
+
+.seal-hit-cell {
+  position: absolute;
+  cursor: inherit;
+  pointer-events: auto;
+  touch-action: pan-y pinch-zoom;
+}
+
+.pet-seal:disabled .seal-hit-cell {
+  pointer-events: none;
 }
 
 .seal-three-canvas {
@@ -1289,7 +1308,7 @@ button:focus-visible {
   background: transparent;
   line-height: 1;
   cursor: grab;
-  pointer-events: auto;
+  pointer-events: none;
   touch-action: pan-y;
   user-select: none;
   animation: float-object 4.1s ease-in-out infinite;
@@ -1349,17 +1368,29 @@ button:focus-visible {
   background: transparent;
   line-height: 1;
   cursor: grab;
-  pointer-events: auto;
+  pointer-events: none;
   touch-action: pan-y;
   user-select: none;
 }
 
-.pool-toy:not(.decor-ring)::before {
+.pool-toy-hit-map {
   position: absolute;
-  z-index: 2;
-  inset: -8px;
-  border-radius: 18px;
-  content: "";
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pool-toy-hit-cell {
+  position: absolute;
+  cursor: inherit;
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+
+.pool-toy:disabled .pool-toy-hit-cell,
+.pool-toy.is-playing .pool-toy-hit-cell,
+#decorations.is-composite-interaction .pool-toy-hit-cell {
+  pointer-events: none;
 }
 
 .pool-toy > img {

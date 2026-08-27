@@ -96,7 +96,7 @@ const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
 const SAVE_BACKUP_KEY = "mogu-pet-v1-backup";
 const SAVE_SCHEMA_VERSION = 6;
-const ASSET_VERSION = "48";
+const ASSET_VERSION = "50";
 const COIN_INTERVAL = 6 * HOUR;
 const PREVIEW_DEAD = new URLSearchParams(location.search).get("preview") === "dead";
 const QUERY_PARAMS = new URLSearchParams(location.search);
@@ -867,6 +867,10 @@ let audioVisibilityGeneration = 0;
 let soundUnlocked = false;
 const preloaded = new Set();
 const spriteCache = new Map();
+const alphaHitRunCache = new Map();
+const alphaHitImageCache = new Map();
+let sealHitAsset = "";
+let sealHitGeneration = 0;
 
 function personalityProfile() {
   return PERSONALITIES.find((item) => item.id === pet.personality) || PERSONALITIES[0];
@@ -3354,6 +3358,104 @@ function decorationStateKey(now = Date.now()) {
   return `${pet.active.join("|")}:${DECOR.map((item) => Number(poolToyCoolingDown(item.id, now))).join("")}`;
 }
 
+function createAlphaHitRuns(image, gridWidth, gridHeight) {
+  const cacheKey = `${image.currentSrc || image.src}:${gridWidth}x${gridHeight}`;
+  if (alphaHitRunCache.has(cacheKey)) return alphaHitRunCache.get(cacheKey);
+  const canvas = document.createElement("canvas");
+  canvas.width = gridWidth;
+  canvas.height = gridHeight;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context || !image.naturalWidth || !image.naturalHeight) return [];
+  const scale = Math.min(gridWidth / image.naturalWidth, gridHeight / image.naturalHeight);
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  context.clearRect(0, 0, gridWidth, gridHeight);
+  context.drawImage(image, (gridWidth - drawWidth) / 2, (gridHeight - drawHeight) / 2, drawWidth, drawHeight);
+  let pixels;
+  try {
+    pixels = context.getImageData(0, 0, gridWidth, gridHeight).data;
+  } catch {
+    return [];
+  }
+  const runs = [];
+  for (let y = 0; y < gridHeight; y += 1) {
+    let runStart = -1;
+    for (let x = 0; x <= gridWidth; x += 1) {
+      const visible = x < gridWidth && pixels[(y * gridWidth + x) * 4 + 3] >= 32;
+      if (visible && runStart < 0) runStart = x;
+      if (!visible && runStart >= 0) {
+        runs.push({ x: runStart, y, width: x - runStart });
+        runStart = -1;
+      }
+    }
+  }
+  alphaHitRunCache.set(cacheKey, runs);
+  return runs;
+}
+
+function paintAlphaHitArea(target, image, hitMap, cellClassName) {
+  if (!target?.isConnected || !image?.naturalWidth || !image?.naturalHeight || !hitMap) return;
+  const rect = target.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const gridWidth = Math.max(64, Math.min(96, Math.round(rect.width / 4)));
+  const gridHeight = Math.max(24, Math.min(112, Math.round(gridWidth * rect.height / rect.width)));
+  const runs = createAlphaHitRuns(image, gridWidth, gridHeight);
+  if (!target.isConnected) return;
+  const fragment = document.createDocumentFragment();
+  runs.forEach((run) => {
+    const cell = document.createElement("span");
+    cell.className = cellClassName;
+    cell.style.left = `${run.x / gridWidth * 100}%`;
+    cell.style.top = `${run.y / gridHeight * 100}%`;
+    cell.style.width = `${run.width / gridWidth * 100}%`;
+    cell.style.height = `${100 / gridHeight}%`;
+    fragment.append(cell);
+  });
+  hitMap.replaceChildren(fragment);
+  target.classList.toggle("is-hit-ready", runs.length > 0);
+}
+
+function installPoolToyHitArea(toy) {
+  const image = toy.querySelector("img");
+  const hitMap = toy.querySelector(".pool-toy-hit-map");
+  if (!image || !hitMap || !toy.isConnected) return;
+  if (!image.complete || !image.naturalWidth) {
+    image.addEventListener("load", () => installPoolToyHitArea(toy), { once: true });
+    return;
+  }
+  paintAlphaHitArea(toy, image, hitMap, "pool-toy-hit-cell");
+}
+
+function initializePoolToyHitAreas() {
+  requestAnimationFrame(() => {
+    $("decorations").querySelectorAll("[data-pool-toy]").forEach(installPoolToyHitArea);
+  });
+}
+
+function loadAlphaHitImage(asset) {
+  if (alphaHitImageCache.has(asset)) return alphaHitImageCache.get(asset);
+  const pending = new Promise((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.addEventListener("load", () => resolve(image), { once: true });
+    image.addEventListener("error", () => resolve(null), { once: true });
+    image.src = asset;
+  });
+  alphaHitImageCache.set(asset, pending);
+  return pending;
+}
+
+function updateSealHitArea(asset) {
+  if (!asset || (sealHitAsset === asset && $("seal-hit-map").childElementCount)) return;
+  sealHitAsset = asset;
+  const generation = ++sealHitGeneration;
+  $("seal-hit-map").replaceChildren();
+  loadAlphaHitImage(asset).then((image) => {
+    if (!image || generation !== sealHitGeneration || asset !== sealHitAsset) return;
+    paintAlphaHitArea($("seal"), image, $("seal-hit-map"), "seal-hit-cell");
+  });
+}
+
 function renderDecorations() {
   if (decorationDrag) return;
   const now = Date.now();
@@ -3368,12 +3470,13 @@ function renderDecorations() {
     .map((item, index) => {
       const coolingDown = poolToyCoolingDown(item.id, now);
       if (item.id === "ring") {
-        return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下互動`}"><img src="${item.asset}?v=${ASSET_VERSION}" alt=""></button>`;
+        return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="ring" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下互動`}"><img src="${item.asset}?v=${ASSET_VERSION}" alt=""><span class="pool-toy-hit-map" aria-hidden="true"></span></button>`;
       }
       const reaction = POOL_TOY_REACTIONS[item.id];
-      return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="${item.id}" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下${reaction.instruction}`}"><img src="${item.asset}?v=${ASSET_VERSION}" alt=""></button>`;
+      return `<button class="pool-decor pool-toy ${item.className}${coolingDown ? " is-cooling-down" : ""}" data-pool-toy="${item.id}" style="--decor-delay:-${index * 0.63}s" type="button" ${coolingDown ? "disabled" : ""} aria-label="${coolingDown ? `${item.name}正在冷卻，讓海豹休息一下` : `把${item.name}拖到海豹身邊，或按一下${reaction.instruction}`}"><img src="${item.asset}?v=${ASSET_VERSION}" alt=""><span class="pool-toy-hit-map" aria-hidden="true"></span></button>`;
     })
     .join("");
+  initializePoolToyHitAreas();
   if (focusedId) {
     const replacement = $("decorations").querySelector(`[data-pool-toy="${focusedId}"]:not(:disabled)`);
     if (replacement) {
@@ -3411,6 +3514,7 @@ function renderSeal() {
   });
   roamer.classList.add(`stage-${nextStage}`);
   $("seal-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "idle")}")`;
+  if (!actionActive) updateSealHitArea(spriteAsset(nextStage, "idle"));
   if (!actionActive) {
     $("seal-action-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "pet")}")`;
     $("seal-action-sprite").dataset.asset = `${nextStage}:pet`;
@@ -3990,10 +4094,15 @@ function setActionSprite(asset) {
   const roamer = $("seal-roamer");
   const stageNumber = currentStage || stage();
   const key = `${stageNumber}:${asset}`;
-  if (sprite.dataset.asset === key) return;
+  if (sprite.dataset.asset === key) {
+    updateSealHitArea(spriteAsset(stageNumber, asset));
+    return;
+  }
   const apply = () => {
-    sprite.style.backgroundImage = `url("${spriteAsset(stageNumber, asset)}")`;
+    const assetUrl = spriteAsset(stageNumber, asset);
+    sprite.style.backgroundImage = `url("${assetUrl}")`;
     sprite.dataset.asset = key;
+    updateSealHitArea(assetUrl);
   };
   clearTimeout(spriteSwapTimer);
   if (prefersReducedMotion() || !roamer.classList.contains("reacting")) {
@@ -4050,6 +4159,7 @@ function react(kind, icon, zone = "", visualAsset = "", motion = "") {
     $("decorations").classList.remove("is-composite-interaction");
     seal.style.removeProperty("animation-duration");
     actionActive = "";
+    updateSealHitArea(spriteAsset(currentStage || stage(), "idle"));
   }, duration);
 }
 
