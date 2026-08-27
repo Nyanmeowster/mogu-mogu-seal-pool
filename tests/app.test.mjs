@@ -165,6 +165,8 @@ test("六件道具都使用同一條點按、拖曳、鍵盤與取消路徑", ()
   assert.match(script, /function scheduleDecorationRefresh\(delay = 0\)/);
   assert.match(script, /if \(decorationDrag \|\| interactionLock \|\| actionActive\)/);
   assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\s*\{[\s\S]*?pointer-events: auto;[\s\S]*?touch-action: pan-y;/);
+  assert.match(styles, /#decorations\s*\{[\s\S]*?z-index: 12;[\s\S]*?pointer-events: none;/);
+  assert.match(styles, /\.pool-toy:not\(\.decor-ring\)::before\s*\{[\s\S]*?inset: -8px;/);
   assert.doesNotMatch(styles, /\.pool-toy[^{}]*\{[^}]*touch-action:\s*none/);
   assert.match(styles, /\.pool-toy:focus-visible/);
   assert.match(styles, /\.pool-toy:not\(\.decor-ring\)\.is-dragging/);
@@ -198,6 +200,8 @@ test("每種體型都有五張海豹與道具完整接觸的專屬互動圖", ()
   assert.doesNotMatch(styles, /toy-interaction-visual|toy-visual-/);
   assert.match(script, /const COMPOSITE_TOY_ASSETS = new Set\(\["ring", "ball", "kelp", "glow", "scent", "ice"\]\)/);
   assert.match(styles, /#decorations\.is-composite-interaction \.pool-toy\s*\{[\s\S]*?opacity: 0 !important;/);
+  assert.match(script, /function stopAutonomousBehavior\(\)/);
+  assert.match(script, /if \(actionActive && !interactionLock\) stopAutonomousBehavior\(\);/);
 });
 
 test("每件道具的可及名稱、冷卻與鍵盤回饋一致", () => {

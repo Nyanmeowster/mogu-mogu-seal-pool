@@ -1257,6 +1257,13 @@ button:focus-visible {
   top: 18px;
 }
 
+#decorations {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  pointer-events: none;
+}
+
 .pool-decor {
   position: absolute;
   z-index: 5;
@@ -1345,6 +1352,14 @@ button:focus-visible {
   pointer-events: auto;
   touch-action: pan-y;
   user-select: none;
+}
+
+.pool-toy:not(.decor-ring)::before {
+  position: absolute;
+  z-index: 2;
+  inset: -8px;
+  border-radius: 18px;
+  content: "";
 }
 
 .pool-toy > img {

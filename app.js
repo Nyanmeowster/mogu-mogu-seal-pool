@@ -96,7 +96,7 @@ const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
 const SAVE_BACKUP_KEY = "mogu-pet-v1-backup";
 const SAVE_SCHEMA_VERSION = 6;
-const ASSET_VERSION = "45";
+const ASSET_VERSION = "47";
 const COIN_INTERVAL = 6 * HOUR;
 const PREVIEW_DEAD = new URLSearchParams(location.search).get("preview") === "dead";
 const QUERY_PARAMS = new URLSearchParams(location.search);
@@ -1320,9 +1320,9 @@ function chooseAutonomousBehavior() {
   if (pet.active.length && (profile.id === "curious" || Math.random() < 0.45)) {
     const activeToys = pet.active.filter((id) => id === "ring" || POOL_TOY_REACTIONS[id]);
     const toyId = activeToys[Math.floor(Math.random() * activeToys.length)];
-    if (toyId === "ring") return { id: "explore", asset: "ring", motion: "ring-play", icon: "🦩", line: "牠主動抱住羽毛泳圈，舒服地漂了一會兒", duration: 4400 };
+    if (toyId === "ring") return { id: "explore", asset: "sniff", motion: "auto-explore", icon: "🦩", line: "牠主動靠近羽毛泳圈，繞著它研究了一會兒", duration: 4400 };
     const reaction = POOL_TOY_REACTIONS[toyId];
-    if (reaction) return { id: "explore", asset: reaction.asset, motion: reaction.motion, icon: reaction.icon, line: `牠主動${reaction.activity}`, duration: 4400 };
+    if (reaction) return { id: "explore", asset: "sniff", motion: "auto-explore", icon: reaction.icon, line: `牠主動靠近${DECOR.find((item) => item.id === toyId)?.name || "泳池玩具"}研究了一會兒`, duration: 4400 };
   }
   if (pet.affection > 55 && (profile.id === "gentle" || Math.random() < 0.5)) {
     return { id: "approach", asset: "approach", icon: "🤍", line: "牠認出你了，主動游過來靠近", duration: 4000 };
@@ -1341,6 +1341,24 @@ function runAutonomousBehavior() {
   setTimeout(() => {
     if (Date.now() >= autonomousUntil) autonomousMood = "idle";
   }, behavior.duration + 50);
+}
+
+function stopAutonomousBehavior() {
+  if (interactionLock || !actionActive || autonomousMood === "idle" || Date.now() >= autonomousUntil) return false;
+  clearTimeout(reactionTimer);
+  const seal = $("seal");
+  const roamer = $("seal-roamer");
+  $("reaction-icon").hidden = true;
+  $("reaction-icon").dataset.zone = "";
+  seal.classList.remove("eat", "pet");
+  delete seal.dataset.motion;
+  seal.style.removeProperty("animation-duration");
+  roamer.classList.remove("reacting", "resting-on-rock", "sprite-swapping");
+  $("decorations").classList.remove("is-composite-interaction");
+  actionActive = "";
+  autonomousMood = "idle";
+  autonomousUntil = 0;
+  return true;
 }
 
 function preloadImage(url) {
@@ -4557,7 +4575,9 @@ function returnDecorationToPool(toy) {
 $("decorations").addEventListener("pointerdown", (event) => {
   const toy = event.target.closest("[data-pool-toy]");
   const unsupportedMouseButton = event.pointerType === "mouse" && event.button !== 0;
-  if (!event.isPrimary || unsupportedMouseButton || decorationDrag || !toy || pet.dead || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
+  if (!event.isPrimary || unsupportedMouseButton || decorationDrag || !toy || pet.dead || tabReadOnly || saveWriteProtected) return;
+  if (actionActive && !interactionLock) stopAutonomousBehavior();
+  if (interactionLock || actionActive) return;
   const toyId = toy.dataset.poolToy;
   if (poolToyCoolingDown(toyId)) {
     showNotice("讓牠先喘口氣，等等再玩這件道具", "warning");
@@ -4728,7 +4748,9 @@ window.addEventListener("blur", () => cancelDecorationDrag());
 window.addEventListener("pagehide", () => cancelDecorationDrag());
 $("decorations").addEventListener("click", (event) => {
   const toy = event.target.closest("[data-pool-toy]");
-  if (!toy || event.detail !== 0 || interactionLock || actionActive || tabReadOnly || saveWriteProtected) return;
+  if (!toy || event.detail !== 0 || tabReadOnly || saveWriteProtected) return;
+  if (actionActive && !interactionLock) stopAutonomousBehavior();
+  if (interactionLock || actionActive) return;
   playWithDecoration(toy);
 });
 
