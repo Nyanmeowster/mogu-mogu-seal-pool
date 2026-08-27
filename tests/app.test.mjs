@@ -72,6 +72,14 @@ test("真實照護狀態包含飽足、信任、健康與水質", () => {
   assert.match(script, /pet\.energy/);
 });
 
+test("體態會隨進食逐漸圓潤，長時間未餵則逐步變瘦", () => {
+  assert.match(script, /function bodyConditionMealGain/);
+  assert.match(script, /hoursSinceFeed >= 72 \? 0\.32 : hoursSinceFeed >= 36 \? 0\.14/);
+  assert.match(script, /--body-condition-scale/);
+  assert.match(script, /function bodyConditionSummary/);
+  assert.match(styles, /scale: var\(--body-condition-scale, 1\);/);
+});
+
 test("首屏只載入目前體型，其餘素材會在合適時機逐張背景載入", () => {
   assert.match(html, /id="app-loader"/);
   assert.equal((html.match(/rel="preload" as="image"/g) || []).length, 0);

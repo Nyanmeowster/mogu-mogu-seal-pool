@@ -96,7 +96,7 @@ const FIVE_DAYS = 432e6;
 const SAVE_KEY = "mogu-pet-v1";
 const SAVE_BACKUP_KEY = "mogu-pet-v1-backup";
 const SAVE_SCHEMA_VERSION = 6;
-const ASSET_VERSION = "52";
+const ASSET_VERSION = "53";
 const COIN_INTERVAL = 6 * HOUR;
 const PREVIEW_DEAD = new URLSearchParams(location.search).get("preview") === "dead";
 const QUERY_PARAMS = new URLSearchParams(location.search);
@@ -1094,10 +1094,11 @@ function applyElapsedStats(now = Date.now()) {
       (simulatedAt - cleanCheckpoint > 24 * HOUR ? 0.04 : 0) +
       (dietVariety < 2 ? 0.08 : 0);
     pet.health = clamp(pet.health + (healthRisk ? -healthRisk : 0.04) * stepHours);
-    if (pet.satiety < 20 || pet.health < 55) {
-      pet.bodyCondition = clamp(pet.bodyCondition - 0.02 * stepHours);
+    const bodyConditionLoss = bodyConditionLossRate(simulatedAt);
+    if (bodyConditionLoss > 0) {
+      pet.bodyCondition = clamp(pet.bodyCondition - bodyConditionLoss * stepHours);
     } else if (pet.satiety >= 35 && pet.health >= 75 && pet.waterQuality >= 60) {
-      pet.bodyCondition = clamp(pet.bodyCondition + 0.012 * stepHours);
+      pet.bodyCondition = clamp(pet.bodyCondition + 0.02 * stepHours);
     }
     remainingHours -= stepHours;
   }
@@ -1216,6 +1217,32 @@ function safeSave() {
 
 function stageForBodyCondition(bodyCondition) {
   return bodyCondition < 20 ? 1 : bodyCondition < 40 ? 2 : bodyCondition < 70 ? 3 : bodyCondition < 90 ? 4 : 5;
+}
+
+function bodyConditionMealGain(satiety = pet.satiety) {
+  if (satiety < 55) return 2.4;
+  if (satiety < 80) return 1.6;
+  return 0.8;
+}
+
+function bodyConditionLossRate(at = Date.now()) {
+  const hoursSinceFeed = Math.max(0, at - pet.lastFedAt) / HOUR;
+  let rate = hoursSinceFeed >= 72 ? 0.32 : hoursSinceFeed >= 36 ? 0.14 : 0;
+  if (pet.satiety < 20) rate = Math.max(rate, 0.22);
+  if (pet.health < 55) rate = Math.max(rate, 0.18);
+  return rate;
+}
+
+function bodyConditionVisualScale(bodyCondition = pet.bodyCondition) {
+  return 0.94 + clamp(bodyCondition) / 1000;
+}
+
+function bodyConditionSummary(now = Date.now()) {
+  const hoursSinceFeed = Math.max(0, now - pet.lastFedAt) / HOUR;
+  if (hoursSinceFeed >= 72 || pet.satiety < 20) return "長時間未進食，體態正在明顯下降";
+  if (hoursSinceFeed >= 36 || pet.satiety < 30) return "進食不足，體態開始變瘦";
+  if (pet.satiety >= 80) return "正在消化餐點，體態逐漸圓潤";
+  return "體態維持穩定";
 }
 
 function stageForSatiety(value) {
@@ -3115,6 +3142,7 @@ function observationSummary() {
     pet.waterQuality >= 70 ? "水質清澈" : pet.waterQuality >= 40 ? "水質接近維護線" : "水質不佳",
     diet >= 3 ? "飲食種類豐富" : diet >= 2 ? "飲食變化尚可" : "最近食物較單一",
     pet.energy >= 55 ? "休息量充足" : "需要更多上岸休息",
+    bodyConditionSummary(),
   ];
   return parts.join(" · ");
 }
@@ -3518,6 +3546,7 @@ function renderSeal() {
     if (className.startsWith("stage-") && className !== "stage-changing") roamer.classList.remove(className);
   });
   roamer.classList.add(`stage-${nextStage}`);
+  $("seal").style.setProperty("--body-condition-scale", bodyConditionVisualScale().toFixed(3));
   $("seal-sprite").style.backgroundImage = `url("${spriteAsset(nextStage, "idle")}")`;
   if (!actionActive) updateSealHitArea(spriteAsset(nextStage, "idle"));
   if (!actionActive) {
@@ -4235,7 +4264,7 @@ function feed(food, sourceButton) {
   }
   const satietyGain = 10;
   const feedingStage = currentStage || stage();
-  const bodyConditionGain = pet.satiety < 80 ? 0.6 : 0.25;
+  const bodyConditionGain = bodyConditionMealGain();
   const targetStage = stageForBodyCondition(clamp(pet.bodyCondition + bodyConditionGain));
   const feedVisualGeneration = ++visualStageGeneration;
   visualStageLock = feedingStage;
@@ -4287,7 +4316,7 @@ function feed(food, sourceButton) {
     const variety = new Set(pet.recentFoods.slice(-4)).size;
     if (variety >= 3) pet.health = clamp(pet.health + 1);
     addActivity("feed", `吃了${food.name}${variety >= 3 ? "，近期飲食種類豐富" : ""}`, food.icon);
-    showNotice(`${food.name}：${pickVariant(`feed-${food.id}`, FEED_LINES)}　＋${satietyGain}%`, "success");
+    showNotice(`${food.name}：${pickVariant(`feed-${food.id}`, FEED_LINES)}　飽足＋${satietyGain}%・體態逐漸圓潤`, "success");
     render(true, true);
     if (threeState.ready) {
       threeState.wetness = THREE.MathUtils.lerp(threeState.wetness, 0.27, 0.2);

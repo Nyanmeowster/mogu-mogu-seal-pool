@@ -736,6 +736,7 @@ function createFeedHarness() {
     "function react() { reactionStages.push(visualStageLock || stage()); }",
     "function advanceOnboarding(step) { completedOnboardingSteps.push(step); }",
     extractFunction("stageForBodyCondition"),
+    extractFunction("bodyConditionMealGain"),
     extractFunction("stageForSatiety"),
     extractFunction("stage"),
     extractFunction("setBusy"),
@@ -769,7 +770,7 @@ test("餵食跨越體型門檻時，咀嚼完成前維持原圖並持續鎖定�
 
   harness.timers.advance(60);
   assert.equal(harness.api.state().satiety, 45);
-  assert.equal(harness.api.state().bodyCondition, 40.1);
+  assert.equal(harness.api.state().bodyCondition, 41.9);
   assert.equal(harness.api.state().visibleStage, 2);
   assert.equal(harness.api.state().interactionLock, true);
   assert.deepEqual(harness.renderedStages, [2]);
@@ -823,7 +824,7 @@ function createElapsedStatsHarness(overrides = {}) {
   vm.runInContext([
     extractConstant("HOUR"), extractConstant("FIVE_DAYS"),
     "const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));",
-    "let pet = globalThis.seedPet;", extractFunction("applyElapsedStats"),
+    "let pet = globalThis.seedPet;", extractFunction("bodyConditionLossRate"), extractFunction("applyElapsedStats"),
     "globalThis.elapsedApi = { applyElapsedStats, pet: () => pet };",
   ].join("\n"), context);
   return { api: context.elapsedApi, start };
@@ -861,6 +862,33 @@ test("長時間離線傷害會封頂，五天未餵會安全轉交代班照護",
   fiveDays.api.applyElapsedStats(fiveDays.start + 5 * 24 * 36e5);
   assert.equal(fiveDays.api.pet().dead, true);
   assert.equal(fiveDays.api.pet().carePauseReason, "substitute");
+});
+
+test("飽足時體態緩慢增加，長時間未餵則會明顯變瘦", () => {
+  const firstDay = createElapsedStatsHarness({ satiety: 100, bodyCondition: 70 });
+  firstDay.api.applyElapsedStats(firstDay.start + 24 * 36e5);
+  assert.ok(firstDay.api.pet().bodyCondition > 70);
+
+  const fourDays = createElapsedStatsHarness({ satiety: 100, bodyCondition: 70 });
+  fourDays.api.applyElapsedStats(fourDays.start + 96 * 36e5);
+  assert.ok(fourDays.api.pet().bodyCondition < 60);
+  assert.equal(fourDays.api.pet().dead, false);
+});
+
+test("餓的時候進食較能恢復體態，吃飽後增幅會自然降低", () => {
+  const context = vm.createContext({});
+  vm.runInContext([
+    "const HOUR = 36e5;",
+    "const clamp = (value, min = 0, max = 100) => Math.min(max, Math.max(min, value));",
+    "let pet = { satiety: 35, bodyCondition: 48, lastFedAt: 0, health: 90 };",
+    extractFunction("bodyConditionMealGain"),
+    extractFunction("bodyConditionVisualScale"),
+    "globalThis.bodyApi = { meal: bodyConditionMealGain, scale: bodyConditionVisualScale };",
+  ].join("\n"), context);
+  assert.equal(context.bodyApi.meal(35), 2.4);
+  assert.equal(context.bodyApi.meal(65), 1.6);
+  assert.equal(context.bodyApi.meal(95), 0.8);
+  assert.ok(context.bodyApi.scale(80) > context.bodyApi.scale(40));
 });
 
 test("結束代班照護會保留名字、回憶、收藏、成就與長期進度", () => {

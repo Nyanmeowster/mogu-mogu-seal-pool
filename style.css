@@ -814,7 +814,9 @@ button:focus-visible {
   cursor: pointer;
   pointer-events: none;
   animation: seal-breathe 4.2s ease-in-out infinite;
+  scale: var(--body-condition-scale, 1);
   transform-origin: 50% 78%;
+  transition: scale 0.55s cubic-bezier(0.22, 0.7, 0.25, 1);
 }
 
 .mode-pet .pet-seal {
